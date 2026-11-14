@@ -75,7 +75,7 @@ async function boot() {
   document.querySelector(".brand__sub").textContent = real
     ? `${net.meta.name.replace(" (real)", "")}: real substations and lines. Every green fiber runs BB84 live; tap one and the network defends itself.`
     : design
-      ? "Nine supernodes in a dual ring around the command center, QKD on every ring fiber. Tap a ring fiber: traffic moves to its twin. Tap both: it goes the other way round."
+      ? "Nine supernodes on a counter-rotating dual ring around the command center, QKD on every span. Tap a span and its traffic goes the other way round to reach the command center."
       : "A quantum-secured utility network, live. Every green fiber runs BB84; every error is counted.";
   document.title = real ? "Tennessee Quantum Grid · Qrypt" : design ? "Dual Ring · Qrypt" : "Grid Twin · Qrypt";
   const centers = controlCenters(net);

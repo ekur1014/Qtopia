@@ -1,7 +1,9 @@
-// The team's dual-ring design (whiteboard and recording of 14 Nov, New Chat Grid/): a command center linked to
-// supernodes 3 and 7, nine supernodes on a ring with two fibers per span (an outer and an inner ring, so traffic can
-// go either way round), and substations hanging off the supernodes. Every ring fiber runs QKD; substations use ML-KEM.
-// Distances are illustrative: the real ring's geometry is not public.
+// The team's dual-ring design (whiteboard and recording of 14 Nov, New Chat Grid/; Ethan's architecture): a command
+// center linked to supernodes 3 and 7, nine supernodes on a counter-rotating dual ring, and substations off the
+// supernodes. Each span is one QKD fiber pair in one corridor: the working ring (clockwise) and the protection ring
+// (counter-clockwise). A spy in the corridor compromises the span, so traffic goes the other way round, as in the
+// teammate's router (dual_ring_router.py, dual_ring_quantum_routing.html), whose distances this matches:
+// 8.5 km per span, 6 km from the command center to each gateway. Distances are illustrative.
 //
 //   node grid-twin/tools/make_dualring.mjs     -> data/networks/dualring.json (+ .js) and the picker entry
 import { readFileSync, writeFileSync } from "node:fs";
@@ -9,9 +11,10 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const R = 14; // ring radius, km
-const GAP = 1.0; // how far the outer and inner fibers bow apart between supernodes, km
 const N = 9;
+const SPAN_KM = 8.5; // between neighbouring supernodes, as in the teammate's router
+const SPOKE_KM = 6; // command center to gateway supernodes 3 and 7
+const R = SPAN_KM / (2 * Math.sin(Math.PI / N)); // ring radius that makes the drawn chord 8.5 km
 const round = (x, d = 2) => Math.round(x * 10 ** d) / 10 ** d;
 // Clockwise from the top, as drawn: 1 near the top, 3 on the right, 5 at the bottom, 7 on the left.
 const angle = (k) => ((20 + (k - 1) * 40) * Math.PI) / 180;
@@ -20,33 +23,27 @@ const at = (r, a) => [round(r * Math.sin(a)), round(-r * Math.cos(a))];
 const nodes = [{ id: "CC", name: "Command center", short: "Command center", type: "control", pos: [0, 0] }];
 const links = [];
 for (let k = 1; k <= N; k++) {
-  nodes.push({ id: `N${k}`, name: `Supernode ${k}`, short: `Supernode ${k}`, type: "substation", pos: at(R, angle(k)) });
-  nodes.push({ id: `D${k}`, name: `Substation off supernode ${k} (illustrative)`, type: "subunit", pos: at(R + 6.5, angle(k) + 0.12) });
+  nodes.push({ id: `N${k}`, name: `Supernode ${k}${k === 3 || k === 7 ? " (gateway)" : ""}`, short: `Supernode ${k}`, type: "substation", pos: at(R, angle(k)) });
+  nodes.push({ id: `D${k}`, name: `Substation off supernode ${k} (illustrative)`, type: "subunit", pos: at(R + 5.5, angle(k) + 0.12) });
 }
 for (let k = 1; k <= N; k++) {
   const next = (k % N) + 1;
   const a0 = angle(k);
-  const a1 = angle(k) + (40 * Math.PI) / 180;
-  const arc = (r) => Array.from({ length: 9 }, (_, i) => {
-    const t = i / 8;
-    const bow = Math.sin(Math.PI * t); // fibers meet at the supernodes, apart in between
-    return at(R + r * bow, a0 + (a1 - a0) * t);
-  });
-  const km = round(R * (a1 - a0), 1);
-  links.push({ id: `A${k}`, a: `N${k}`, b: `N${next}`, kind: "qkd", km, ring: "outer", path: arc(GAP) });
-  links.push({ id: `B${k}`, a: `N${k}`, b: `N${next}`, kind: "qkd", km, ring: "inner", path: arc(-GAP) });
-  links.push({ id: `P${k}`, a: `N${k}`, b: `D${k}`, kind: "pqc", km: 6.5 });
+  const a1 = angle(k) + (2 * Math.PI) / N;
+  const path = Array.from({ length: 9 }, (_, i) => at(R, a0 + ((a1 - a0) * i) / 8)); // follow the ring
+  links.push({ id: `R${k}`, a: `N${k}`, b: `N${next}`, kind: "qkd", km: SPAN_KM, ring: true, path });
+  links.push({ id: `P${k}`, a: `N${k}`, b: `D${k}`, kind: "pqc", km: 5.5 });
 }
-links.push({ id: "C3", a: "CC", b: "N3", kind: "qkd", km: R });
-links.push({ id: "C7", a: "CC", b: "N7", kind: "qkd", km: R });
+links.push({ id: "C3", a: "CC", b: "N3", kind: "qkd", km: SPOKE_KM });
+links.push({ id: "C7", a: "CC", b: "N7", kind: "qkd", km: SPOKE_KM });
 
 const out = {
   meta: {
     name: "Dual ring: command center and nine supernodes (team design)",
     nodeScale: 1.1,
     teamDesign: true, // the team's own design (not real data, not a test network)
-    note: "The team's design (whiteboard, 14 Nov): nine supernodes in a ring around the command center, with two fibers per span so traffic can go either way round. Distances are illustrative; the real ring's layout is not public.",
-    design_detail: "Every ring fiber runs QKD. Tap one fiber of a span and traffic moves to its twin; tap both and it goes the other way round.",
+    note: "The team's design (Ethan's architecture, 14 Nov): nine supernodes on a counter-rotating dual ring around the command center, which links to gateway supernodes 3 and 7. Distances are illustrative (8.5 km spans), matching the team's router page.",
+    design_detail: "Every span runs QKD. Tap a span and its key traffic goes the other way round the ring to reach the command center.",
   },
   nodes,
   links,
@@ -58,4 +55,4 @@ const idxPath = join(root, "data/networks/index.json");
 const idx = JSON.parse(readFileSync(idxPath, "utf8")).filter((m) => m.id !== "dualring");
 const entry = { id: "dualring", label: "Dual ring: command center + 9 supernodes (team design)", file: "data/networks/dualring.json", nodes: nodes.length, links: links.length, qkd: links.filter((l) => l.kind === "qkd").length, design: true };
 writeFileSync(idxPath, JSON.stringify([entry, ...idx], null, 1) + "\n");
-console.log(`dualring: ${nodes.length} sites, ${links.length} links (${entry.qkd} QKD), ring span ${links[0].km} km`);
+console.log(`dualring: ${nodes.length} sites, ${links.length} links (${entry.qkd} QKD), span ${SPAN_KM} km, radius ${R.toFixed(1)} km`);

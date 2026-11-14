@@ -63,4 +63,4 @@ Only as a drawing, and it will probably be taken out unless we find a quantum ap
 Yes. Substations and lines are public OpenStreetMap data, the same data OpenInfraMap draws. Two things are our assumptions: which two substations hold the keys, and that fiber runs along every power line.
 
 **Why a dual ring?**
-The lead's design puts the important traffic on a ring of nine supernodes around the command center, with two fibers per span. A spy on one fiber costs nothing: traffic moves to its twin. Only if both fibers of a span are compromised does traffic go the long way round, and every supernode on the way becomes a trusted relay. Distances in our model are illustrative.
+The lead's design puts the important traffic on a ring of nine supernodes around the command center, with a working ring and a protection ring running opposite ways. If a spy taps a span, its traffic goes the other way round; every supernode on the detour becomes a trusted relay. Distances in our model are illustrative and match the teammate's router.

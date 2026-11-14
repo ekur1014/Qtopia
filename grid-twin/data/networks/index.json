@@ -4,8 +4,8 @@
   "label": "Dual ring: command center + 9 supernodes (team design)",
   "file": "data/networks/dualring.json",
   "nodes": 19,
-  "links": 29,
-  "qkd": 20,
+  "links": 20,
+  "qkd": 11,
   "design": true
  },
  {

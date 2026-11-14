@@ -18,6 +18,7 @@ cp index.html                    site/index.html                  # home: links 
 cp shared/qrypt.css shared/qbar.js site/shared/                   # one design system and top bar
 cp chattanooga_quantum_map.html  site/                            # Real map
 cp bb84_visualizer.html          site/                            # Photon line (notebook 1, one fiber)
+cp dual_ring_quantum_routing.html site/                           # Dual ring router (team design)
 cp threejs_quantum_grid.html     site/                            # Quantum lab
 cp interactive_grid_monitor.html site/                            # first prototype, linked from home
 cp grid_twin.html                site/                            # the live grid as one downloadable file
@@ -27,10 +28,9 @@ cp -r grid-twin/src             site/grid-twin/src
 cp -r grid-twin/data/networks   site/grid-twin/data/networks      # includes the .js copies the map and lab load
 cp grid-twin/data/network.json grid-twin/data/calibration.json site/grid-twin/data/
 
-# Old public paths from the first version of this site still work. The pitch deck is the teammates' own work and
-# is not part of the Grid Twin site; it stays at its original address.
+# Old public path from the first version of this site still works. The pitch deck is no longer published: the team
+# removed it from this project (presentation_deck.html stays in the repo).
 cp bb84_visualizer.html          site/bb84.html
-cp presentation_deck.html        site/deck.html
 
 printf ".env*\n.vercel\n" > site/.vercelignore   # never upload local tokens
 echo "Built site/:"

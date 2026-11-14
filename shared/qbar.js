@@ -9,6 +9,7 @@
   var PAGES = [
     { id: "home", label: "Home", href: "index.html" },
     { id: "grid", label: "Live grid", href: "grid-twin/index.html" },
+    { id: "ring", label: "Dual ring", href: "dual_ring_quantum_routing.html" },
     { id: "map", label: "Real map", href: "chattanooga_quantum_map.html" },
     { id: "photon", label: "Photon line", href: "bb84_visualizer.html" },
     { id: "lab", label: "Quantum lab", href: "threejs_quantum_grid.html" },

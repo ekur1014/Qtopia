@@ -75,11 +75,11 @@ Live engine results for one fiber (p = 3.3%, tap 40%, theory 12.64%): Qiskit Aer
 
 | Asked for | Done |
 |---|---|
-| Model the dual ring: command center, nine supernodes, two rings so traffic can go either way | `?net=dualring`: 9 supernodes, 18 ring fibers (outer and inner), command center linked to supernodes 3 and 7 as drawn |
-| QKD on every supernode connection | All 18 ring fibers and both command-center links run BB84 live |
-| Best path: when an error rate is too high, go another way, all the way round if needed | One bad fiber: traffic moves to its twin. Both fibers of a span: the key goes the other way round (tested: supernode 4 moves from via 3 to via 7, 6, 5) |
+| Model the dual ring: command center, nine supernodes, two rings so traffic can go either way | `?net=dualring`: 9 supernodes, one QKD fiber pair (working + protection ring) per 8.5 km span, command center linked to gateways 3 and 7, matching the teammate's router |
+| QKD on every supernode connection | All 9 spans and both command-center links run BB84 live |
+| Best path: when an error rate is too high, go another way, all the way round if needed | A tapped span sends the key the other way round (tested: supernode 4 moves from via 3 to via 7, 6, 5) |
 | Don't worry about substations much | One substation per supernode, on ML-KEM |
 | Remove the pitch deck | Done: no longer linked from our pages |
 | Make sure it is justified | Open: the lead is checking how the real architecture works; distances are illustrative |
 
-The task was given to a teammate (Asheb), and the lead is checking how the real architecture works. Grid Twin's version uses the same engine as everything else, so it can be compared with his.
+The teammate (Asheb) built the 2D router (`dual_ring_quantum_routing.html`, `dual_ring_router.py`); it is now part of the site, and Grid Twin's 3D version uses the same topology and distances.
