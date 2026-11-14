@@ -1,0 +1,74 @@
+/* Qrypt design system: one set of colors, type and the top bar, shared by every page of the project
+   (live 3D grid, real map, quantum lab, pitch deck, monitor). Light is the default; dark via the toggle. */
+:root {
+  color-scheme: light;
+  --q-bg: #eef2f7;
+  --q-surface: #ffffff;
+  --q-glass: rgba(255, 255, 255, 0.82);
+  --q-glass-strong: rgba(255, 255, 255, 0.94);
+  --q-ink: #0f1a2e;
+  --q-ink-dim: #4a5874;
+  --q-ink-faint: #7c88a3;
+  --q-line: rgba(15, 26, 46, 0.12);
+  --q-tint: rgba(15, 26, 46, 0.04);
+  --q-tint-2: rgba(15, 26, 46, 0.08);
+  --q-ok: #07a27e;
+  --q-warn: #c77700;
+  --q-bad: #d22f4b;
+  --q-pqc: #5257e0;
+  --q-gold: #b88600;
+  --q-tele: #1189bd;
+  --q-decoy: #c8358f;
+  --q-off: #b3bccb;
+  --q-shadow: 0 10px 30px rgba(15, 26, 46, 0.08);
+  --q-font: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --q-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --q-bar-h: 46px;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --q-bg: #04060b;
+  --q-surface: #0b1020;
+  --q-glass: rgba(12, 17, 30, 0.66);
+  --q-glass-strong: rgba(14, 20, 36, 0.9);
+  --q-ink: #e8eefc;
+  --q-ink-dim: #8b96b3;
+  --q-ink-faint: #5a6582;
+  --q-line: rgba(160, 180, 230, 0.14);
+  --q-tint: rgba(255, 255, 255, 0.04);
+  --q-tint-2: rgba(255, 255, 255, 0.08);
+  --q-ok: #3ef0c6;
+  --q-warn: #ffb547;
+  --q-bad: #ff4d6d;
+  --q-pqc: #8a8dff;
+  --q-gold: #ffd76a;
+  --q-tele: #5ad7ff;
+  --q-decoy: #ff5ec7;
+  --q-off: #3a4256;
+  --q-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Top bar */
+.qbar { position: fixed; top: 0; left: 0; right: 0; height: var(--q-bar-h); z-index: 50; display: flex; align-items: center; gap: 18px; padding: 0 20px; background: var(--q-glass-strong); border-bottom: 1px solid var(--q-line); backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%); font-family: var(--q-font); color: var(--q-ink); }
+.qbar__brand { display: flex; align-items: baseline; gap: 10px; text-decoration: none; color: inherit; white-space: nowrap; }
+.qbar__mark { font-family: var(--q-mono); font-size: 11px; letter-spacing: 0.38em; color: var(--q-ok); }
+.qbar__name { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+.qbar__nav { display: flex; gap: 2px; margin-left: auto; }
+.qbar__link { padding: 7px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--q-ink-dim); text-decoration: none; white-space: nowrap; transition: background .2s ease, color .2s ease; }
+.qbar__link:hover { color: var(--q-ink); background: var(--q-tint-2); }
+.qbar__link[aria-current="page"] { color: var(--q-surface); background: var(--q-ink); }
+.qbar__theme { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--q-line); border-radius: 999px; background: transparent; color: var(--q-ink-dim); cursor: pointer; }
+.qbar__theme:hover { color: var(--q-ink); background: var(--q-tint-2); }
+.qbar__theme svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 760px) { .qbar__name { display: none; } .qbar__link { padding: 7px 9px; font-size: 12px; } }
+
+/* Shared pieces the pages use */
+.q-pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-family: var(--q-mono); font-size: 11px; font-weight: 600; letter-spacing: .04em; }
+.q-pill--ok { background: color-mix(in srgb, var(--q-ok) 14%, transparent); color: var(--q-ok); }
+.q-pill--warn { background: color-mix(in srgb, var(--q-warn) 15%, transparent); color: var(--q-warn); }
+.q-pill--bad { background: color-mix(in srgb, var(--q-bad) 14%, transparent); color: var(--q-bad); }
+.q-pill--pqc { background: color-mix(in srgb, var(--q-pqc) 15%, transparent); color: var(--q-pqc); }
+.q-pill--tele { background: color-mix(in srgb, var(--q-tele) 15%, transparent); color: var(--q-tele); }
+.q-pill--gold { background: color-mix(in srgb, var(--q-gold) 15%, transparent); color: var(--q-gold); }
+.q-note { font-size: 12px; line-height: 1.5; color: var(--q-ink-dim); }
+.q-label { font-family: var(--q-mono); font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--q-ink-faint); }

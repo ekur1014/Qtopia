@@ -224,7 +224,8 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
           const r = runs[e];
           if (r === "running") return `<div class="fw__row"><span>${engines[e]}</span><b>running…</b></div>`;
           if (r.error) return `<div class="fw__row"><span>${engines[e]}</span><b class="bad">error</b></div>`;
-          return `<div class="fw__row"><span>${r.label}</span><b>${pct(r.qber, 2)}</b><em>${r.sifted.toLocaleString()} bits · ${r.ms} ms</em></div>`;
+          const extra = [r.job_id ? `job ${r.job_id}` : "", r.note ?? ""].filter(Boolean).map((t) => `<em>${t}</em>`).join("");
+          return `<div class="fw__row"><span>${r.label}</span><b>${pct(r.qber, 2)}</b><em>${r.sifted.toLocaleString()} bits · ${(r.ms / 1000).toFixed(1)} s</em>${extra}</div>`;
         });
       fw.innerHTML = rows.length
         ? `<div class="fw__row fw__row--head"><span>Browser engine, live window</span><b>${pct(s.qhat, 2)}</b><em>theory ${pct(s.baseline + (s.eve ?? 0) * (0.25 - s.baseline / 2), 2)}</em></div>${rows.join("")}`

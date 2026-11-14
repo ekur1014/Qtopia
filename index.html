@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tennessee Quantum Grid · Qrypt</title>
+  <meta name="description" content="Qrypt's Secure the Grid project: a live 3D twin of Chattanooga's real grid with BB84 on every QKD fiber, a real map, a quantum lab and the pitch deck." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="site/qrypt.css" />
+  <script src="site/qbar.js" data-page="home" data-root="./"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--q-bg); color: var(--q-ink); font-family: var(--q-font); -webkit-font-smoothing: antialiased; }
+    main { max-width: 1120px; margin: 0 auto; padding: calc(var(--q-bar-h) + 56px) max(24px, env(safe-area-inset-right, 0px)) 72px max(24px, env(safe-area-inset-left, 0px)); }
+    .eyebrow { font-family: var(--q-mono); font-size: 11px; letter-spacing: .38em; color: var(--q-ok); }
+    h1 { margin: 12px 0 14px; font-size: clamp(40px, 6vw, 76px); line-height: .95; letter-spacing: -0.04em; font-weight: 600; text-wrap: balance; max-width: 13ch; }
+    .lede { max-width: 62ch; font-size: 17px; line-height: 1.55; color: var(--q-ink-dim); margin: 0; }
+    .facts { display: flex; flex-wrap: wrap; gap: 28px; margin: 34px 0 44px; padding: 18px 0; border-top: 1px solid var(--q-line); border-bottom: 1px solid var(--q-line); }
+    .fact b { display: block; font-size: 28px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .fact span { font-size: 12.5px; color: var(--q-ink-dim); }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .card { display: flex; flex-direction: column; gap: 10px; padding: 22px; min-height: 210px; border-radius: 18px; background: var(--q-surface); border: 1px solid var(--q-line); box-shadow: var(--q-shadow); text-decoration: none; color: inherit; transition: transform .2s ease, border-color .2s ease; }
+    .card:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--q-ok) 45%, var(--q-line)); }
+    .card--hero { grid-column: span 2; background: linear-gradient(135deg, color-mix(in srgb, var(--q-ok) 10%, var(--q-surface)), var(--q-surface) 60%); }
+    @media (max-width: 620px) { .card--hero { grid-column: auto; } }
+    .card h2 { margin: 0; font-size: 22px; letter-spacing: -0.02em; }
+    .card p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--q-ink-dim); }
+    .card .go { margin-top: auto; font-size: 13px; font-weight: 600; color: var(--q-ok); }
+    .more { margin-top: 44px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 28px; }
+    .more h3 { margin: 0 0 10px; font-size: 14px; }
+    .more ul { margin: 0; padding-left: 18px; color: var(--q-ink-dim); font-size: 13.5px; line-height: 1.7; }
+    .more a { color: var(--q-ink); }
+    footer { margin-top: 56px; font-size: 12px; color: var(--q-ink-faint); line-height: 1.6; }
+    footer a { color: var(--q-ink-dim); }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">QRYPT · SECURE THE GRID</div>
+    <h1>Tennessee Quantum Grid</h1>
+    <p class="lede">Chattanooga's real power grid, with quantum key distribution running live on every transmission fiber. Tap a fiber and the network catches the eavesdropper, keeps the link up on post-quantum keys, reroutes, and measures the spy, on its own.</p>
+
+    <div class="facts" aria-label="Key numbers">
+      <div class="fact"><b>117</b><span>real EPB and TVA substations</span></div>
+      <div class="fact"><b>34</b><span>fibers running BB84 live</span></div>
+      <div class="fact"><b>≈1 s</b><span>from a full tap to detection</span></div>
+      <div class="fact"><b>4</b><span>quantum frameworks cross-check the browser</span></div>
+      <div class="fact"><b>0</b><span>links taken down by an alarm</span></div>
+    </div>
+
+    <div class="cards">
+      <a class="card card--hero" href="grid-twin/index.html">
+        <span class="q-label">Start here</span>
+        <h2>Live grid</h2>
+        <p>The 3D twin. BB84 on every QKD fiber four times a second, click-to-place eavesdroppers, and an automatic response you can watch stage by stage. Switch between Chattanooga, Tennessee's 500 kV backbone, and the simulation lab.</p>
+        <span class="go">Open the live grid →</span>
+      </a>
+      <a class="card" href="chattanooga_quantum_map.html">
+        <span class="q-label">Same data, on a map</span>
+        <h2>Real map</h2>
+        <p>The same substations and lines on a street map, with each fiber's length, its normal error rate and what a tap would do. Every fiber opens in the 3D grid.</p>
+        <span class="go">Open the map →</span>
+      </a>
+      <a class="card" href="threejs_quantum_grid.html">
+        <span class="q-label">The physics, step by step</span>
+        <h2>Quantum lab</h2>
+        <p>Teleportation, BB84 and Grover computed in your browser, next to the results we measured on simulators, emulators and a real Rigetti quantum computer.</p>
+        <span class="go">Open the lab →</span>
+      </a>
+      <a class="card" href="presentation_deck.html">
+        <span class="q-label">Five slides, five minutes</span>
+        <h2>Pitch deck</h2>
+        <p>Problem, customer, solution, team, what we learned. Arrow keys to move, S for speaker notes.</p>
+        <span class="go">Open the deck →</span>
+      </a>
+    </div>
+
+    <div class="more">
+      <div>
+        <h3>Run it yourself</h3>
+        <ul>
+          <li>No install: download <a href="grid_twin.html">grid_twin.html</a> and double-click it</li>
+          <li>Everything, with the live quantum-code buttons: <code>python3 grid-twin/start.py</code></li>
+          <li>How it works: <a href="grid-twin/README.md">grid-twin/README.md</a> and <a href="grid-twin/DESIGN.md">DESIGN.md</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Behind it</h3>
+        <ul>
+          <li><a href="docs/MENTOR_NOTES.md">What the mentors told us</a> and what we changed</li>
+          <li><a href="docs/TECH_RANKED.md">Technologies, ranked</a>, GPU included</li>
+          <li><a href="WRITEUP_step2.md">Step 2 write-up</a>: Shor, Grover and real-hardware runs</li>
+          <li><a href="interactive_grid_monitor.html">2D monitor</a>, our first prototype</li>
+        </ul>
+      </div>
+      <div>
+        <h3>What is real, what is assumed</h3>
+        <ul>
+          <li>Real: substations, lines and their lengths (OpenStreetMap)</li>
+          <li>Real: BB84 physics, checked against Qiskit, CUDA-Q, Guppy and qBraid</li>
+          <li>Assumed: fiber along every power line, and which two substations hold the keys</li>
+        </ul>
+      </div>
+    </div>
+
+    <footer>Map data © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ODbL. Built for the Tennessee Quantum Hackathon, Secure the Grid track, November 2026.</footer>
+  </main>
+</body>
+</html>

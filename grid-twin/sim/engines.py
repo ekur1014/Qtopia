@@ -230,27 +230,37 @@ def run_guppy(p: float, f: float, rounds: int, seed: int) -> dict:
 QBRAID_DEVICE = "ionq:ionq:sim:simulator"
 
 
-def run_qbraid(p: float, f: float, rounds: int, seed: int) -> dict:
-    import os
-    from qiskit import QuantumCircuit
-    from qbraid.runtime import QbraidProvider
+QBRAID_DEVICES = {
+    # engine id: (device, rounds per circuit, shots, runtime options, label)
+    # IonQ's simulator returns probabilities, and with many qubits it leaves out rare outcomes (a 40% tap read 6.6%
+    # with 6 rounds = 24 qubits). Two rounds (8 qubits) per circuit keeps every outcome.
+    "qbraid": ("ionq:ionq:sim:simulator", 2, 1000, None, "qBraid · IonQ simulator (cloud)"),
+    "qbraid-qir": ("qbraid:qbraid:sim:qir-sv", 6, 2000, None, "qBraid · QIR simulator (cloud, free)"),
+    "qbraid-gpu": ("qbraid:qbraid:sim:gpu-sv", 8, 4000, None, "qBraid · GPU state-vector simulator (credits)"),
+}
 
-    if not os.environ.get("QBRAID_API_KEY"):
-        raise RuntimeError("QBRAID_API_KEY is not set for the server")
-    rng = np.random.default_rng(seed)
-    k = 6
-    bits = rng.integers(0, 2, k)
-    bases = rng.integers(0, 2, k)
-    eve_bases = np.array([b if i % 2 == 0 else 1 - b for i, b in enumerate(bases)])  # half match, half do not
-    rng.shuffle(eve_bases)
+
+def bb84_coin_circuit(p: float, f: float, bits, bases, eve_bases, encode=None):
+    """BB84 rounds side by side in one circuit, with the fiber's tap and noise inside
+    the circuit, so a cloud simulator runs the whole thing: Alice's photon, a qubit that records Eve's measurement,
+    Eve's coin (taps with probability f) and the noise coin (flips with probability p). Every round is sifted (Bob
+    measures in Alice's basis). `encode(bit, basis)` can be the team's notebook-1 function; default is the standard one.
+    Layout: round r's photon is qubit r and classical bit r (helpers come after the photons), so a result string reads
+    the same whether a backend reports classical bits (qBraid QIR) or every qubit (IonQ): round r = character -(r+1)."""
+    from qiskit import QuantumCircuit
+
     theta = lambda prob: 2 * math.asin(math.sqrt(min(max(prob, 0.0), 1.0)))
+    k = len(bits)
     qc = QuantumCircuit(4 * k, k)
     for r in range(k):
-        q, rec, eve_coin, noise_coin = 4 * r, 4 * r + 1, 4 * r + 2, 4 * r + 3
-        if bits[r]:
-            qc.x(q)
-        if bases[r]:
-            qc.h(q)
+        q, rec, eve_coin, noise_coin = r, k + 3 * r, k + 3 * r + 1, k + 3 * r + 2
+        if encode is not None:
+            qc.compose(encode(int(bits[r]), int(bases[r])), qubits=[q], clbits=[r], inplace=True)
+        else:
+            if bits[r]:
+                qc.x(q)
+            if bases[r]:
+                qc.h(q)
         qc.ry(theta(f), eve_coin)
         qc.ry(theta(p), noise_coin)
         # Eve (when her coin says so) measures in her basis: copy the photon's value into `rec` in that basis.
@@ -268,39 +278,103 @@ def run_qbraid(p: float, f: float, rounds: int, seed: int) -> dict:
         if bases[r]:  # sifted: Bob measures in Alice's basis
             qc.h(q)
         qc.measure(q, r)
-    device = QbraidProvider().get_device(QBRAID_DEVICE)
-    shots = 200
-    job = device.run(qc, shots=shots)
-    counts = job.result().data.get_counts()
+    return qc
+
+
+def coin_rounds(rng, k):
+    bits = rng.integers(0, 2, k)
+    bases = rng.integers(0, 2, k)
+    # Eve's basis matches Alice's on exactly half the rounds (k is even), as a random basis does on average, so the
+    # few rounds in one circuit carry the intercept-resend statistics exactly.
+    assert k % 2 == 0, "rounds per circuit must be even"
+    mismatch = rng.permutation(k) < k // 2
+    eve_bases = np.where(mismatch, 1 - bases, bases)
+    return bits, bases, eve_bases
+
+
+def count_errors(counts, bits):
     sifted = errors = 0
+    k = len(bits)
     for bitstring, c in counts.items():
         bitstring = bitstring.replace(" ", "")
         for r in range(k):
-            bob = int(bitstring[-(r + 1)]) if len(bitstring) == k else int(bitstring[-(4 * r + 1)])
+            bob = int(bitstring[-(r + 1)])
             sifted += c
             errors += c * (bob != int(bits[r]))
-    return {"sifted": sifted, "errors": errors, "job_id": job.id, "device": QBRAID_DEVICE, "shots": shots}
+    return sifted, errors
+
+
+def run_on_qbraid(engine: str, qc, shots: int) -> tuple:
+    import os
+    from qbraid.runtime import QbraidProvider
+
+    if not os.environ.get("QBRAID_API_KEY"):
+        raise RuntimeError("QBRAID_API_KEY is not set for the server")
+    device_id, _, _, options, _ = QBRAID_DEVICES[engine]
+    device = QbraidProvider().get_device(device_id)
+    job = device.run(qc, shots=shots, **({"runtime_options": options} if options else {}))
+    return job.result().data.get_counts(), job.id, device_id
+
+
+def make_qbraid_engine(engine: str):
+    def run_engine(p: float, f: float, rounds: int, seed: int) -> dict:
+        _, k, shots, _, _ = QBRAID_DEVICES[engine]
+        bits, bases, eve_bases = coin_rounds(np.random.default_rng(seed), k)
+        counts, job_id, device_id = run_on_qbraid(engine, bb84_coin_circuit(p, f, bits, bases, eve_bases), shots)
+        sifted, errors = count_errors(counts, bits)
+        return {"sifted": sifted, "errors": errors, "job_id": job_id, "device": device_id, "shots": shots}
+
+    return run_engine
+
+
+run_qbraid = make_qbraid_engine("qbraid")
 
 
 # --- The team's own notebook 1 code -----------------------------------------------------------------------
 # Runs encode() and measure() from 1_bb84_eavesdropper.ipynb as written by the team, with Eve exactly as the
 # notebook's TODO describes (measure in a random basis, re-encode). Fiber noise is added by flipping Bob's result
 # with probability p, which gives the same error statistics on sifted rounds.
-def run_notebook1(p: float, f: float, rounds: int, seed: int) -> dict:
+def load_notebook1(seed: int) -> tuple:
+    """The team's notebook 1 functions: encode() and measure() (cells 3-4) and, for cloud runs, qber_from_counts()
+    (cell 8, functions only). While encode() still has its TODO, it is completed exactly as the TODO comment says
+    ("if bit == 1, apply X. If basis == 1 (X basis), apply H.") and the result says so."""
+    import ast
     import json
     import os
+
     nb_path = pathlib.Path(os.environ.get("GRIDTWIN_NOTEBOOK1") or pathlib.Path(__file__).resolve().parents[2] / "1_bb84_eavesdropper.ipynb")
     nb = json.loads(nb_path.read_text())
     src = lambda i: "".join(nb["cells"][i]["source"])
     from qiskit import QuantumCircuit, transpile
     from qiskit_aer import AerSimulator
+
     ns = {"np": np, "QuantumCircuit": QuantumCircuit, "transpile": transpile, "sim": AerSimulator(seed_simulator=seed), "AerSimulator": AerSimulator}
-    exec(src(3) + "\n" + src(4), ns)  # the team's encode() and measure()
-    rng = np.random.default_rng(seed)
+    exec(src(3) + "\n" + src(4), ns)
+    cell8 = ast.parse(src(8))
+    cell8.body = [n for n in cell8.body if isinstance(n, ast.FunctionDef)]  # defs only: the cell also runs a demo
+    exec(compile(cell8, "notebook1_cell8", "exec"), ns)
+    note = None
     try:
         ns["encode"](0, 0)
     except NotImplementedError:
-        raise RuntimeError("notebook 1 is not finished: encode() still has its TODO") from None
+        def encode(bit, basis):
+            qc = QuantumCircuit(1, 1)
+            if bit == 1:
+                qc.x(0)
+            if basis == 1:
+                qc.h(0)
+            return qc
+
+        ns["encode"] = encode
+        note = "notebook 1's encode() still has its TODO: completed here exactly as its TODO comment says"
+    return ns, note
+
+
+def run_notebook1(p: float, f: float, rounds: int, seed: int) -> dict:
+    """Notebook 1's own encode() and measure() on Qiskit Aer, with Eve exactly as the notebook's TODO describes
+    (measure in a random basis, re-encode). Fiber noise flips Bob's result with probability p."""
+    ns, note = load_notebook1(seed)
+    rng = np.random.default_rng(seed)
     sifted = errors = 0
     for _ in range(min(rounds, 600)):
         bit, basis, bob_basis = (int(x) for x in rng.integers(0, 2, 3))
@@ -315,22 +389,80 @@ def run_notebook1(p: float, f: float, rounds: int, seed: int) -> dict:
         if basis == bob_basis:
             sifted += 1
             errors += int(bob != bit)
-    return {"sifted": sifted, "errors": errors}
+    out = {"sifted": sifted, "errors": errors}
+    if note:
+        out["note"] = note
+    return out
 
 
-ENGINES = {"qiskit": run_qiskit, "cudaq": run_cudaq, "guppy": run_guppy, "qbraid": run_qbraid, "notebook1": run_notebook1}
-LABELS = {"qiskit": "Qiskit Aer", "cudaq": "NVIDIA CUDA-Q", "guppy": "Quantinuum Guppy (Selene)", "qbraid": "qBraid · IonQ simulator (cloud)", "notebook1": "Team notebook 1 (Qiskit)"}
+QBRAID_DEVICES["notebook1-qbraid"] = ("qbraid:qbraid:sim:qir-sv", 6, 2000, None, "Team notebook 1 on qBraid · QIR simulator")
+
+
+def run_notebook1_qbraid(p: float, f: float, rounds: int, seed: int) -> dict:
+    """Notebook 1's own batch hardware path on qBraid: the team's encode() builds every photon, the circuit runs on
+    qBraid's QIR simulator (the free simulator the notebook itself suggests), and the team's qber_from_counts() scores
+    it. Added to the notebook's batch circuit: the fiber's tap and noise, as coin qubits inside the circuit."""
+    ns, note = load_notebook1(seed)
+    _, k, shots, _, _ = QBRAID_DEVICES["notebook1-qbraid"]
+    bits, bases, eve_bases = coin_rounds(np.random.default_rng(seed), k)
+    qc = bb84_coin_circuit(p, f, bits, bases, eve_bases, encode=ns["encode"])
+    counts, job_id, device_id = run_on_qbraid("notebook1-qbraid", qc, shots)
+    # The notebook's scorer expects one classical bit per round (round r = character -(r+1)). Some backends report
+    # every qubit; keep just the rounds' bits.
+    norm = {}
+    for key, c in counts.items():
+        key = key.replace(" ", "")
+        key = key[-k:]
+        norm[key] = norm.get(key, 0) + c
+    counts = norm
+    q = ns["qber_from_counts"](counts, [int(b) for b in bits], [int(b) for b in bases], [int(b) for b in bases])  # the team's scoring
+    sifted = shots * k
+    out = {"sifted": sifted, "errors": round(q * sifted), "job_id": job_id, "device": device_id, "shots": shots}
+    if note:
+        out["note"] = note
+    return out
+
+
+ENGINES = {
+    "qiskit": run_qiskit,
+    "cudaq": run_cudaq,
+    "guppy": run_guppy,
+    "notebook1": run_notebook1,
+    "qbraid": run_qbraid,
+    "qbraid-qir": make_qbraid_engine("qbraid-qir"),
+    "notebook1-qbraid": run_notebook1_qbraid,
+    "qbraid-gpu": make_qbraid_engine("qbraid-gpu"),
+}
+LABELS = {
+    "qiskit": "Qiskit Aer",
+    "cudaq": "NVIDIA CUDA-Q",
+    "guppy": "Quantinuum Guppy (Selene)",
+    "notebook1": "Team notebook 1 (Qiskit Aer)",
+    **{e: v[4] for e, v in QBRAID_DEVICES.items()},
+}
+NEEDS = {"qiskit": "qiskit_aer", "cudaq": "cudaq", "guppy": "guppylang", "notebook1": "qiskit_aer", "qbraid": "qbraid", "qbraid-qir": "qbraid", "notebook1-qbraid": "qbraid", "qbraid-gpu": "qbraid"}
 
 
 def available() -> dict:
-    out = {}
+    """Engines this machine can run. qBraid ones need QBRAID_API_KEY; the GPU one spends qBraid credits
+    (5 per minute), so it is offered only when GRIDTWIN_ALLOW_PAID=1."""
     import os
-    for name, module in (("qiskit", "qiskit_aer"), ("cudaq", "cudaq"), ("guppy", "guppylang"), ("qbraid", "qbraid"), ("notebook1", "qiskit_aer")):
+
+    out = {}
+    for name in ENGINES:
         try:
-            importlib.import_module(module)
+            importlib.import_module(NEEDS[name])
         except Exception:
             continue
-        if name == "qbraid" and not os.environ.get("QBRAID_API_KEY"):
+        if name.startswith("qbraid") or name == "notebook1-qbraid":
+            if not os.environ.get("QBRAID_API_KEY"):
+                continue
+        if name == "notebook1-qbraid":
+            try:
+                importlib.import_module("qiskit_aer")
+            except Exception:
+                continue
+        if name == "qbraid-gpu" and os.environ.get("GRIDTWIN_ALLOW_PAID") != "1":
             continue
         out[name] = LABELS[name]
     return out

@@ -130,3 +130,58 @@ Driven by the mentor recordings (see `docs/MENTOR_NOTES.md`).
   - Tennessee view: all 38 fibers healthy at rest.
   - The gate at 800 × 700.
 - Tests: 26 passing.
+
+## qBraid simulators and notebook 1 on qBraid
+
+User request: "integrate qbraid simulators and notebook 1 qbraid".
+
+**New engines** (all in `sim/engines.py`; buttons appear in a fiber's inspector when the page is served by `start.py` with `QBRAID_API_KEY` set):
+
+| Engine | What it runs |
+|---|---|
+| **qBraid · QIR simulator** | Free, noise-free, 6 BB84 rounds per circuit, 2,000 shots |
+| **Team notebook 1 on qBraid · QIR simulator** | Notebook 1's own `encode()` builds every photon. Its batch circuit runs on qBraid with the fiber's tap and noise added as coin qubits, and its own `qber_from_counts()` scores the result |
+| **qBraid · GPU state-vector simulator** | 35 qubits, 5 credits a minute. Wired in but **off** unless `GRIDTWIN_ALLOW_PAID=1`; not run yet |
+
+**Notebook 1's unfinished TODO:** `encode()` still has its TODO, so the notebook engines complete it exactly as the TODO comment says. Every result carries a note saying so, and the notebook file is not edited.
+
+**Measured** (p = 3.3%, seed 23):
+
+| Engine | No tap (theory 3.30%) | 40% tap (theory 12.64%) | Full tap (theory 26.65%) |
+|---|---|---|---|
+| qBraid QIR simulator | 3.11% | 12.96% | 26.75% |
+| Notebook 1 on qBraid QIR | 3.43% | 12.86% | 26.63% |
+| qBraid IonQ simulator | 3.30% | 12.55% | 26.60% |
+
+Every QIR result is within 1.2σ of theory. Job IDs are logged by the server; the IonQ 40% run is `ionq:ionq:sim:simulator-a7ae-qjob-6af89d21c8f5265fb3f1dcf7`.
+
+**Bugs found and fixed:**
+- **Bit order:** qBraid's QIR simulator reports classical bits, padded, while IonQ reports every qubit. Each photon now sits on qubit r and classical bit r, so both formats read the same.
+- **Eve's basis:** with an odd number of rounds per circuit, Eve's basis could not match Alice's exactly half the time. It now matches on exactly half.
+- **IonQ dropping outcomes:** IonQ's simulator returns probabilities and leaves out rare outcomes on big circuits. With 24 qubits, a 40% tap read 6.6% (6σ low). It now runs 2 rounds (8 qubits) per circuit.
+
+**Correction:** our earlier "qBraid IonQ simulator 12.17%" came from the 24-qubit version and is replaced by 12.55% above.
+
+## One project: shared design, honest teammate pages
+
+User request: fix the teammates' pages and "make sure everything is like 1 thing".
+
+- **Shared design system and top bar** (`site/qrypt.css`, `site/qbar.js`) on every page:
+  - The bar links Home, Live grid, Real map, Quantum lab and Pitch deck.
+  - Light is the default; the light/dark choice is shared and announced to the 3D grid.
+- **Home page** (`index.html` at the repo root): what the project is, key numbers, the four pages, and how to run it.
+- **Real map** (`chattanooga_quantum_map.html`), rebuilt on the same real data as the 3D grid (Chattanooga and Tennessee 500 kV, from `data/networks/*.js`):
+  - Uses the same BB84 formulas, with a "what a tap would do" slider.
+  - Every fiber and site opens in the live grid (`?select=`).
+  - Removed: unsourced cost figures and invented sites.
+  - Basemap: OpenStreetMap tiles, because CARTO's now require an API key.
+- **Quantum lab** (`threejs_quantum_grid.html`): replaces the canned numbers with real in-browser computation.
+  - **Teleportation:** a 3-qubit state-vector simulation over a real Chattanooga route, with per-fiber error composition. Default route Oglethorpe → JC Edwards → T6 → Hamilton: 9.27% end to end, fidelity 90.7%.
+  - **BB84:** a Monte Carlo of 20,000 photons, matching theory to within the error bar.
+  - **Grover:** exact probabilities.
+  - **Measured results shown:** simulators, emulators and Rigetti hardware.
+  - **Removed claims:** IonQ Forte 98.5%, NERC CIP-014, under-16 ms breaker trips, the fake AI/GraphQL tab, invented Guppy syntax.
+  - **3D:** two Bloch spheres.
+- **Pitch deck** (`presentation_deck.html`): five honest slides in the shared style; team names left as placeholders.
+- **2D monitor** (`interactive_grid_monitor.html`): the same physics and policy as the grid, marked as the first prototype.
+- **Server:** `start.py` and `live_server.py` serve the repo root.

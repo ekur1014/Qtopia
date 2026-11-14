@@ -3,407 +3,450 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EPB Quantum Grid · 5-Slide Pitch Deck</title>
+  <title>Qrypt · Pitch Deck</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="site/qrypt.css" />
+  <script src="site/qbar.js" data-page="deck" data-root="./"></script>
   <style>
-    :root {
-      --bg: #070a13;
-      --slide-bg: #0b1120;
-      --card-bg: rgba(15, 23, 42, 0.85);
-      --border: rgba(255, 255, 255, 0.12);
-      --accent-cyan: #00f2fe;
-      --accent-blue: #38bdf8;
-      --secure-green: #10b981;
-      --warn-yellow: #f59e0b;
-      --danger-red: #ef4444;
-      --purple-teleport: #c084fc;
-      --text: #f8fafc;
-      --text-dim: #94a3b8;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; width: 100vw; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-
-    /* Top HUD Bar */
-    .top-bar {
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      padding: 14px 28px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: rgba(7, 10, 19, 0.95);
-      border-bottom: 1px solid var(--border);
-      z-index: 50;
-    }
-    .badge {
-      background: linear-gradient(135deg, #0284c7, #00f2fe);
-      color: #000;
-      font-weight: 800;
-      font-size: 11px;
-      padding: 4px 10px;
-      border-radius: 4px;
-      letter-spacing: 0.05em;
-    }
-    .brand-title { font-size: 15px; font-weight: 700; color: #fff; margin-left: 10px; }
-    .slide-counter { font-size: 13px; font-weight: 700; color: var(--accent-cyan); font-family: var(--font-mono); }
-
-    /* Main Slide Presentation Stage (16:9 Aspect Ratio) */
-    .stage {
-      position: relative;
-      width: 92vw;
-      max-width: 1200px;
-      height: 75vh;
-      max-height: 675px;
-      background: var(--slide-bg);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 242, 254, 0.08);
+    /* Deck layout. Every color, font and shadow comes from the shared tokens in site/qrypt.css,
+       so the deck follows the same light (default) and dark themes as the rest of the project. */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: var(--q-bg);
+      color: var(--q-ink);
+      font-family: var(--q-font);
+      -webkit-font-smoothing: antialiased;
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      padding: calc(var(--q-bar-h) + 14px) 24px 14px;
+      gap: 12px;
     }
 
-    /* Individual Slide */
+    /* Strip above the slide: event label and slide counter */
+    .deck-strip {
+      width: 100%;
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      font-family: var(--q-mono);
+      font-size: 12px;
+      letter-spacing: .2em;
+      text-transform: uppercase;
+      color: var(--q-ink-faint);
+    }
+    .slide-counter { color: var(--q-ok); font-weight: 600; white-space: nowrap; }
+
+    /* Stage: a 16:9 white card that scales with the window */
+    .stage-wrap { flex: 1; min-height: 0; display: grid; place-items: center; }
+    .stage {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      width: min(100%, 1600px, calc((100vh - var(--q-bar-h) - 140px) * 16 / 9));
+      background: var(--q-surface);
+      border: 1px solid var(--q-line);
+      border-radius: 20px;
+      box-shadow: var(--q-shadow);
+      overflow: hidden;
+      display: flex;
+      container-type: inline-size;
+    }
+
+    /* Type scale: px fallback, slide-relative units where supported (projector friendly) */
+    .slide {
+      --pad: 56px;
+      --fs-tag: 14px;
+      --fs-title: 46px;
+      --fs-line: 26px;
+      --fs-hero: 104px;
+      --fs-big: 56px;
+      --fs-label: 15px;
+      --fs-foot: 14px;
+      --gap: 28px;
+    }
+    @supports (container-type: inline-size) {
+      .slide {
+        --pad: 5cqw;
+        --fs-tag: 1.15cqw;
+        --fs-title: 4.1cqw;
+        --fs-line: 2.4cqw;
+        --fs-hero: 9cqw;
+        --fs-big: 5.2cqw;
+        --fs-label: 1.3cqw;
+        --fs-foot: 1.15cqw;
+        --gap: 2.4cqw;
+      }
+    }
+
     .slide {
       display: none;
       flex: 1;
-      padding: 40px 48px;
       flex-direction: column;
-      justify-content: space-between;
-      animation: fadeIn 0.3s ease-in-out;
+      padding: var(--pad);
+      gap: var(--gap);
+      animation: fadeIn .3s ease-in-out;
     }
     .slide.active { display: flex; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) { .slide { animation: none; } }
 
-    /* Slide Header */
-    .slide-header { margin-bottom: 20px; }
     .slide-tag {
-      font-size: 12px;
-      font-weight: 800;
+      font-family: var(--q-mono);
+      font-size: var(--fs-tag);
+      font-weight: 600;
+      letter-spacing: .24em;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--accent-cyan);
-      margin-bottom: 6px;
+      color: var(--q-ok);
+      margin-bottom: calc(var(--gap) * .5);
     }
-    .slide-title { font-size: 32px; font-weight: 800; color: #fff; line-height: 1.2; text-shadow: 0 0 20px rgba(255,255,255,0.1); }
-    .slide-subtitle { font-size: 16px; color: var(--text-dim); margin-top: 6px; line-height: 1.4; }
-
-    /* Grid Layouts for Slide Content */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; flex: 1; align-items: stretch; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; flex: 1; align-items: stretch; }
-
-    /* Cards inside slides */
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
+    .slide-title {
+      font-size: var(--fs-title);
+      font-weight: 600;
+      line-height: 1.08;
+      letter-spacing: -0.025em;
+      color: var(--q-ink);
+      max-width: 30ch;
     }
-    .card-title {
-      font-size: 13px;
-      font-weight: 700;
+    .slide-body { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: var(--gap); }
+    .slide-foot {
+      font-family: var(--q-mono);
+      font-size: var(--fs-foot);
+      letter-spacing: .08em;
+      color: var(--q-ink-faint);
+      border-top: 1px solid var(--q-line);
+      padding-top: calc(var(--gap) * .6);
+    }
+
+    /* Hero number + short lines, side by side */
+    .split { display: grid; grid-template-columns: 1fr 1.25fr; gap: calc(var(--gap) * 2); align-items: center; }
+    .hero-num { font-size: var(--fs-hero); font-weight: 600; line-height: .95; letter-spacing: -0.04em; color: var(--q-ok); }
+    .hero-num small { font-size: .38em; letter-spacing: -0.01em; margin-left: .15em; color: var(--q-ink-dim); }
+    .label {
+      font-family: var(--q-mono);
+      font-size: var(--fs-label);
+      letter-spacing: .16em;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--accent-blue);
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    .hero-stat { font-size: 42px; font-weight: 900; line-height: 1; margin: 8px 0; }
-    .stat-desc { font-size: 13px; color: var(--text-dim); line-height: 1.4; }
-
-    .bullet-list { list-style: none; margin-top: 8px; }
-    .bullet-list li {
-      font-size: 14px;
-      color: var(--text);
+      color: var(--q-ink-dim);
+      margin-top: calc(var(--gap) * .45);
       line-height: 1.5;
-      margin-bottom: 10px;
-      position: relative;
-      padding-left: 20px;
-    }
-    .bullet-list li::before {
-      content: "▹";
-      position: absolute;
-      left: 0;
-      color: var(--accent-cyan);
-      font-weight: 900;
     }
 
-    /* Bottom Controls */
-    .nav-controls {
-      position: absolute;
-      bottom: 20px;
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      z-index: 50;
+    .lines { list-style: none; display: flex; flex-direction: column; gap: calc(var(--gap) * .7); }
+    .lines li {
+      font-size: var(--fs-line);
+      line-height: 1.25;
+      color: var(--q-ink-dim);
+      padding-left: 1em;
+      position: relative;
     }
-    .btn-nav {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 10px 22px;
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 13px;
-      cursor: pointer;
+    .lines li::before {
+      content: "";
+      position: absolute;
+      left: 0; top: .5em;
+      width: .38em; height: .38em;
+      border-radius: 999px;
+      background: var(--q-ok);
+    }
+    .lines b { color: var(--q-ink); font-weight: 600; }
+    .aside { font-family: var(--q-mono); font-size: .62em; letter-spacing: .02em; color: var(--q-ink-faint); white-space: nowrap; }
+
+    /* Numbered lines (slide 5) */
+    .lines--num { counter-reset: n; gap: calc(var(--gap) * .55); }
+    .lines--num li { counter-increment: n; padding-left: 2.1em; }
+    .lines--num li::before {
+      content: counter(n, decimal-leading-zero);
+      top: .3em; width: auto; height: auto; border-radius: 0; background: none;
+      font-family: var(--q-mono); font-size: .6em; font-weight: 600; letter-spacing: .08em; color: var(--q-ok);
+    }
+
+    /* Stat cards (slide 3) */
+    .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); }
+    .card {
+      background: var(--q-tint);
+      border: 1px solid var(--q-line);
+      border-radius: 16px;
+      padding: calc(var(--gap) * .9) var(--gap);
+      border-top: 3px solid var(--accent, var(--q-ink));
+    }
+    .card .big { font-size: var(--fs-big); font-weight: 600; line-height: 1; letter-spacing: -0.03em; color: var(--accent, var(--q-ink)); }
+    .card .label { margin-top: calc(var(--gap) * .5); }
+    .c-ink { --accent: var(--q-ink); }
+    .c-ok { --accent: var(--q-ok); }
+    .c-pqc { --accent: var(--q-pqc); }
+
+    /* Alarm flow chips (slide 3) */
+    .flow { display: flex; flex-wrap: wrap; align-items: center; gap: calc(var(--gap) * .4); }
+    .chip {
+      font-size: calc(var(--fs-line) * .78);
+      font-weight: 500;
+      padding: .38em .85em;
+      border-radius: 999px;
+      color: var(--tone, var(--q-ink));
+      background: color-mix(in srgb, var(--tone, var(--q-ink)) 11%, transparent);
+      border: 1px solid color-mix(in srgb, var(--tone, var(--q-ink)) 28%, transparent);
+      white-space: nowrap;
+    }
+    .chip b { font-family: var(--q-mono); font-weight: 600; }
+    .arrow { color: var(--q-ink-faint); font-size: calc(var(--fs-line) * .8); }
+    .t-bad { --tone: var(--q-bad); }
+    .t-pqc { --tone: var(--q-pqc); }
+    .t-ok { --tone: var(--q-ok); }
+    .t-ink { --tone: var(--q-ink); }
+
+    /* Team (slide 4) */
+    .team { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); }
+    .member {
+      border: 1px dashed var(--q-line);
+      border-radius: 16px;
+      padding: var(--gap);
+      background: var(--q-tint);
+    }
+    .member .name { font-size: var(--fs-big); font-weight: 600; letter-spacing: -0.02em; line-height: 1.05; color: var(--q-ink); }
+
+    /* Next steps row (slide 5) */
+    .next { display: flex; flex-wrap: wrap; align-items: center; gap: calc(var(--gap) * .4); }
+    .next .label { margin: 0 calc(var(--gap) * .3) 0 0; color: var(--q-ok); }
+
+    /* Bottom controls */
+    .nav-controls {
       display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      align-items: center;
+    }
+    .btn-nav, .btn-notes {
+      font-family: var(--q-font);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 9px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--q-line);
+      background: var(--q-surface);
+      color: var(--q-ink);
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
       align-items: center;
       gap: 8px;
-      transition: all 0.2s;
+      transition: background .2s ease, color .2s ease, border-color .2s ease;
     }
-    .btn-nav:hover { background: var(--accent-cyan); color: #000; border-color: var(--accent-cyan); box-shadow: 0 0 15px rgba(0,242,254,0.4); }
-    .btn-notes {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-      color: var(--text-dim);
-      padding: 10px 16px;
-      border-radius: 8px;
-      font-size: 12px;
-      cursor: pointer;
-    }
-    .btn-notes:hover { color: #fff; border-color: #fff; }
+    .btn-nav:hover { background: var(--q-ink); color: var(--q-surface); border-color: var(--q-ink); }
+    .btn-notes { color: var(--q-ink-dim); background: transparent; font-family: var(--q-mono); font-size: 12px; letter-spacing: .06em; }
+    .btn-notes:hover { color: var(--q-ink); background: var(--q-tint-2); }
+    .btn-live { background: var(--q-ok); border-color: var(--q-ok); color: var(--q-surface); font-weight: 600; }
+    .btn-live:hover { background: var(--q-ink); border-color: var(--q-ink); }
+    button:focus-visible, a:focus-visible { outline: 2px solid var(--q-ok); outline-offset: 2px; }
 
-    /* Speaker Notes Drawer */
+    /* Speaker notes drawer */
     #speaker-notes {
-      position: absolute;
-      bottom: 75px;
-      width: 92vw;
-      max-width: 1200px;
-      background: rgba(3, 7, 18, 0.95);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--accent-cyan);
-      border-radius: 12px;
+      position: fixed;
+      left: 50%;
+      bottom: 70px;
+      transform: translateX(-50%);
+      width: min(1200px, calc(100vw - 32px));
+      max-height: 45vh;
+      overflow-y: auto;
+      background: var(--q-glass-strong);
+      backdrop-filter: blur(16px) saturate(140%);
+      -webkit-backdrop-filter: blur(16px) saturate(140%);
+      border: 1px solid var(--q-line);
+      border-left: 4px solid var(--q-ok);
+      border-radius: 14px;
       padding: 18px 24px;
       z-index: 60;
       display: none;
-      box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      box-shadow: var(--q-shadow);
     }
     #speaker-notes.active { display: block; }
-    .notes-title { font-size: 11px; font-weight: 800; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
-    .notes-text { font-size: 14px; color: #cbd5e1; line-height: 1.5; }
+    .notes-title { font-family: var(--q-mono); font-size: 11px; font-weight: 600; color: var(--q-ok); text-transform: uppercase; letter-spacing: .2em; margin-bottom: 8px; }
+    .notes-text { font-size: 18px; color: var(--q-ink); line-height: 1.55; }
 
-    /* Pill Badges */
-    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; margin-right: 6px; }
-    .pill-green { background: rgba(16, 185, 129, 0.15); color: var(--secure-green); border: 1px solid var(--secure-green); }
-    .pill-purple { background: rgba(192, 132, 252, 0.15); color: var(--purple-teleport); border: 1px solid var(--purple-teleport); }
-    .pill-blue { background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); border: 1px solid var(--accent-blue); }
+    /* Phones and narrow windows: drop the fixed 16:9 frame and let the page scroll */
+    @media (max-width: 760px) {
+      body { overflow: auto; height: auto; min-height: 100%; padding: calc(var(--q-bar-h) + 12px) 16px 16px; }
+      .deck-strip { font-size: 10px; letter-spacing: .12em; }
+      .stage-wrap { display: block; flex: none; }
+      .stage { aspect-ratio: auto; width: 100%; }
+      .slide {
+        --pad: 22px; --fs-tag: 11px; --fs-title: 28px; --fs-line: 18px; --fs-hero: 64px;
+        --fs-big: 34px; --fs-label: 11px; --fs-foot: 11px; --gap: 18px;
+      }
+      .split, .cards, .team { grid-template-columns: 1fr; }
+      .chip, .aside { white-space: normal; }
+      #speaker-notes { bottom: 12px; }
+      .notes-text { font-size: 15px; }
+    }
   </style>
 </head>
 <body>
 
-  <!-- Top Status Bar -->
-  <div class="top-bar">
-    <div style="display: flex; align-items: center;">
-      <span class="badge">EPB CHATTANOOGA</span>
-      <span class="brand-title">Tennessee Quantum Hackathon · Track 1: Secure the Grid</span>
-    </div>
-    <div class="slide-counter" id="slide-num">SLIDE 1 OF 5</div>
+  <!-- Event label and slide counter (the Qrypt top bar above is injected by site/qbar.js) -->
+  <div class="deck-strip">
+    <span>Tennessee Quantum Hackathon · Secure the Grid</span>
+    <span class="slide-counter" id="slide-num">SLIDE 1 OF 5</span>
   </div>
 
   <!-- Main Slide Container -->
+  <div class="stage-wrap">
   <div class="stage">
 
     <!-- SLIDE 1: THE PROBLEM -->
-    <div class="slide active" id="slide-1">
-      <div class="slide-header">
-        <div class="slide-tag">SLIDE 1 · PROBLEM CONTEXT</div>
-        <div class="slide-title">Power Grid Assets Last 40 Years. Public Key Encryption Does Not.</div>
-        <div class="slide-subtitle">Why utility operational technology (OT) is uniquely vulnerable to the quantum transition.</div>
-      </div>
-
-      <div class="grid-2">
-        <div class="card" style="border-color: rgba(239, 68, 68, 0.3);">
-          <div class="card-title" style="color: var(--danger-red);">The 40-Year SCADA Mismatch</div>
-          <div class="hero-stat" style="color: var(--danger-red);">40 Years</div>
-          <div class="stat-desc">Operational lifespan of high-voltage transformers and substation switchgear installed today.</div>
-          <ul class="bullet-list" style="margin-top: 14px;">
-            <li><strong>Classical Expiration:</strong> RSA-2048 and ECC will fall to quantum computers decades before grid assets are decommissioned.</li>
-            <li><strong>Harvest Now, Decrypt Later (HNDL):</strong> Adversaries are capturing encrypted SCADA telemetry off optical lines today to forge control commands tomorrow.</li>
-          </ul>
+    <section class="slide active" id="slide-1" aria-label="Slide 1: The Problem">
+      <header>
+        <div class="slide-tag">01 · The Problem</div>
+        <h2 class="slide-title">Grid devices outlive today's encryption.</h2>
+      </header>
+      <div class="slide-body split">
+        <div>
+          <div class="hero-num">20–30<small>yrs</small></div>
+          <div class="label">Relay &amp; RTU service life</div>
         </div>
-
-        <div class="card">
-          <div class="card-title" style="color: var(--accent-cyan);">IT vs. OT: The High-Stakes Reality</div>
-          <ul class="bullet-list" style="margin-top: 8px;">
-            <li><strong>Enterprise IT Breach:</strong> Leaked credit cards, passwords, or emails (expensive, but recoverable).</li>
-            <li><strong>Electric Grid (OT) Breach:</strong> Unauthenticated breaker tripping, physical transformer destruction, and cascading regional blackouts.</li>
-            <li><strong>The Requirement:</strong> An unforgeable, tamper-evident cryptographic foundation that protects physical infrastructure for the next 40 years.</li>
-          </ul>
-        </div>
+        <ul class="lines">
+          <li>Harvest now, <b>decrypt later</b></li>
+          <li>Forge later: <b>firmware signatures</b></li>
+          <li><b>RSA-2048</b>: under 1M noisy qubits</li>
+        </ul>
       </div>
-    </div>
+      <div class="slide-foot">Gidney 2025 · largest machine we reached: 107 qubits · ~4 orders of magnitude short</div>
+    </section>
 
-    <!-- SLIDE 2: ASSUMPTIONS & BOUNDARY LINE -->
-    <div class="slide" id="slide-2">
-      <div class="slide-header">
-        <div class="slide-tag">SLIDE 2 · ARCHITECTURAL BOUNDARY &amp; ASSUMPTIONS</div>
-        <div class="slide-title">Pragmatic Deployment: Where Quantum Belongs (and Where It Doesn't)</div>
-        <div class="slide-subtitle">Building physical encryption tools for utility cybersecurity engineers, not generic software.</div>
-      </div>
-
-      <div class="grid-2">
-        <div class="card" style="border-color: rgba(0, 242, 254, 0.3);">
-          <div class="card-title" style="color: var(--accent-cyan);">The Hard Boundary Line</div>
-          <ul class="bullet-list">
-            <li><strong>Toolmakers for Cyber:</strong> We provide the tamper-evident key distribution foundation for utility CISOs and SCADA architects.</li>
-            <li><strong>Zero QKD to Homes:</strong> Putting \$100k cryogenic single-photon detectors on residential meters is economically absurd.</li>
-            <li><strong>Transmission Backbone Only:</strong> QKD and Teleportation belong strictly on the 161 kV–500 kV Bulk Electric System (Central SCADA, Primary Substations, Chickamauga Dam).</li>
-            <li><strong>Edge Distribution:</strong> Neighborhood reclosers and smart meters run <strong>NIST Post-Quantum Cryptography (ML-KEM-768 / FIPS 203)</strong>.</li>
-          </ul>
+    <!-- SLIDE 2: IDEAL CUSTOMER PROFILE -->
+    <section class="slide" id="slide-2" aria-label="Slide 2: Ideal Customer Profile">
+      <header>
+        <div class="slide-tag">02 · Ideal Customer Profile</div>
+        <h2 class="slide-title">City utilities that own their fiber.</h2>
+      </header>
+      <div class="slide-body split">
+        <div>
+          <div class="hero-num">EPB</div>
+          <div class="label">Chattanooga · the model customer</div>
         </div>
-
-        <div class="card" style="border-color: rgba(192, 132, 252, 0.3);">
-          <div class="card-title" style="color: var(--purple-teleport);">Physical Transport Assumptions</div>
-          <ul class="bullet-list">
-            <li><strong>Metro Scale (<25 km):</strong> EPB reuses existing aerial Optical Ground Wire (OPGW) dark fiber on transmission towers.</li>
-            <li><strong>Regional Scale (>100 km):</strong> Ground fiber suffers 0.2 dB/km attenuation. <strong>Free-Space Optics (LEO Quantum Satellites)</strong> shooting entangled photons through space is the visionary roadmap for multi-state TVA ties.</li>
-          </ul>
-        </div>
+        <ul class="lines">
+          <li><b>100%</b> community fiber network</li>
+          <li><b>EPB Quantum Network</b> · IonQ partner</li>
+          <li>Buyer: <b>engineering &amp; security</b> leads</li>
+        </ul>
       </div>
-    </div>
+      <div class="slide-foot">We build encryption tools security teams use · QKD only at transmission substations</div>
+    </section>
 
-    <!-- SLIDE 3: TECHNICAL SOLUTION & PROOF -->
-    <div class="slide" id="slide-3">
-      <div class="slide-header">
-        <div class="slide-tag">SLIDE 3 · STEP 3 CAPSTONE &amp; HARDWARE PROOF</div>
-        <div class="slide-title">Repeaterless Quantum Teleportation &amp; Real Hardware Verification</div>
-        <div class="slide-subtitle">Eliminating untrusted repeaters under NERC CIP-014 with verified 98.5% fidelity on IonQ Forte.</div>
-      </div>
-
-      <div class="grid-3">
-        <div class="card">
-          <div class="card-title">Eliminating Untrusted Nodes</div>
-          <div class="stat-desc">NERC CIP-014 prohibits exposing decrypted keys in intermediate facilities.</div>
-          <ul class="bullet-list" style="margin-top: 10px;">
-            <li>Classical QKD repeaters decrypt keys into memory every 70 km.</li>
-            <li><strong>Teleportation Link:</strong> Entanglement swapping routes quantum states directly without intermediate measurements.</li>
-          </ul>
-        </div>
-
-        <div class="card" style="border-color: rgba(16, 185, 129, 0.4);">
-          <div class="card-title" style="color: var(--secure-green);">IonQ Forte Cloud Run</div>
-          <div class="hero-stat" style="color: var(--secure-green);">98.5%</div>
-          <div class="stat-desc">Teleportation state fidelity on IonQ Forte QPU simulator (197 of 200 shots).</div>
-          <div style="font-family: var(--font-mono); font-size: 10px; color: var(--accent-cyan); margin-top: 8px; word-break: break-all;">
-            Job ID: ionq:sim:simulator-a7b2-qjob-6af7d3fcf15852ed27b724f1
+    <!-- SLIDE 3: SOLUTION & TECHNOLOGY -->
+    <section class="slide" id="slide-3" aria-label="Slide 3: Solution and Technology">
+      <header>
+        <div class="slide-tag">03 · Solution &amp; Technology</div>
+        <h2 class="slide-title">BB84 on Chattanooga's real grid.</h2>
+      </header>
+      <div class="slide-body">
+        <div class="cards">
+          <div class="card c-ink">
+            <div class="big">117</div>
+            <div class="label">Real substations · 145 lines</div>
+          </div>
+          <div class="card c-ok">
+            <div class="big">BB84</div>
+            <div class="label">34 fibers · 161 kV+</div>
+          </div>
+          <div class="card c-pqc">
+            <div class="big">ML-KEM</div>
+            <div class="label">46 kV · FIPS 203</div>
           </div>
         </div>
-
-        <div class="card" style="border-color: rgba(0, 242, 254, 0.4);">
-          <div class="card-title" style="color: var(--accent-cyan);">Sub-Cycle Breaker Trip</div>
-          <div class="hero-stat" style="color: var(--accent-cyan);">&lt;16 ms</div>
-          <div class="stat-desc">Trip signal authentication within a single 60 Hz AC cycle.</div>
-          <ul class="bullet-list" style="margin-top: 10px;">
-            <li>Pre-shared Bell states allow instant one-time-pad trip authentication.</li>
-            <li>Bypasses slow classical TLS/PQC handshake latency.</li>
-          </ul>
+        <div class="flow" aria-label="What happens when a fiber is tapped">
+          <span class="chip t-bad">Tap: <b>QBER</b> → <b>27%</b></span>
+          <span class="arrow">›</span>
+          <span class="chip t-pqc">Keys → <b>ML-KEM</b></span>
+          <span class="arrow">›</span>
+          <span class="chip t-ok">Link stays up</span>
+          <span class="arrow">›</span>
+          <span class="chip t-ink">Power never cut</span>
         </div>
       </div>
-    </div>
+      <div class="slide-foot">Cross-checked: Qiskit · CUDA-Q · Guppy · qBraid QIR and IonQ simulators · our notebook 1 on qBraid · map data: OpenStreetMap</div>
+    </section>
 
-    <!-- SLIDE 4: DIGITAL TWIN & FAILOVER -->
-    <div class="slide" id="slide-4">
-      <div class="slide-header">
-        <div class="slide-tag">SLIDE 4 · OPERATIONAL VISIBILITY &amp; FAILOVER</div>
-        <div class="slide-title">3D Digital Twin &amp; Physics as an Intrusion Detection Sensor</div>
-        <div class="slide-subtitle">Three.js visualization linked directly to real-time quantum circuit simulation and automated PQC failover.</div>
-      </div>
-
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-title" style="color: var(--accent-blue);">The 3-Tier QBER Defense</div>
-          <ul class="bullet-list">
-            <li><span class="pill pill-green">QBER &lt; 7%</span> <strong>Normal Operations:</strong> Secret key distilled via privacy amplification.</li>
-            <li><span class="pill" style="border-color: var(--warn-yellow); color: var(--warn-yellow);">QBER &ge; 8%</span> <strong>Early Utility Alarm:</strong> Alerts operators to optical line tapping or physical fiber degradation.</li>
-            <li><span class="pill" style="border-color: var(--danger-red); color: var(--danger-red);">QBER &ge; 11%</span> <strong>Shor-Preskill Hard Abort:</strong> Channel terminated instantly. Mutual information drops to zero.</li>
-            <li><strong>Automated Failover:</strong> Seamless migration to <strong>NIST ML-KEM-768</strong> with zero SCADA downtime.</li>
-          </ul>
-        </div>
-
-        <div class="card" style="border-color: rgba(0, 242, 254, 0.3);">
-          <div class="card-title" style="color: var(--accent-cyan);">Interactive Three.js Digital Twin</div>
-          <div class="stat-desc">Built in response to mentor feedback (Landon Shrock).</div>
-          <ul class="bullet-list" style="margin-top: 10px;">
-            <li><strong>Live Code Runs:</strong> Executes real 1024-shot teleportation and BB84 eavesdropping in-browser.</li>
-            <li><strong>CUDA-Q &amp; Quantinuum Guppy:</strong> Mid-circuit dynamic feedforward kernels for 100+ substations.</li>
-            <li><strong>AI / GraphQL:</strong> Natural-language RAG over NERC CIP-005/012/014 standards.</li>
-          </ul>
+    <!-- SLIDE 4: THE TEAM -->
+    <section class="slide" id="slide-4" aria-label="Slide 4: The Team">
+      <header>
+        <div class="slide-tag">04 · The Team</div>
+        <h2 class="slide-title">The team.</h2>
+      </header>
+      <div class="slide-body">
+        <div class="team">
+          <div class="member">
+            <div class="name">[Name]</div>
+            <div class="label">Routing &amp; failover</div>
+          </div>
+          <div class="member">
+            <div class="name">[Name]</div>
+            <div class="label">Architecture &amp; threat model</div>
+          </div>
+          <div class="member">
+            <div class="name">[Name]</div>
+            <div class="label">Quantum circuits &amp; 3D grid</div>
+          </div>
         </div>
       </div>
-    </div>
+      <div class="slide-foot">Qrypt · Tennessee Quantum Grid</div>
+    </section>
 
-    <!-- SLIDE 5: ROADMAP & IMPACT -->
-    <div class="slide" id="slide-5">
-      <div class="slide-header">
-        <div class="slide-tag">SLIDE 5 · ECONOMICS, ROADMAP &amp; TEAMWORK</div>
-        <div class="slide-title">Economics, Scalability &amp; The Future of Grid Security</div>
-        <div class="slide-subtitle">High-assurance transmission protection with practical commercial viability.</div>
-      </div>
-
-      <div class="grid-3">
-        <div class="card">
-          <div class="card-title">Capital Expenditure</div>
-          <div class="hero-stat" style="color: var(--secure-green);">&gt;90%</div>
-          <div class="stat-desc">CapEx savings compared to long-haul dedicated fiber trenching.</div>
-          <ul class="bullet-list" style="margin-top: 8px;">
-            <li>Reuses existing EPB aerial OPGW lines for metro.</li>
-            <li>Satellite teleportation eliminates \$100k/mile ground trenching.</li>
-          </ul>
-        </div>
-
-        <div class="card">
-          <div class="card-title">Technical Roadmap</div>
-          <ul class="bullet-list">
-            <li><strong>Multi-Hop Mesh:</strong> 3-hop entanglement swapping across TVA transmission ties.</li>
-            <li><strong>Guppy HIL Testing:</strong> Real-Time Digital Simulator (RTDS) hardware testing on 500 kV breakers.</li>
-            <li><strong>EPB Pilot:</strong> Commercial deployment on EPB's active quantum fiber loop.</li>
-          </ul>
-        </div>
-
-        <div class="card" style="border-color: rgba(0, 242, 254, 0.4);">
-          <div class="card-title" style="color: var(--accent-cyan);">Integrated Teamwork</div>
-          <ul class="bullet-list">
-            <li><strong>Dynamic Routing:</strong> Multi-path quantum key routing around compromised lines.</li>
-            <li><strong>Architecture &amp; NERC:</strong> CIP-005/012/014 compliance &amp; risk models.</li>
-            <li><strong>Teleportation &amp; 3D:</strong> IonQ Forte hardware execution &amp; 3D digital twin.</li>
-          </ul>
+    <!-- SLIDE 5: WHAT WE LEARNED -->
+    <section class="slide" id="slide-5" aria-label="Slide 5: What We Learned">
+      <header>
+        <div class="slide-tag">05 · What We Learned</div>
+        <h2 class="slide-title">What we learned.</h2>
+      </header>
+      <div class="slide-body">
+        <ul class="lines lines--num">
+          <li>Alarms must <b>never cut power</b></li>
+          <li>City fits fiber. <b>Statewide doesn't.</b> <span class="aside">8 of 38 spans &gt; 80 km</span></li>
+          <li>Noise models <b>≠ real hardware</b> <span class="aside">Rigetti 45% vs 71.5% / 92.5%</span></li>
+          <li>Small taps <b>hide in noise</b></li>
+          <li><b>Key rate</b> under fast attack?</li>
+        </ul>
+        <div class="next">
+          <span class="label">Next</span>
+          <span class="chip t-ink">Sourced cost model</span>
+          <span class="chip t-ink">Teleportation on hardware</span>
+          <span class="chip t-ink">CUDA-Q on GPUs</span>
         </div>
       </div>
-    </div>
+    </section>
 
+  </div>
   </div>
 
   <!-- Bottom Navigation -->
   <div class="nav-controls">
-    <button class="btn-nav" onclick="prevSlide()">&larr; Previous</button>
-    <button class="btn-nav" onclick="nextSlide()">Next Slide &rarr;</button>
-    <button class="btn-notes" onclick="toggleNotes()">[S] Toggle Speaker Notes</button>
-    <a href="threejs_quantum_grid.html" target="_blank" class="btn-nav" style="text-decoration: none; background: rgba(0, 242, 254, 0.15); color: var(--accent-cyan);">Launch 3D Twin &nearr;</a>
+    <button class="btn-nav" type="button" onclick="prevSlide()">&larr; Previous</button>
+    <button class="btn-nav" type="button" onclick="nextSlide()">Next Slide &rarr;</button>
+    <button class="btn-notes" type="button" onclick="toggleNotes()">[S] Toggle Speaker Notes</button>
+    <a href="grid-twin/index.html" target="_blank" rel="noopener" class="btn-nav btn-live">Open the live grid ↗</a>
   </div>
 
-  <!-- Speaker Notes Drawer -->
-  <div id="speaker-notes">
+  <!-- Speaker Notes Drawer (text is filled in by showSlide) -->
+  <div id="speaker-notes" aria-live="polite">
     <div class="notes-title" id="notes-title">SPEAKER SCRIPT · SLIDE 1</div>
-    <div class="notes-text" id="notes-text">
-      "Judges, when a utility like EPB installs a 500 kV transformer, that asset sits on the grid for 30 to 40 years. But classical encryption has an expiration date. Adversaries are executing Harvest Now, Decrypt Later attacks today. In enterprise IT, a breach leaks emails; in the electric grid, a compromised key causes physical transformer explosions and blackouts. We need an unforgeable foundation that outlasts the 40-year life of the grid."
-    </div>
+    <div class="notes-text" id="notes-text"></div>
   </div>
 
   <script>
     let currentSlide = 1;
     const totalSlides = 5;
 
+    // Speaker scripts, about 50-60 seconds each. Detail lives here, not on the slides.
     const speakerNotes = {
-      1: "Judges, when a utility like EPB installs a 500 kV transformer, that asset sits on the grid for 30 to 40 years. But classical encryption has an expiration date. Adversaries are executing Harvest Now, Decrypt Later attacks today. In enterprise IT, a breach leaks emails; in the electric grid, a compromised key causes physical transformer explosions and blackouts. We need an unforgeable foundation that outlasts the 40-year life of the grid.",
-      2: "We want to be clear about our boundary: we build tools for cybersecurity engineers, not generic software. And we are NOT putting QKD into residential homes—that is economically absurd. QKD belongs strictly on the 161 kV+ Bulk Transmission Backbone. For neighborhood feeders, we use NIST Post-Quantum Cryptography (ML-KEM-768). For metro, we reuse EPB aerial fiber; for long-haul across TVA, Free-Space Satellite Optics is our future roadmap.",
-      3: "Traditional QKD hits a wall under NERC CIP-014 because classical repeaters decrypt keys in memory. We implemented Quantum Teleportation (Step 3, Option B), transferring states with zero intermediate exposure. We verified this on real IonQ Forte hardware with 98.5% fidelity (197/200 shots, Job ID logged). Pre-shared entanglement allows sub-cycle (<16 ms) breaker trip authentication, beating classical TLS latency.",
-      4: "Our greatest advantage is physics as an intrusion detector: below 7% QBER is clean; at 8% our utility alarm flags fiber tampering; at 11% (Shor-Preskill limit) the channel aborts instantly with zero mutual information leaked, failing over to NIST ML-KEM-768. We linked this to our live Three.js 3D Digital Twin, incorporating CUDA-Q, Quantinuum Guppy, and AI GraphQL queries based on Landon Shrock's guidance.",
-      5: "By reusing EPB's aerial fiber and planning satellite ties, we save >90% of infrastructure CapEx. Our team brought together dynamic routing, NERC CIP compliance, and hardware-verified teleportation. We deliver future-proof security that guarantees the lights stay on for the next 40 years."
+      1: "Grid devices like protective relays and RTUs are planned for roughly 20 to 30 years of service. The question is whether the encryption on them will hold that long. Two risks follow. Harvest now, decrypt later: someone records traffic today and reads it once the math breaks. That is real for long-lived data. The bigger risk for a grid is forge later: firmware signatures on devices that will still be in the field decades from now. How close is the threat? Gidney's 2025 estimate says breaking RSA-2048 needs under a million noisy qubits. The largest machine we could reach through qBraid has 107. That is about four orders of magnitude away. We did run Shor on real Rigetti hardware: a hand-reduced circuit for 15 put 65 percent of shots on the right answers, against 25 percent for noise.",
+      2: "Our ideal customer is a city-scale utility that already owns its fiber. EPB in Chattanooga is the model: a 100 percent community fiber network, its own EPB Quantum Network, and a partnership with IonQ. The people who decide are the utility's engineering and security leadership. We are not replacing their security team. We build encryption tools that their cybersecurity team uses. Energy is a real market for quantum key distribution, but only at the high-value points: the transmission substations. As our mentors advised, we do not run QKD to neighborhoods or homes. Those links use ML-KEM, the NIST post-quantum standard, FIPS 203. And because grid devices stay in service for 20 to 30 years, what this team picks now has to last.",
+      3: "This is the Tennessee Quantum Grid: a live 3D model of Chattanooga's real grid, built from OpenStreetMap, the data behind OpenInfraMap. It has 117 EPB and TVA substations and 145 lines with their real lengths. BB84 runs live on the 34 transmission fibers, 161 kV and above. The 46 kV lines to distribution substations use ML-KEM. We assume fiber runs along every power line, and we picked Chickamauga and Oglethorpe as the key holders, because control-center locations are not public. A full tap raises a fiber's error rate from about 3 to 5 percent to about 27, and we see it in about a second. The alarm never takes a link down: keys switch to ML-KEM, traffic reroutes, and only an operator can quarantine, which cuts communications, never power. We cross-checked our browser BB84 against Qiskit, CUDA-Q, Guppy and an IonQ simulator: all within about one and a half points of theory.",
+      4: "We are [team names]. [Name] worked on routing and failover: how keys and traffic move around a fiber under attack. [Name] worked on the architecture and the threat model. [Name] built the quantum circuits and the 3D grid. [One plain sentence per person on what they built.] We also want to thank our mentors, including Landon Shrock. They pointed us to the real grid data behind OpenInfraMap, told us to keep QKD off neighborhood lines, and told us to keep satellites as roadmap only.",
+      5: "Five things we learned. First, a QKD alarm must never be able to cut the grid, or an attacker could use the alarm itself as a weapon. Second, Chattanooga's distances are short enough for fiber QKD. Statewide they are not: 8 of the 38 spans on TVA's 500 kV backbone are longer than 80 kilometers, past fiber QKD's reach without trusted relays. Third, noise models disagree with each other and with real hardware: Grover over 8 items found the key 45 percent of the time on Rigetti, against 71.5 and 92.5 percent in two noise models. Fourth, a careful spy who taps only a few percent can hide inside normal noise. Fifth, as our mentors raised, fiber QKD's key rate may not keep up during a fast live attack. Next: a sourced cost model, since we could not find published QKD prices; teleportation on real hardware; and GPU runs with CUDA-Q."
     };
 
     function showSlide(n) {
@@ -433,10 +476,13 @@
     }
 
     window.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
-      else if (e.key === 'ArrowLeft') prevSlide();
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); nextSlide(); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prevSlide(); }
       else if (e.key === 's' || e.key === 'S') toggleNotes();
     });
+
+    showSlide(currentSlide);
   </script>
 </body>
 </html>

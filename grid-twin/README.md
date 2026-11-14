@@ -30,21 +30,20 @@ node grid-twin/tools/build_standalone.mjs
 
 ## Run it by hand
 
-`index.html` uses ES modules, so it needs a local web server (opening `grid-twin/index.html` directly from disk will not work; `grid_twin.html` will).
+`index.html` uses ES modules, so it needs a local web server (opening `grid-twin/index.html` directly from disk will not work; `grid_twin.html` will). Serve the **repo root**, so the shared top bar (`site/`) and the other pages work too:
 
 ```bash
-cd grid-twin
 python3 -m http.server 8000
 ```
 
-Then open http://localhost:8000. Three.js and the fonts load from public CDNs, so you need an internet connection.
+Then open http://localhost:8000 (the project home) or http://localhost:8000/grid-twin/ (the live grid). Three.js and the fonts load from public CDNs, so you need an internet connection.
 
 ### With live quantum frameworks
 
 To re-run any fiber as real quantum code from the page, serve it with the bridge instead (needs Qiskit, CUDA-Q and Guppy installed; see `sim/engines.py`):
 
 ```bash
-python sim/live_server.py 8000
+python grid-twin/sim/live_server.py 8000   # serves the repo root; the grid is at /grid-twin/
 ```
 
 A fiber's inspector then shows **Run this fiber as real quantum code**: Qiskit Aer, NVIDIA CUDA-Q and Quantinuum Guppy on the Selene emulator each run 4,000 photons with that fiber's current noise and tap. Two more engines: **qBraid · IonQ simulator** runs the fiber as a real cloud job on qBraid's free IonQ simulator (needs `QBRAID_API_KEY` in the server's environment, for example `source ~/.qrypt.env` first; about 45 s with the queue), and **Team notebook 1** runs the team's own `encode()` and `measure()` from `1_bb84_eavesdropper.ipynb` (it reports that the notebook is unfinished until its TODOs are filled), and the error rates appear next to the browser's live value and the theory. Example (L11, 40% tap, theory 12.64%): Qiskit 13.52%, CUDA-Q 12.11%, Guppy 11.15%, each on about 2,000 sifted bits (±0.7%).
@@ -128,3 +127,15 @@ grid-twin/
   DESIGN.md               design decisions and the physics behind them
   BUILD_LOG.md            what was built, in order, and how it was verified
 ```
+
+## Part of one project site
+
+Every page shares one design system and one top bar (`site/qrypt.css`, `site/qbar.js`): Home (`index.html`), Live grid (this folder), Real map (`chattanooga_quantum_map.html`), Quantum lab (`threejs_quantum_grid.html`) and Pitch deck (`presentation_deck.html`). The light/dark choice is shared. Other pages link straight to a fiber or site here with `?net=chattanooga&select=link:L6` or `select=node:T23`.
+
+## qBraid engines
+
+With `QBRAID_API_KEY` set (for example `source ~/.qrypt.env` before `start.py`), a fiber's inspector also offers:
+- **qBraid · IonQ simulator** and **qBraid · QIR simulator** (both free cloud simulators).
+- **Team notebook 1 on qBraid · QIR simulator:** notebook 1's own `encode()` and `qber_from_counts()`, with the fiber's tap and noise added.
+
+The GPU state-vector simulator costs credits, so it is offered only with `GRIDTWIN_ALLOW_PAID=1`. Measured results are in BUILD_LOG.md.

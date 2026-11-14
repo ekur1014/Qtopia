@@ -51,7 +51,7 @@ Every control was operated: the four tools, the network and coverage selectors, 
 | Teleportation route | (1 − 2Q_end) = product of (1 − 2Q_i); usable under 11% | Monte Carlo test of the composition |
 | Long fibers | 140 km detects about 537 times fewer photons, so it takes longer to build evidence (S7 shows "Measuring" for several seconds in every-fiber mode) | Browser |
 
-Live engine results for one fiber (p = 3.3%, tap 40%, theory 12.64%): Qiskit Aer 13.52%, CUDA-Q 12.11%, Guppy/Selene 11.15%, qBraid IonQ simulator 12.17% (job `ionq:ionq:sim:simulator-a7ae-qjob-6af88b20c8f5265fb3f1bd9b`). Team notebook 1 code, tested on a scratch copy with `encode()` filled as its hint says: 3.6%, 24.4%, 14.5% for taps of 0%, 100%, 40% (theory 3.3%, 26.7%, 12.6%), all within about 1σ.
+Live engine results for one fiber (p = 3.3%, tap 40%, theory 12.64%): Qiskit Aer 13.52%, CUDA-Q 12.11%, Guppy/Selene 11.15%, qBraid IonQ simulator 12.55% (job `ionq:ionq:sim:simulator-a7ae-qjob-6af89d21c8f5265fb3f1dcf7`; corrected 14 Nov, see BUILD_LOG). Team notebook 1 code, tested on a scratch copy with `encode()` filled as its hint says: 3.6%, 24.4%, 14.5% for taps of 0%, 100%, 40% (theory 3.3%, 26.7%, 12.6%), all within about 1σ.
 
 ## 4. What the team still needs to do
 

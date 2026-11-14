@@ -41,12 +41,12 @@ Saturday 14 November 2026. Source: `Additional Mentor Recordings IMPORTANT/`. It
 | Decoy traffic and rerouting on an alarm | Already built; now automatic when a tap is placed |
 | Teleportation is roadmap | The teleportation view stays an optional layer, not part of the main demo |
 
-## What it means for the teammates' pages
+## What it meant for the teammates' pages
 
-These are not edited, only noted for the team:
+Update: at the user's request these pages were fixed and restyled as part of one project site (see grid-twin/BUILD_LOG.md, "One project"). What we found:
 
 - `chattanooga_quantum_map.html` follows the same OpenInfraMap idea. Some of its sites match real places (the EPB headquarters address), others could not be matched to OpenStreetMap. Its cost figures ($100k per mile, "satellite saves over 90%") have no source.
 - `threejs_quantum_grid.html` shows "IonQ Forte: 98.5% fidelity". The job ID on that page is a simulator job (`ionq:sim:simulator-…`), so "Forte" should not be claimed; we could not match the ID to any run in our logs. Our own IonQ run was also on the simulator.
 - The same page claims teleportation gives breaker trips in under 16 ms. That is not supported: teleportation needs a classical message, so it is never faster than the fiber.
 
-Worth fixing before judges see them.
+All three are corrected now.

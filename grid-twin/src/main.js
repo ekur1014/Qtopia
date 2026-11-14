@@ -599,15 +599,18 @@ async function boot() {
       }
     }
   }
+  // One theme for the whole project: the shared top bar (site/qbar.js) owns it and announces changes.
   function setTheme(theme) {
+    if (window.qrypt) window.qrypt.setTheme(theme); // announces "qrypt:theme", handled below
+    else applyTheme(theme);
+  }
+  function applyTheme(theme) {
     document.documentElement.dataset.theme = theme;
-    try {
-      localStorage.setItem("gridtwin-theme", theme);
-    } catch {}
     scene.setTheme(theme);
     refresh();
     syncDock();
   }
+  window.addEventListener("qrypt:theme", (e) => applyTheme(e.detail === "dark" ? "dark" : "light"));
   function viewAction(v) {
     if (v === "zoom-in") scene.zoom(0.72);
     else if (v === "zoom-out") scene.zoom(1.38);
@@ -679,6 +682,13 @@ async function boot() {
   }
   window.addEventListener("resize", updateInsets);
   updateInsets();
+
+  // Deep links from the other pages: ?select=link:L6 or ?select=node:T23 opens that fiber or site.
+  const deep = params.get("select")?.split(":");
+  if (deep && (deep[0] === "link" ? net.links.has(deep[1]) : deep[0] === "node" && net.nodes.has(deep[1]))) {
+    sim.selected = { type: deep[0], id: deep[1] };
+    scene.setOrbit(false);
+  }
 
   // Start -----------------------------------------------------------------------------------------
   const qkdCount = [...net.links.values()].filter((l) => l.kind === "qkd").length;

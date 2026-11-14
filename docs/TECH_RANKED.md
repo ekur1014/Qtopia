@@ -35,7 +35,7 @@ Ranked by what each adds to **our pitch by Sunday 9 AM**, given the mentors' adv
 
 ### 3. Visualization linked with real-time code runs
 **What it is:** `grid-twin/sim/live_server.py` serves the page and runs a fiber's current noise and tap as real quantum programs.
-**Measured** (one fiber, 40% tap, theory 12.64%): Qiskit 13.52%, CUDA-Q 12.11%, Guppy 11.15%, qBraid IonQ simulator 12.17%.
+**Measured** (one fiber, 40% tap, theory 12.64%): Qiskit 13.52%, CUDA-Q 12.11%, Guppy 11.15%, qBraid IonQ simulator 12.55% (job `ionq:ionq:sim:simulator-a7ae-qjob-6af89d21c8f5265fb3f1dcf7`; corrected 14 Nov, see BUILD_LOG).
 **Further options:** run on the hero's real fibers (it already works for any fiber); add the GPU target below.
 
 ### 4. Make an artifact

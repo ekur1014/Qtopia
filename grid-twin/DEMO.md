@@ -4,7 +4,7 @@ A 60-second live demo for the Solution & Technology slide, plus setup and a back
 
 ## Before you present
 
-1. Start the page: `python3 grid-twin/start.py` (opens the browser), or double-click `grid_twin.html` at the top of the repo. Let the intro flight finish.
+1. Start the page: `source ~/.qrypt.env; python3 grid-twin/start.py` (opens the live grid, with the qBraid buttons), or double-click `grid_twin.html` at the top of the repo. Let the intro flight finish. The top bar switches to the real map, the quantum lab and the deck.
 2. The page opens in the light theme, the easiest to read on a projector. The cinematic orbit turns the view slowly until you touch anything; press **O** to stop it for good, **H** to fit the whole network, **F** to fly close to the selection.
 3. **It needs internet**: Three.js and the fonts load from public CDNs. Test on the venue Wi-Fi. If it is unreliable, have the backup ready (below).
 4. Set the browser to full screen. Close other tabs so the animation stays smooth.

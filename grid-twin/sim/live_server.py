@@ -1,7 +1,7 @@
 """Grid Twin with live quantum frameworks: serves the page and lets it re-run a fiber on Qiskit Aer, NVIDIA CUDA-Q
 or Quantinuum Guppy (Selene), so what is on screen can be checked against real quantum code in real time.
 
-    python sim/live_server.py            # then open http://localhost:8000
+    python sim/live_server.py            # then open http://localhost:8000 (the project home; the grid is /grid-twin/)
     python sim/live_server.py 8137       # another port
 
 API (JSON):
@@ -24,7 +24,7 @@ import traceback
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import engines  # noqa: E402
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent
+ROOT = pathlib.Path(__file__).resolve().parent.parent.parent  # the repo root: home page, map, lab, deck and grid-twin/
 MAX_ROUNDS = 20000
 _lock = threading.Lock()  # the frameworks are not all thread-safe; run one job at a time
 
@@ -43,12 +43,12 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
-        if self.path == "/api/engines":
+        if self.path.split("?")[0].endswith("/api/engines"):  # the grid asks relative to /grid-twin/
             return self._json(200, {"engines": engines.available()})
         return super().do_GET()
 
     def do_POST(self):
-        if self.path != "/api/bb84":
+        if not self.path.split("?")[0].endswith("/api/bb84"):
             return self._json(404, {"error": "not found"})
         try:
             length = int(self.headers.get("Content-Length", "0"))
@@ -80,7 +80,7 @@ def main():
     port = int(sys.argv[1]) if len(sys.argv) > 1 else 8000
     print("frameworks available:", ", ".join(engines.available().values()) or "none")
     server = http.server.ThreadingHTTPServer(("127.0.0.1", port), functools.partial(Handler, directory=str(ROOT)))
-    print(f"Grid Twin live: http://localhost:{port}")
+    print(f"Tennessee Quantum Grid: http://localhost:{port}  (live grid: http://localhost:{port}/grid-twin/)")
     server.serve_forever()
 
 

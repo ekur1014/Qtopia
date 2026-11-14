@@ -1,341 +1,239 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EPB Chattanooga Real-World Quantum Infrastructure & Cost GIS Map</title>
-  <!-- Leaflet CSS & JS -->
+  <title>Real Map · Tennessee Quantum Grid</title>
+  <!-- The real grid on a street map: the same OpenStreetMap substations and lines as the live 3D grid, so every
+       fiber here opens there. Physics: the same BB84 formulas as grid-twin/src/bb84.js. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="site/qrypt.css" />
+  <script src="site/qbar.js" data-page="map" data-root="./"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="grid-twin/data/networks/chattanooga.js"></script>
+  <script src="grid-twin/data/networks/tennessee500.js"></script>
   <style>
-    :root {
-      --bg: #090d16;
-      --card: rgba(15, 23, 42, 0.92);
-      --cyan: #00f2fe;
-      --blue: #38bdf8;
-      --purple: #c084fc;
-      --green: #10b981;
-      --yellow: #f59e0b;
-      --red: #ef4444;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --border: rgba(255, 255, 255, 0.12);
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: var(--bg); color: var(--text); height: 100vh; width: 100vw; display: flex; flex-direction: column; overflow: hidden; }
-
-    header {
-      background: #0f172a;
-      border-bottom: 1px solid var(--border);
-      padding: 12px 24px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      z-index: 1000;
-    }
-    .brand { display: flex; align-items: center; gap: 12px; }
-    .badge { background: linear-gradient(135deg, #0284c7, var(--cyan)); color: #000; font-weight: 800; font-size: 11px; padding: 4px 8px; border-radius: 4px; }
-    h1 { font-size: 17px; font-weight: 700; color: #fff; }
-
-    #main-container { display: flex; flex: 1; position: relative; overflow: hidden; }
-    #map { flex: 1; height: 100%; width: 100%; z-index: 1; }
-
-    /* Floating Left Overlay Stats */
-    .cost-banner {
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      z-index: 1000;
-      background: var(--card);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border);
-      padding: 14px 18px;
-      border-radius: 10px;
-      max-width: 380px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }
-    .cost-title { font-size: 11px; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.05em; }
-    .cost-val { font-size: 26px; font-weight: 800; color: #fff; margin: 4px 0 2px; }
-    .cost-sub { font-size: 12px; color: var(--muted); line-height: 1.4; }
-
-    /* Right Sidebar Control Panel */
-    #panel {
-      width: 400px;
-      background: var(--card);
-      backdrop-filter: blur(16px);
-      border-left: 1px solid var(--border);
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      overflow-y: auto;
-      z-index: 1000;
-      box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-    }
-
-    .card { background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
-    .card-head { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between; }
-    
-    .qber-metric { font-size: 32px; font-weight: 800; }
-    
-    .btn { width: 100%; padding: 10px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; border: none; transition: 0.2s; margin-top: 8px; }
-    .btn-red { background: rgba(239, 68, 68, 0.15); color: var(--red); border: 1px solid var(--red); }
-    .btn-red:hover { background: var(--red); color: #fff; }
-    .btn-blue { background: rgba(0, 242, 254, 0.15); color: var(--cyan); border: 1px solid var(--cyan); }
-    .btn-blue:hover { background: var(--cyan); color: #000; }
-
-    /* Cost Comparison Table */
-    .cost-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
-    .cost-table th, .cost-table td { padding: 6px 4px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
-    .cost-table th { color: var(--muted); font-weight: 600; }
-    .cost-table td:last-child { text-align: right; font-weight: 700; }
-
-    /* Legend */
-    .legend-row { display: flex; align-items: center; gap: 8px; font-size: 11px; margin-bottom: 5px; }
-    .legend-badge { width: 12px; height: 12px; border-radius: 3px; }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body { background: var(--q-bg); color: var(--q-ink); font-family: var(--q-font); -webkit-font-smoothing: antialiased; overflow: hidden; }
+    #app { position: fixed; inset: var(--q-bar-h) 0 0 0; display: grid; grid-template-columns: 1fr 400px; }
+    #map { height: 100%; background: var(--q-bg); }
+    .leaflet-container { font-family: var(--q-font); }
+    .leaflet-tile-pane { filter: grayscale(0.9) contrast(0.9) brightness(1.04); opacity: 0.85; }
+    :root[data-theme="dark"] .leaflet-tile-pane { filter: grayscale(1) invert(1) contrast(0.85) brightness(0.8); opacity: 0.7; }
+    aside { overflow-y: auto; padding: 22px; background: var(--q-glass-strong); border-left: 1px solid var(--q-line); }
+    h1 { margin: 6px 0 6px; font-size: 26px; letter-spacing: -0.02em; line-height: 1.1; }
+    .sub { margin: 0 0 16px; font-size: 13px; line-height: 1.5; color: var(--q-ink-dim); }
+    .seg { display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: var(--q-tint); border: 1px solid var(--q-line); margin-bottom: 16px; }
+    .seg button { flex: 1; padding: 8px 10px; border: 0; border-radius: 999px; background: transparent; color: var(--q-ink-dim); font: 500 13px var(--q-font); cursor: pointer; }
+    .seg button[aria-pressed="true"] { background: var(--q-ink); color: var(--q-surface); }
+    .card { padding: 14px 16px; border-radius: 14px; background: var(--q-surface); border: 1px solid var(--q-line); margin-bottom: 12px; }
+    .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .stat { padding: 12px 14px; border-radius: 12px; background: var(--q-surface); border: 1px solid var(--q-line); }
+    .stat b { display: block; font-size: 24px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+    .stat span { font-size: 11.5px; color: var(--q-ink-dim); }
+    .stat--ok b { color: var(--q-ok); } .stat--pqc b { color: var(--q-pqc); } .stat--warn b { color: var(--q-warn); }
+    .sel-title { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; margin: 4px 0 2px; }
+    .sel-meta { font-size: 12.5px; color: var(--q-ink-dim); margin-bottom: 10px; }
+    dl { display: grid; grid-template-columns: 1fr auto; gap: 7px 12px; margin: 0 0 10px; font-size: 12.5px; }
+    dt { color: var(--q-ink-dim); } dd { margin: 0; text-align: right; font-family: var(--q-mono); font-size: 12px; }
+    .row { display: flex; justify-content: space-between; font-size: 12.5px; margin: 10px 0 6px; }
+    .row b { font-family: var(--q-mono); font-weight: 500; }
+    input[type="range"] { width: 100%; accent-color: var(--q-bad); }
+    .gauge { position: relative; height: 8px; border-radius: 6px; background: var(--q-tint-2); margin: 12px 0 18px; }
+    .gauge__fill { position: absolute; inset: 0 auto 0 0; border-radius: 6px; background: var(--q-ok); transition: width .25s ease, background .25s ease; }
+    .gauge__mark { position: absolute; top: -4px; bottom: -4px; width: 2px; }
+    .gauge__mark span { position: absolute; top: 14px; transform: translateX(-50%); font: 10px var(--q-mono); white-space: nowrap; }
+    .btn { display: inline-block; padding: 9px 14px; border-radius: 999px; border: 1px solid var(--q-line); background: var(--q-ink); color: var(--q-surface); font: 600 12.5px var(--q-font); text-decoration: none; cursor: pointer; }
+    .btn--ghost { background: transparent; color: var(--q-ink); }
+    .legend div { display: flex; align-items: center; gap: 9px; font-size: 12px; color: var(--q-ink-dim); margin: 5px 0; }
+    .legend i { display: inline-block; width: 22px; height: 3px; border-radius: 3px; }
+    .legend i.dot { width: 10px; height: 10px; border-radius: 50%; }
+    .foot { font-size: 11px; color: var(--q-ink-faint); line-height: 1.55; margin-top: 14px; }
+    .foot a { color: var(--q-ink-dim); }
+    .tip { font: 12px var(--q-font); }
+    @media (max-width: 900px) { #app { grid-template-columns: 1fr; grid-template-rows: 55vh 1fr; } aside { border-left: 0; border-top: 1px solid var(--q-line); } }
   </style>
 </head>
 <body>
-
-  <header>
-    <div class="brand">
-      <div class="badge">OPENINFRA REAL-WORLD GIS</div>
-      <h1>EPB Chattanooga &amp; TVA Quantum Grid Infrastructure</h1>
-    </div>
-    <div style="font-size: 12px; color: var(--cyan); font-weight: 600;">
-      Real Coordinates: 35.0456° N, 85.3097° W
-    </div>
-  </header>
-
-  <div id="main-container">
-    <div id="map"></div>
-
-    <!-- Left Cost Justification Banner -->
-    <div class="cost-banner">
-      <div class="cost-title">Infrastructure Economics (EPB vs. Large-Scale)</div>
-      <div class="cost-val" id="cost-display">$250,000 Total</div>
-      <div class="cost-sub" id="cost-detail">
-        <strong>Hybrid Architecture:</strong> Reuses existing EPB OPGW aerial fiber (0 trenching cost) + Satellite/Teleportation for long-haul ties.
+  <div id="app">
+    <div id="map" aria-label="Map of the real grid"></div>
+    <aside>
+      <span class="q-label">Real map</span>
+      <h1 id="title">Chattanooga's grid, on the map</h1>
+      <p class="sub" id="subtitle"></p>
+      <div class="seg" role="group" aria-label="Which grid">
+        <button type="button" data-region="chattanooga" aria-pressed="true">Chattanooga</button>
+        <button type="button" data-region="tennessee500" aria-pressed="false">Tennessee 500 kV</button>
       </div>
-    </div>
+      <div class="stats" id="stats"></div>
 
-    <!-- Right Sidebar -->
-    <div id="panel">
+      <div class="card" id="selected">
+        <span class="q-label">Selected fiber</span>
+        <p class="sub" style="margin:8px 0 0">Click any line on the map. Green lines run quantum key distribution (BB84); indigo lines use post-quantum keys (ML-KEM).</p>
+      </div>
 
-      <!-- Active Substation Info -->
+      <div class="card legend">
+        <span class="q-label">Legend</span>
+        <div><i style="background:var(--q-ok)"></i>QKD fiber (BB84), 161 kV and up</div>
+        <div><i style="background:var(--q-pqc)"></i>Post-quantum link (ML-KEM)</div>
+        <div><i class="dot" style="background:var(--q-gold)"></i>Key hub (assumed)</div>
+        <div><i class="dot" style="background:var(--q-ok)"></i>Transmission substation</div>
+        <div><i class="dot" style="background:var(--q-pqc)"></i>Distribution substation</div>
+      </div>
+
       <div class="card">
-        <div class="card-head">Inspected Substation / Node</div>
-        <div style="font-size: 15px; font-weight: 800; color: #fff;" id="node-name">EPB Downtown Control Center</div>
-        <div style="font-size: 12px; color: var(--cyan); margin-top: 2px;" id="node-meta">Bulk Grid Control · 161 kV Tie · 10 W MLK Blvd</div>
+        <span class="q-label">Distance is the limit</span>
+        <p class="sub" style="margin:8px 0 0" id="reach"></p>
       </div>
 
-      <!-- Real-time QBER Gauge -->
-      <div class="card">
-        <div class="card-head">
-          <span>Observed QBER on Active Path</span>
-          <span id="qber-badge" style="background: rgba(16,185,129,0.2); color: var(--green); padding: 2px 6px; border-radius: 4px;">NORMAL</span>
-        </div>
-        <div class="qber-metric" id="qber-text" style="color: var(--green);">1.6%</div>
-        <div style="font-size: 11px; color: var(--muted);" id="qber-sub">Fiber Baseline Noise across 8.4 km</div>
-        
-        <button class="btn btn-red" id="btn-spy">Tap Selected Link (Inject Eavesdropper)</button>
-        <button class="btn btn-blue" id="btn-restore" style="display: none;">Remove Spy &amp; Restore QKD</button>
-      </div>
-
-      <!-- Satellite vs Dedicated Long-Haul Trenching Cost Analysis -->
-      <div class="card">
-        <div class="card-head">Why Satellite / Teleportation Wins at Scale</div>
-        <table class="cost-table">
-          <thead>
-            <tr>
-              <th>Approach</th>
-              <th>Deployment Scope</th>
-              <th>Estimated Cost</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><span style="color: var(--cyan);">EPB Metro Hybrid</span></td>
-              <td>Existing OPGW Fiber (Chattanooga)</td>
-              <td style="color: var(--green);">$250,000</td>
-            </tr>
-            <tr>
-              <td><span style="color: var(--purple);">Satellite / Free-Space</span></td>
-              <td>Wide-Area Long-Haul (TVA Scale)</td>
-              <td style="color: var(--cyan);">$1,200,000</td>
-            </tr>
-            <tr>
-              <td><span style="color: var(--red);">Trenching Dedicated Fiber</span></td>
-              <td>Long-Haul + Trusted Repeaters</td>
-              <td style="color: var(--red);">$12,500,000+</td>
-            </tr>
-          </tbody>
-        </table>
-        <div style="font-size: 10px; color: var(--muted); margin-top: 8px; line-height: 1.4;">
-          <strong>Selling Point for the Board:</strong> Trenching fiber across Tennessee costs \$100k/mile. Free-space / Satellite Teleportation saves <strong>over 90%</strong> in capital costs!
-        </div>
-      </div>
-
-      <!-- OpenInfra Voltage Legend -->
-      <div class="card">
-        <div class="card-head">OpenInfra Map Voltage Classification</div>
-        <div class="legend-row">
-          <div class="legend-badge" style="background: var(--red);"></div>
-          <span><strong>161 kV / 500 kV Bulk Transmission:</strong> Critical (High Priority)</span>
-        </div>
-        <div class="legend-row">
-          <div class="legend-badge" style="background: var(--yellow);"></div>
-          <span><strong>46 kV Sub-Transmission:</strong> Regional Substations</span>
-        </div>
-        <div class="legend-row">
-          <div class="legend-badge" style="background: var(--green);"></div>
-          <span><strong>13.8 kV Distribution:</strong> Feeder lines (Lowest Priority)</span>
-        </div>
-        <div class="legend-row">
-          <div class="legend-badge" style="background: var(--purple);"></div>
-          <span><strong>Quantum Teleportation Link:</strong> Entanglement Backbone</span>
-        </div>
-      </div>
-
-    </div>
+      <p class="foot">Substations and lines: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>, ODbL, via the same data as <a href="https://openinframap.org/#11.68/35.0463/-85.2892/A,B,L,P" target="_blank" rel="noopener">OpenInfraMap</a>. Basemap: OpenStreetMap tiles. Assumed: fiber runs along every power line (OPGW), and which two substations hold the keys. Fiber model: 0.21 dB/km, 4.5% detector efficiency, 1.7e-6 dark counts, 3.3% detector error (Ma, Qi, Zhao, Lo, Table 1). No cost figures here: we found no published QKD prices, so a cost model is future work.</p>
+    </aside>
   </div>
 
   <script>
-    // Initialize Leaflet Map centered on Chattanooga, TN
-    const map = L.map('map', {
-      zoomControl: true,
-      attributionControl: false
-    }).setView([35.050, -85.275], 12);
+    // BB84 physics, identical to grid-twin/src/bb84.js -------------------------------------------------
+    var FIBER = { alpha: 0.21, etaBob: 0.045, Y0: 1.7e-6, eDet: 0.033 };
+    function transmittance(km) { return Math.pow(10, -FIBER.alpha * km / 10) * FIBER.etaBob; }
+    function baselineQber(km) { var eta = transmittance(km); return (FIBER.eDet * eta + FIBER.Y0 / 2) / (eta + FIBER.Y0); }
+    function expectedQber(p, f) { return p + f * (0.25 - p / 2); }
+    function h2(q) { return q <= 0 || q >= 1 ? 0 : -q * Math.log2(q) - (1 - q) * Math.log2(1 - q); }
+    function secretFraction(q) { return Math.max(0, 1 - 2 * h2(q)); }
+    var ABORT = 0.11;
+    var pct = function (x, d) { return (100 * x).toFixed(d == null ? 1 : d) + "%"; };
 
-    // Dark Matter Tiles (OpenStreetMap data)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 18,
-      subdomains: 'abcd'
-    }).addTo(map);
+    // Shared data: the same networks the 3D grid draws ----------------------------------------------------
+    var NETS = window.QRYPT_NETWORKS || {};
+    var region = new URLSearchParams(location.search).get("net") === "tennessee500" ? "tennessee500" : "chattanooga";
+    var css = function (name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); };
 
-    // Real Chattanooga Substation Coordinates (OpenInfraMap / EPB / TVA Data)
-    const substations = [
-      { id: 'epb_hq', name: 'EPB Downtown Control Center', lat: 35.0456, lng: -85.3097, type: 'core', kv: '161 kV Bulk Tie', critical: 'CRITICAL PRIORITY' },
-      { id: 'chickamauga', name: 'Chickamauga Dam Hydroelectric & Switchyard', lat: 35.1030, lng: -85.2290, type: 'bulk', kv: '161 kV Bulk Generator', critical: 'CRITICAL PRIORITY' },
-      { id: 'north_chatt', name: 'North Chattanooga (Hixson) Substation', lat: 35.1180, lng: -85.2420, type: 'sub', kv: '46 kV Regional', critical: 'HIGH PRIORITY' },
-      { id: 'south_chatt', name: 'South Chattanooga (Alton Park) Substation', lat: 35.0080, lng: -85.3120, type: 'sub', kv: '46 kV Regional', critical: 'HIGH PRIORITY' },
-      { id: 'east_ridge', name: 'East Ridge Substation', lat: 34.9980, lng: -85.2340, type: 'sub', kv: '46 kV Regional', critical: 'MEDIUM PRIORITY' },
-      { id: 'tiftonia', name: 'Lookout Valley (Tiftonia) Substation', lat: 35.0320, lng: -85.3780, type: 'sub', kv: '46 kV Regional', critical: 'HIGH PRIORITY' },
-      { id: 'enterprise_south', name: 'TVA Power Control Center (Enterprise South)', lat: 35.0780, lng: -85.1480, type: 'bulk', kv: '161 kV / 500 kV Tie', critical: 'CRITICAL PRIORITY' },
-      { id: 'ooltewah', name: 'Ooltewah Distribution Substation', lat: 35.0740, lng: -85.0680, type: 'dist', kv: '13.8 kV Distribution', critical: 'LOW PRIORITY' }
-    ];
-
-    // Real Transmission / Fiber Links between Substations
-    const links = [
-      { from: 'epb_hq', to: 'chickamauga', dist: 9.8, type: 'qkd', eve: 0 },
-      { from: 'epb_hq', to: 'tiftonia', dist: 6.5, type: 'qkd', eve: 0 },
-      { from: 'epb_hq', to: 'south_chatt', dist: 4.3, type: 'qkd', eve: 0 },
-      { from: 'chickamauga', to: 'north_chatt', dist: 2.1, type: 'qkd', eve: 0 },
-      { from: 'epb_hq', to: 'enterprise_south', dist: 15.2, type: 'teleport', eve: 0 },
-      { from: 'enterprise_south', to: 'ooltewah', dist: 7.8, type: 'pqc', eve: 0 },
-      { from: 'south_chatt', to: 'east_ridge', dist: 7.4, type: 'pqc', eve: 0 }
-    ];
-
-    let activeLink = links[0];
-
-    // Add Nodes to Map
-    const nodeMarkers = {};
-    substations.forEach(s => {
-      let color = s.type === 'core' ? '#00f2fe' : (s.type === 'bulk' ? '#ef4444' : (s.type === 'sub' ? '#f59e0b' : '#10b981'));
-      let radius = s.type === 'core' ? 10 : (s.type === 'bulk' ? 8 : 6);
-
-      const marker = L.circleMarker([s.lat, s.lng], {
-        radius: radius,
-        fillColor: color,
-        color: '#fff',
-        weight: 2,
-        opacity: 1,
-        fillOpacity: 0.9
+    var map = L.map("map", { zoomControl: true, attributionControl: true, preferCanvas: true });
+    map.attributionControl.setPrefix(false);
+    var tiles = null;
+    function setTiles() {
+      if (tiles) map.removeLayer(tiles);
+      // Standard OpenStreetMap tiles, toned down with CSS so the grid stands out (inverted in dark mode).
+      tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19, attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
-
-      marker.bindPopup(`<strong>${s.name}</strong><br>Voltage: ${s.kv}<br>Status: ${s.critical}`);
-      marker.on('click', () => {
-        document.getElementById('node-name').innerText = s.name;
-        document.getElementById('node-meta').innerText = `${s.kv} · ${s.critical}`;
-      });
-
-      nodeMarkers[s.id] = s;
-    });
-
-    // Add Transmission Lines
-    const polylineObjects = [];
-    links.forEach(l => {
-      const s1 = nodeMarkers[l.from];
-      const s2 = nodeMarkers[l.to];
-
-      let color = l.type === 'qkd' ? '#00f2fe' : (l.type === 'teleport' ? '#c084fc' : '#64748b');
-      let dash = l.type === 'teleport' ? '6, 6' : '';
-
-      const line = L.polyline([[s1.lat, s1.lng], [s2.lat, s2.lng]], {
-        color: color,
-        weight: 4,
-        opacity: 0.8,
-        dashArray: dash
-      }).addTo(map);
-
-      line.on('click', () => {
-        activeLink = l;
-        const n1 = nodeMarkers[l.from].name;
-        const n2 = nodeMarkers[l.to].name;
-        document.getElementById('node-name').innerHTML = `${n1} &harr; ${n2}`;
-        document.getElementById('node-meta').innerText = `${l.type.toUpperCase()} Link (${l.dist} km)`;
-        updateQBER();
-      });
-
-      l.line = line;
-      polylineObjects.push(line);
-    });
-
-    // UI Updates
-    const qberText = document.getElementById('qber-text');
-    const qberBadge = document.getElementById('qber-badge');
-    const qberSub = document.getElementById('qber-sub');
-    const btnSpy = document.getElementById('btn-spy');
-    const btnRestore = document.getElementById('btn-restore');
-
-    function updateQBER() {
-      const base = 1.4 + (activeLink.dist * 0.05);
-      const eveError = activeLink.eve > 0 ? 25.0 : 0.0;
-      const totalQBER = base + eveError;
-
-      qberText.innerText = totalQBER.toFixed(1) + '%';
-      qberSub.innerText = `Fiber line noise across ${activeLink.dist} km`;
-
-      if (totalQBER < 7.0) {
-        qberText.style.color = 'var(--green)';
-        qberBadge.innerText = 'NORMAL';
-        qberBadge.style.background = 'rgba(16,185,129,0.2)';
-        qberBadge.style.color = 'var(--green)';
-        activeLink.line.setStyle({ color: activeLink.type === 'teleport' ? '#c084fc' : '#00f2fe', dashArray: activeLink.type === 'teleport' ? '6, 6' : '' });
-        btnSpy.style.display = 'block';
-        btnRestore.style.display = 'none';
-      } else {
-        qberText.style.color = 'var(--red)';
-        qberBadge.innerText = 'ATTACK: SHOR-PRESKILL CUTOFF (ABORT)';
-        qberBadge.style.background = 'rgba(239,68,68,0.2)';
-        qberBadge.style.color = 'var(--red)';
-        activeLink.line.setStyle({ color: '#ef4444', dashArray: '4, 4' });
-        btnSpy.style.display = 'none';
-        btnRestore.style.display = 'block';
-      }
+      tiles.bringToBack();
     }
 
-    btnSpy.addEventListener('click', () => {
-      activeLink.eve = 1;
-      updateQBER();
-    });
+    var layer = L.layerGroup().addTo(map);
+    var selected = null; // { link, line }
+    var tap = 0; // share of photons the hypothetical spy intercepts
 
-    btnRestore.addEventListener('click', () => {
-      activeLink.eve = 0;
-      updateQBER();
-    });
+    function ll(net, pos) {
+      var p = net.meta.proj;
+      return [p.lat0 - (pos[1] + p.cz) / p.kz, p.lon0 + (pos[0] + p.cx) / p.kx];
+    }
+    function nameOf(n) { return n.short || n.name.split(" · ")[0]; }
 
-    updateQBER();
+    function draw() {
+      layer.clearLayers();
+      selected = null;
+      var net = NETS[region];
+      if (!net) { document.getElementById("subtitle").textContent = "Map data did not load."; return; }
+      var nodes = {};
+      net.nodes.forEach(function (n) { nodes[n.id] = n; });
+      var bounds = [];
+      // Lines first (underneath), PQC then QKD so the quantum backbone sits on top.
+      ["pqc", "qkd"].forEach(function (kind) {
+        net.links.filter(function (l) { return l.kind === kind; }).forEach(function (l) {
+          var pts = (l.path && l.path.length > 1 ? l.path : [nodes[l.a].pos, nodes[l.b].pos]).map(function (q) { return ll(net, q); });
+          pts.forEach(function (q) { bounds.push(q); });
+          var line = L.polyline(pts, { color: css(kind === "qkd" ? "--q-ok" : "--q-pqc"), weight: kind === "qkd" ? 4 : 2.2, opacity: kind === "qkd" ? 0.9 : 0.65 });
+          line.bindTooltip(l.id + " · " + nameOf(nodes[l.a]) + " – " + nameOf(nodes[l.b]) + " · " + l.km + " km", { className: "tip", sticky: true });
+          line.on("click", function () { select(net, nodes, l, line); });
+          line.addTo(layer);
+          l._line = line;
+        });
+      });
+      net.nodes.forEach(function (n) {
+        var color = n.type === "control" ? css("--q-gold") : n.type === "substation" ? css("--q-ok") : css("--q-pqc");
+        var m = L.circleMarker(ll(net, n.pos), { radius: n.type === "control" ? 8 : n.type === "substation" ? 5.5 : 3.5, color: css("--q-surface"), weight: 1.5, fillColor: color, fillOpacity: 0.95 });
+        m.bindTooltip("<b>" + n.id + "</b> · " + n.name + (n.kv ? " · " + n.kv + " kV" : ""), { className: "tip" });
+        m.on("click", function () { window.open("grid-twin/index.html?net=" + region + "&select=node:" + n.id, "_self"); });
+        m.addTo(layer);
+      });
+      map.fitBounds(bounds, { padding: [24, 24] });
+
+      var qkd = net.links.filter(function (l) { return l.kind === "qkd"; });
+      var longest = Math.max.apply(null, net.links.map(function (l) { return l.km; }));
+      var over80 = net.links.filter(function (l) { return l.km > 80; }).length;
+      document.getElementById("title").textContent = region === "chattanooga" ? "Chattanooga's grid, on the map" : "Tennessee's 500 kV backbone";
+      document.getElementById("subtitle").textContent = (region === "chattanooga"
+        ? "Real EPB and TVA substations and lines around Chattanooga. "
+        : "TVA's 500 kV transmission network across Tennessee. ") + "The same network the live 3D grid runs; click a substation to open it there.";
+      document.getElementById("stats").innerHTML =
+        '<div class="stat"><b>' + net.nodes.length + '</b><span>real substations</span></div>' +
+        '<div class="stat stat--ok"><b>' + qkd.length + '</b><span>fibers running BB84</span></div>' +
+        '<div class="stat stat--pqc"><b>' + (net.links.length - qkd.length) + '</b><span>links on ML-KEM</span></div>' +
+        '<div class="stat' + (over80 ? " stat--warn" : "") + '"><b>' + longest.toFixed(1) + ' km</b><span>longest link' + (over80 ? " · " + over80 + " over 80 km" : "") + '</span></div>';
+      document.getElementById("reach").innerHTML = region === "chattanooga"
+        ? "Fiber QKD works to roughly 80 to 100 km before it needs trusted relays. Every link here is at most <b>" + longest.toFixed(1) + " km</b>, so the whole city backbone fits on fiber, with no repeaters and no satellite."
+        : "<b>" + over80 + " of " + net.links.length + "</b> spans are longer than 80 km. Those would need trusted relay stations (China's 2,000 km Beijing–Shanghai backbone uses 32, about 70 km apart). That is the only scale where a satellite could ever make sense, and it stays on our roadmap.";
+      document.getElementById("selected").innerHTML = '<span class="q-label">Selected fiber</span><p class="sub" style="margin:8px 0 0">Click any line on the map. Green lines run quantum key distribution (BB84); indigo lines use post-quantum keys (ML-KEM).</p>';
+      document.querySelectorAll("[data-region]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.region === region)); });
+      // Open straight on a fiber that is good for the demo.
+      var demo = net.links.find(function (l) { return l.id === (region === "chattanooga" ? "L6" : "L11"); });
+      if (demo) select(net, nodes, demo, demo._line);
+    }
+
+    function select(net, nodes, l, line) {
+      if (selected) selected.line.setStyle({ weight: selected.link.kind === "qkd" ? 4 : 2.2 });
+      selected = { link: l, line: line, net: net, nodes: nodes };
+      line.setStyle({ weight: 8 });
+      line.bringToFront();
+      render();
+    }
+
+    function render() {
+      if (!selected) return;
+      var l = selected.link, nodes = selected.nodes;
+      var a = nodes[l.a], b = nodes[l.b];
+      var p = baselineQber(l.km);
+      var q = expectedQber(p, tap);
+      var isQkd = l.kind === "qkd";
+      var status = !isQkd ? ["no quantum signal", "pqc"] : q > ABORT ? ["above 11%: no key possible", "bad"] : q - p > 0.014 ? ["would alarm", "warn"] : ["within normal noise", "ok"];
+      var openUrl = "grid-twin/index.html?net=" + region + "&select=link:" + l.id;
+      var max = 0.3;
+      var gauge = isQkd
+        ? '<div class="gauge"><div class="gauge__fill" style="width:' + Math.min(100, (q / max) * 100) + "%;background:var(--q-" + status[1] + ')"></div>' +
+          '<div class="gauge__mark" style="left:' + (p / max) * 100 + '%;background:var(--q-ink-faint)"><span style="color:var(--q-ink-faint)">baseline</span></div>' +
+          '<div class="gauge__mark" style="left:' + (ABORT / max) * 100 + '%;background:var(--q-bad)"><span style="color:var(--q-bad)">11%</span></div></div>'
+        : "";
+      document.getElementById("selected").innerHTML =
+        '<span class="q-label">Selected fiber · ' + l.id + "</span>" +
+        '<div class="sel-title">' + nameOf(a) + " – " + nameOf(b) + "</div>" +
+        '<div class="sel-meta">' + (isQkd ? "QKD fiber (BB84)" : "Post-quantum link (ML-KEM)") + " · " + l.km + " km" + (l.kv ? " · " + l.kv + " kV line" : "") + "</div>" +
+        "<dl>" +
+        (isQkd
+          ? "<dt>Normal error rate (no spy)</dt><dd>" + pct(p, 2) + "</dd>" +
+            "<dt>With the tap below</dt><dd>" + pct(q, 2) + "</dd>" +
+            "<dt>Secret key left after privacy amplification</dt><dd>" + pct(secretFraction(q), 0) + "</dd>" +
+            "<dt>Photons reaching Bob vs a 10 km fiber</dt><dd>" + (transmittance(l.km) / transmittance(10)).toFixed(2) + "×</dd>" +
+            '<dt>Status</dt><dd><span class="q-pill q-pill--' + status[1] + '">' + status[0] + "</span></dd>"
+          : "<dt>Why not QKD</dt><dd>" + (l.kv && l.kv < 161 ? "distribution line" : "over 80 km") + "</dd><dt>Keys</dt><dd>ML-KEM (FIPS 203)</dd>") +
+        "</dl>" +
+        (isQkd
+          ? '<div class="row"><span>Imagine a spy intercepting</span><b id="tapv">' + Math.round(tap * 100) + '% of photons</b></div><input type="range" min="0" max="100" value="' + Math.round(tap * 100) + '" id="tap" aria-label="Share of photons intercepted" />' + gauge +
+            '<p class="sub" style="margin:0 0 12px">Theory: error rate = p + f(¼ − p/2). The live grid simulates it photon by photon and responds on its own: keys switch to ML-KEM, the fiber stays up, traffic reroutes, and the spy is measured.</p>'
+          : '<p class="sub" style="margin:0 0 12px">No photons to disturb, so physics cannot detect a tap here; ML-KEM keeps the traffic unreadable.</p>') +
+        '<a class="btn" href="' + openUrl + '">Open this fiber in the live grid →</a>';
+      var slider = document.getElementById("tap");
+      if (slider) slider.addEventListener("input", function () { tap = Number(slider.value) / 100; render(); var s = document.getElementById("tap"); if (s) s.focus(); });
+    }
+
+    document.querySelectorAll("[data-region]").forEach(function (b) {
+      b.addEventListener("click", function () { region = b.dataset.region; tap = 0; draw(); });
+    });
+    window.addEventListener("qrypt:theme", function () { setTiles(); draw(); });
+    setTiles();
+    draw();
   </script>
 </body>
 </html>

@@ -8,3 +8,7 @@ Video Resources/
 site/
 .vercel/
 .ipynb_checkpoints/
+
+# Python bytecode
+__pycache__/
+*.pyc
