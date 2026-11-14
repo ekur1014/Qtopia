@@ -79,14 +79,14 @@ Disagreement between our AI drafts, and how we resolved it: one draft ranked the
 ### Part 5. Grover's search and symmetric keys
 What we ran (notebook `2b_grover_symmetric_keys.ipynb`): a Grover search with a phase oracle and a diffuser, on Qiskit Aer (noise-free, 1024 shots), with the number of iterations floor((pi/4) sqrt(N)).
 
-| N | Iterations | Measured success (Aer) | Exact theory | IonQ noisy simulator (forte-1 noise model, 200 shots) |
-|---|---|---|---|---|
-| 4 | 1 | 100.0% | 100.0% | 100% |
-| 8 | 2 | 95.5% | 94.5% | 71.5% |
-| 16 | 3 | 96.0% | 96.1% | 36.0% |
+| N | Iterations | Measured success (Aer) | Exact theory | IonQ noisy simulator (forte-1 noise model, 200 shots) | Quantinuum H2 emulator (200 shots) |
+|---|---|---|---|---|---|
+| 4 | 1 | 100.0% | 100.0% | 100% | 100% (200/200) |
+| 8 | 2 | 95.5% | 94.5% | 71.5% | 92.5% (185/200) |
+| 16 | 3 | 96.0% | 96.1% | 36.0% | not run |
 
 - The peak lands on the secret key every time on the noise-free simulator. We also checked the oracle and diffuser against the exact formula for every possible key for N = 2 to 32: no mismatches.
-- Noise: the peak stays on the right key on IonQ's noisy simulator, but it shrinks fast as the circuit grows (about 2, 24 and 84 two-qubit gates for N = 4, 8, 16, per the notebook). At N = 16 the right answer is still the most common one, but only about one shot in three. This is a simulator with a noise model, not real hardware; we did not run a real QPU or the Quantinuum emulator for this part.
+- Noise: the peak stays on the right key on IonQ's noisy simulator, but it shrinks fast as the circuit grows (about 2, 24 and 84 two-qubit gates for N = 4, 8, 16, per the notebook). At N = 16 the right answer is still the most common one, but only about one shot in three. Both are noise models, not real hardware, and we ran no real QPU for this part. The two noisy runs disagree on how much noise matters: IonQ's simulator model drops N = 8 to 71.5%, while the Quantinuum H2 emulator (which models a different trapped-ion machine, readout error included) stays at 92.5%. Different devices and noise models give different answers, so a noise number is only meaningful for the machine it models. We did not run the emulator for N = 16.
 - A toy search over N = 16 keys says nothing about AES. The point is the scaling: Grover needs about sqrt(N) steps instead of N.
 
 **Answer: what Grover means for AES key length.** Grover cuts a brute-force search over 2^128 keys (AES-128) to about 2^64 quantum steps, and over 2^256 (AES-256) to about 2^128. It does not break AES; it halves the exponent. Two things limit it in practice. Each Grover step must run a full AES circuit on an error-corrected quantum computer, and Grover can't be split across many machines the way classical guessing can: NIST's PQC FAQ notes that, per Zalka (1997), the full quadratic speedup requires all the steps to run in series, so a parallel attack gets a smaller advantage.
@@ -103,7 +103,10 @@ In the migration plan (Part 4): symmetric keys are row 11, the lowest priority: 
   - N = 4: `ionq:ionq:sim:simulator-a7ae-qjob-6af7caaff15852ed27b7215d`
   - N = 8: `ionq:ionq:sim:simulator-a7ae-qjob-6af7cacbf15852ed27b72167`
   - N = 16: `ionq:ionq:sim:simulator-a7ae-qjob-6af7cadcf15852ed27b7216d`
-  - No real QPU and no Quantinuum emulator run (the emulator needs the user to accept Quantinuum's terms first).
+  - Two jobs on the free Quantinuum H2 emulator (`quantinuum:quantinuum:sim:h2-emulator`, 200 shots, COMPLETED, cost 0 credits; emulator, not hardware). Submitted as OpenQASM 2 through the qBraid plugin because the SDK on our laptop failed to parse QASM 2 locally:
+    - N = 4: `quantinuum:quantinuum:sim:h2-emulator-a7ae-qjob-6af7ccc1f15852ed27b721e3` (200/200 on key 2)
+    - N = 8: `quantinuum:quantinuum:sim:h2-emulator-a7ae-qjob-6af7ccc3f15852ed27b721e6` (185/200 on key 6)
+  - No real QPU run.
 - Drafts of Parts 3-4 were generated independently by two open models (DeepSeek, GLM) and sourced by a third (big-pickle) through OpenCode, then merged and fact-checked by Claude. Checked: NIST IR 8547, CIP-012-2 effective date, EO 14412 exists. Not independently confirmed: CIP-005-8 date, exact DNP3 SAv5 and IEC 62351 crypto details, vendor support for hybrid modes.
 
 Sources: NIST PQC FAQ on AES and Grover (https://csrc.nist.gov/projects/post-quantum-cryptography/faqs); NIST IR 8547 (https://csrc.nist.gov/pubs/ir/8547/final); FIPS 203/204/205 and SP 800-208 (https://csrc.nist.gov/projects/post-quantum-cryptography); NERC CIP-012-2 (https://www.nerc.com/standards/reliability-standards/cip/cip-012-2); EO 14412 (https://www.federalregister.gov/documents/2026/06/25/2026-12909/securing-the-nation-against-advanced-cryptographic-attacks); Evans et al., EPB trusted-node QKD (https://arxiv.org/abs/2103.09877); service-life data: SEL paper (https://cms-cdn.selinc.com/assets/Literature/Publications/Technical%20Papers/7045_BalancingSubstation_DD_20220311_Web.pdf).
