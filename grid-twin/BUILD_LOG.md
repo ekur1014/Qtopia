@@ -166,7 +166,7 @@ Every QIR result is within 1.2σ of theory. Job IDs are logged by the server; th
 
 User request: fix the teammates' pages and "make sure everything is like 1 thing".
 
-- **Shared design system and top bar** (`site/qrypt.css`, `site/qbar.js`) on every page:
+- **Shared design system and top bar** (`shared/qrypt.css`, `shared/qbar.js`) on every page:
   - The bar links Home, Live grid, Real map, Quantum lab and Pitch deck.
   - Light is the default; the light/dark choice is shared and announced to the 3D grid.
 - **Home page** (`index.html` at the repo root): what the project is, key numbers, the four pages, and how to run it.
@@ -185,3 +185,12 @@ User request: fix the teammates' pages and "make sure everything is like 1 thing
 - **Pitch deck** (`presentation_deck.html`): five honest slides in the shared style; team names left as placeholders.
 - **2D monitor** (`interactive_grid_monitor.html`): the same physics and policy as the grid, marked as the first prototype.
 - **Server:** `start.py` and `live_server.py` serve the repo root.
+
+**Update, notebook 1 finished:** the teammate filled notebook 1's TODOs, so both notebook engines now run the team's own `encode()` with no note.
+
+| Engine | No tap (theory 3.30%) | 40% tap (theory 12.64%) | Full tap (theory 26.65%) |
+|---|---|---|---|
+| Notebook 1, local (about 300 bits each) | 4.68% | 11.26% | 28.94% |
+| Notebook 1 on qBraid QIR (12,000 bits each) | 3.10% | 12.48% | 26.18% |
+
+All within 1.3σ. The qBraid QIR job at 40% is `qbraid:qbraid:sim:qir-sv-a7ae-qjob-6af89fbcc8f5265fb3f1e23b`. On the live page, the real Chickamauga–Hamilton fiber at a 40% tap read 12.30%; that was before the notebook was finished, so it used the hint-based `encode()`.

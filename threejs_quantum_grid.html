@@ -9,8 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="site/qrypt.css" />
-  <script src="site/qbar.js" data-page="lab" data-root="./"></script>
+  <link rel="stylesheet" href="shared/qrypt.css" />
+  <script src="shared/qbar.js" data-page="lab" data-root="./"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="grid-twin/data/networks/chattanooga.js"></script>
   <style>
@@ -123,9 +123,9 @@
             <tr><td>Quantinuum Guppy on Selene</td><td>local emulator</td><td class="n">11.15%</td></tr>
             <tr><td>qBraid · IonQ simulator</td><td>cloud simulator</td><td class="n">12.55%</td></tr>
             <tr><td>qBraid · QIR simulator</td><td>cloud simulator</td><td class="n">12.96%</td></tr>
-            <tr><td>Team notebook 1 on qBraid QIR</td><td>cloud simulator</td><td class="n">12.86%</td></tr>
+            <tr><td>Team notebook 1 on qBraid QIR</td><td>cloud simulator</td><td class="n">12.48%</td></tr>
           </table>
-          <p class="note">Each on about 1,000 to 12,000 sifted bits; spread about ±0.3 to ±0.7 points. Notebook 1's <code>encode()</code> still has its TODO; until it is filled, its runs complete it exactly as the TODO comment says. All of these are simulators or emulators, not hardware. Run them yourself from a fiber in the live grid (served by <code>python3 grid-twin/start.py</code>).</p>
+          <p class="note">Each on about 1,000 to 12,000 sifted bits; spread about ±0.3 to ±0.7 points. Notebook 1's runs use the team's own finished <code>encode()</code>. All of these are simulators or emulators, not hardware. Run them yourself from a fiber in the live grid (served by <code>python3 grid-twin/start.py</code>).</p>
         </div>
       </section>
 

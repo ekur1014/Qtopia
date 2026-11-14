@@ -52,12 +52,12 @@ const swap = (a, b) => {
   html = html.replace(a, () => b);
 };
 swap('<link rel="stylesheet" href="style.css" />', `<style>\n${css}\n</style>`);
-// The shared project bar and tokens (site/), inlined too; links point at the repo root, where this file lives.
-const siteCss = readFileSync(join(root, "../site/qrypt.css"), "utf8");
-const siteBar = readFileSync(join(root, "../site/qbar.js"), "utf8");
-swap('<link rel="stylesheet" href="../site/qrypt.css" />', `<style>\n${siteCss}\n</style>`);
+// The shared project bar and tokens (shared/), inlined too; links point at the repo root, where this file lives.
+const siteCss = readFileSync(join(root, "../shared/qrypt.css"), "utf8");
+const siteBar = readFileSync(join(root, "../shared/qbar.js"), "utf8");
+swap('<link rel="stylesheet" href="../shared/qrypt.css" />', `<style>\n${siteCss}\n</style>`);
 swap(
-  '<script src="../site/qbar.js" data-page="grid" data-root="../"></script>',
+  '<script src="../shared/qbar.js" data-page="grid" data-root="../"></script>',
   // document.currentScript is the inline script itself, so its data attributes still work.
   `<script data-page="grid" data-root="./">\n${safe(siteBar)}</script>`,
 );

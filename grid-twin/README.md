@@ -30,7 +30,7 @@ node grid-twin/tools/build_standalone.mjs
 
 ## Run it by hand
 
-`index.html` uses ES modules, so it needs a local web server (opening `grid-twin/index.html` directly from disk will not work; `grid_twin.html` will). Serve the **repo root**, so the shared top bar (`site/`) and the other pages work too:
+`index.html` uses ES modules, so it needs a local web server (opening `grid-twin/index.html` directly from disk will not work; `grid_twin.html` will). Serve the **repo root**, so the shared top bar (`shared/`) and the other pages work too:
 
 ```bash
 python3 -m http.server 8000
@@ -46,7 +46,7 @@ To re-run any fiber as real quantum code from the page, serve it with the bridge
 python grid-twin/sim/live_server.py 8000   # serves the repo root; the grid is at /grid-twin/
 ```
 
-A fiber's inspector then shows **Run this fiber as real quantum code**: Qiskit Aer, NVIDIA CUDA-Q and Quantinuum Guppy on the Selene emulator each run 4,000 photons with that fiber's current noise and tap. Two more engines: **qBraid · IonQ simulator** runs the fiber as a real cloud job on qBraid's free IonQ simulator (needs `QBRAID_API_KEY` in the server's environment, for example `source ~/.qrypt.env` first; about 45 s with the queue), and **Team notebook 1** runs the team's own `encode()` and `measure()` from `1_bb84_eavesdropper.ipynb` (it reports that the notebook is unfinished until its TODOs are filled), and the error rates appear next to the browser's live value and the theory. Example (L11, 40% tap, theory 12.64%): Qiskit 13.52%, CUDA-Q 12.11%, Guppy 11.15%, each on about 2,000 sifted bits (±0.7%).
+A fiber's inspector then shows **Run this fiber as real quantum code**: Qiskit Aer, NVIDIA CUDA-Q and Quantinuum Guppy on the Selene emulator each run 4,000 photons with that fiber's current noise and tap. Two more engines: **qBraid · IonQ simulator** runs the fiber as a real cloud job on qBraid's free IonQ simulator (needs `QBRAID_API_KEY` in the server's environment, for example `source ~/.qrypt.env` first; about 45 s with the queue), and **Team notebook 1** runs the team's own `encode()` and `measure()` from `1_bb84_eavesdropper.ipynb` (the team's finished code), and the error rates appear next to the browser's live value and the theory. Example (L11, 40% tap, theory 12.64%): Qiskit 13.52%, CUDA-Q 12.11%, Guppy 11.15%, each on about 2,000 sifted bits (±0.7%).
 
 ## What you can do
 
@@ -130,7 +130,7 @@ grid-twin/
 
 ## Part of one project site
 
-Every page shares one design system and one top bar (`site/qrypt.css`, `site/qbar.js`): Home (`index.html`), Live grid (this folder), Real map (`chattanooga_quantum_map.html`), Quantum lab (`threejs_quantum_grid.html`) and Pitch deck (`presentation_deck.html`). The light/dark choice is shared. Other pages link straight to a fiber or site here with `?net=chattanooga&select=link:L6` or `select=node:T23`.
+Every page shares one design system and one top bar (`shared/qrypt.css`, `shared/qbar.js`): Home (`index.html`), Live grid (this folder), Real map (`chattanooga_quantum_map.html`), Quantum lab (`threejs_quantum_grid.html`) and Pitch deck (`presentation_deck.html`). The light/dark choice is shared. Other pages link straight to a fiber or site here with `?net=chattanooga&select=link:L6` or `select=node:T23`.
 
 ## qBraid engines
 

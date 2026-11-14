@@ -1,5 +1,5 @@
 // The Qrypt top bar: the same navigation on every page, plus the shared light/dark switch.
-// Usage: <script src="site/qbar.js" data-page="map" data-root="./"></script> (data-root points at the repo root).
+// Usage: <script src="shared/qbar.js" data-page="map" data-root="./"></script> (data-root points at the repo root).
 // The theme is stored per browser (key "qrypt-theme") and announced with a "qrypt:theme" event,
 // so pages with their own rendering (the 3D grid) can follow it.
 (function () {
@@ -10,6 +10,7 @@
     { id: "home", label: "Home", href: "index.html" },
     { id: "grid", label: "Live grid", href: "grid-twin/index.html" },
     { id: "map", label: "Real map", href: "chattanooga_quantum_map.html" },
+    { id: "photon", label: "Photon line", href: "bb84_visualizer.html" },
     { id: "lab", label: "Quantum lab", href: "threejs_quantum_grid.html" },
     { id: "deck", label: "Pitch deck", href: "presentation_deck.html" },
   ];

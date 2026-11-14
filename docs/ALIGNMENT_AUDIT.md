@@ -55,7 +55,7 @@ Live engine results for one fiber (p = 3.3%, tap 40%, theory 12.64%): Qiskit Aer
 
 ## 4. What the team still needs to do
 
-1. Finish notebook 1 (two TODOs). Then the **Team notebook 1** button runs the team's own code from the visualization.
+1. ~~Finish notebook 1~~ Done (14 Nov): the **Team notebook 1** buttons now run the team's own finished code, locally and on qBraid's QIR simulator.
 2. Run notebook 3 once and save its outputs (it is filled in but has never been executed on GitHub).
 3. Decide the 2D monitor's fate, and fix its "IonQ Forte Verified" label if kept (that run was on a simulator).
 4. Fix `WRITEUP.md` (Step 2 numbers, Step 3 design), and add a sentence on timing synchronization (Step 3 Part 1).

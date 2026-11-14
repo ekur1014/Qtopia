@@ -599,7 +599,7 @@ async function boot() {
       }
     }
   }
-  // One theme for the whole project: the shared top bar (site/qbar.js) owns it and announces changes.
+  // One theme for the whole project: the shared top bar (shared/qbar.js) owns it and announces changes.
   function setTheme(theme) {
     if (window.qrypt) window.qrypt.setTheme(theme); // announces "qrypt:theme", handled below
     else applyTheme(theme);

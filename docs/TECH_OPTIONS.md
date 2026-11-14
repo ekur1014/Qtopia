@@ -10,7 +10,7 @@ From the team's notebook page (`Idea/tech-ideas-notebook.jpg`) and Saturday's ch
 | Make an artifact | **Done** | A shareable private link to Grid Twin (share it from the page's Share menu) | https://claude.ai/artifact/RMHGPbTvUVXPvKpzXgE6pH |
 | Visualization linked with real-time code runs | **Done** | Any fiber can be re-run from the page as 4,000 photons of real quantum code, with the result shown beside the live value and the theory | `grid-twin/sim/live_server.py` |
 | Run a link on qBraid | **Done** | The page can send a fiber's photons as a real job to qBraid's free IonQ simulator | `grid-twin/sim/engines.py` (`qbraid`) |
-| The team's own notebook 1 | **Ready** | The page runs the team's `encode()`/`measure()`; waits for the TODOs to be filled | `grid-twin/sim/engines.py` (`notebook1`) |
+| The team's own notebook 1 | **Done** | The page runs the team's finished `encode()`/`measure()` on Qiskit Aer, and its batch circuit on qBraid's QIR simulator | `grid-twin/sim/engines.py` (`notebook1`) |
 | CUDA-Q (NVIDIA) | **Done** | BB84 as a CUDA-Q kernel (CUDA-Q 0.16, CPU simulator, no GPU needed) | `grid-twin/sim/engines.py` |
 | Guppy (Quantinuum) | **Done** | BB84 written in Guppy and run on Quantinuum's open-source Selene emulator, coin flips included | `grid-twin/sim/engines.py` |
 | Import the network from a data set; more and bigger nodes | **Done** | IEEE 14/30/57/118/300-bus public test grids, selectable in the page | `grid-twin/tools/import_ieee.mjs` |

@@ -426,7 +426,7 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border: 0; bo
 </style>
   <script data-page="grid" data-root="./">
 // The Qrypt top bar: the same navigation on every page, plus the shared light/dark switch.
-// Usage: <script src="site/qbar.js" data-page="map" data-root="./"><\/script> (data-root points at the repo root).
+// Usage: <script src="shared/qbar.js" data-page="map" data-root="./"><\/script> (data-root points at the repo root).
 // The theme is stored per browser (key "qrypt-theme") and announced with a "qrypt:theme" event,
 // so pages with their own rendering (the 3D grid) can follow it.
 (function () {
@@ -437,6 +437,7 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border: 0; bo
     { id: "home", label: "Home", href: "index.html" },
     { id: "grid", label: "Live grid", href: "grid-twin/index.html" },
     { id: "map", label: "Real map", href: "chattanooga_quantum_map.html" },
+    { id: "photon", label: "Photon line", href: "bb84_visualizer.html" },
     { id: "lab", label: "Quantum lab", href: "threejs_quantum_grid.html" },
     { id: "deck", label: "Pitch deck", href: "presentation_deck.html" },
   ];
@@ -2972,7 +2973,7 @@ async function boot() {
       }
     }
   }
-  // One theme for the whole project: the shared top bar (site/qbar.js) owns it and announces changes.
+  // One theme for the whole project: the shared top bar (shared/qbar.js) owns it and announces changes.
   function setTheme(theme) {
     if (window.qrypt) window.qrypt.setTheme(theme); // announces "qrypt:theme", handled below
     else applyTheme(theme);
