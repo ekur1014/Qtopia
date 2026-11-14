@@ -71,6 +71,7 @@ Regulation: NERC CIP-012-2 (enforceable 1 July 2026) requires protecting control
 | 8 | ICCP and synchrophasors | Hybrid TLS; rewrite bilateral agreements | Multi-party governance is the bottleneck: start contracts early |
 | 9 | DER and customer/vendor APIs | Hybrid TLS and PQC clauses in aggregator contracts | Low cost, but third parties control the timing |
 | 10 | Enterprise IT | Mainstream vendor PQC updates, AES-256 | Broad but lower criticality |
+| 11 | Symmetric keys (AES, from Part 5) | AES-256 in all new procurement and for data that must stay secret for decades; revisit AES-128 equipment at normal refresh | Not an emergency: Grover only halves the key exponent and NIST says AES-128 stays secure for decades; the fix is a longer key, not a new algorithm |
 
 Reasoning: confidentiality (key exchange) is urgent now because recording is cheap. Signatures are driven by lead time, because a forged signature needs a working large quantum computer. Hardware that can't be patched in the field (ROM anchors, meters) is the true long pole.
 Disagreement between our AI drafts, and how we resolved it: one draft ranked the PKI second, another ranked firmware third. We put firmware above PKI because device trust anchors can't be patched later, while a PKI can be rolled forward in software.
@@ -92,7 +93,7 @@ What we ran (notebook `2b_grover_symmetric_keys.ipynb`): a Grover search with a 
 What NIST says (PQC FAQ, "should we double the key length for AES now?", added 18 Nov 2018): "it is quite likely that Grover's algorithm will provide little or no advantage in attacking AES, and AES 128 will remain secure for decades to come", and current applications can keep using AES with 128, 192 or 256-bit keys.
 Our recommendation for the utility: keep AES-128 where it is today, but specify **AES-256 for new equipment and for data that must stay secret for decades** (smart meters, relays, firmware images, VPNs). It costs almost nothing extra, and it removes any argument about Grover. This also matches the stricter US national-security guidance (CNSA 2.0 asks for AES-256) [verify].
 **Compared with RSA: less urgent, and easier to fix.** Shor's algorithm breaks RSA and elliptic curves outright, in polynomial time, so there is no key length that saves them: the algorithm has to be replaced (ML-KEM, ML-DSA). Grover only weakens AES by a square root, and the fix is the same algorithm with a longer key. The hard part is not the math but devices that are hard-coded to AES-128 and can't be changed in the field: another reason to require AES-256 in the next purchase.
-In the migration plan (Part 4): symmetric keys are not an emergency. Add one line: AES-256 in all new procurement; revisit AES-128 equipment at normal refresh.
+In the migration plan (Part 4): symmetric keys are row 11, the lowest priority: not an emergency, but AES-256 goes into all new procurement.
 
 ## Run record and AI use
 - Part 1: Qiskit Aer simulator on a laptop (no cloud job, no credits); result r = 4, 15 = 3 x 5.
