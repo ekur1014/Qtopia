@@ -66,6 +66,7 @@ Draft:
   - Shor factors 15: r = 4, 3 x 5.
   - Grover on Aer: N = 4, 8, 16 find the key with 100%, 95.5%, 96.0% success (theory 100%, 94.5%, 96.1%).
   - Noise: IonQ noisy simulator drops N = 8 to 71.5% and N = 16 to 36%; Quantinuum H2 emulator stays at 92.5% for N = 8. Different machine models, different answers.
+  - Real hardware (Rigetti Cepheus, 200 shots): Grover N = 4 finds the key 88.5% of the time and N = 8 only 45% (theory 94.5%, random 12.5%). Shor on 15 (circuit cut down by hand to 168 two-qubit gates): 65% of shots on the four ideal outcomes vs 25% for pure noise. The structure survives on a real quantum computer, but only at the smallest size.
 - Suggested design principle for the diagram: use PQC (hybrid ML-KEM + ML-DSA) as the default across all links; use QKD only where the case is strong (short dedicated fiber between a few high-value sites), and treat QKD trusted-node relays as trust anchors that must be protected.
 - Tools to build (these count; pick one or two): an interactive BB84 demo with an eavesdropper slider; a threshold explorer (line noise vs a spy, where to set the alarm); a network map showing which links get QKD vs PQC and why; a migration tracker that ranks systems by data lifetime x device lifetime. Our Part 3 table is already the data for the tracker.
 
@@ -80,7 +81,7 @@ Questions to answer: Where does quantum help this customer today, and where does
 Draft (honest list; add the teammate's failures):
 - Quantum helps today: BB84 gives a physical eavesdropper alarm on a dedicated link (Step 1). It does not replace authentication.
 - Quantum does not help today: Shor cannot break RSA yet (4 orders of magnitude of qubits to go, and no error-corrected machine). Our Grover demo says nothing about breaking AES: Grover only halves the key exponent, and NIST says AES-128 stays secure for decades (we still recommend AES-256 in new buys).
-- What surprised us: IonQ's simulator and Quantinuum's emulator gave very different noise results for the same circuit (71.5% vs 92.5% at N = 8): noise is a property of the machine model, not the algorithm.
+- What surprised us: IonQ's simulator and Quantinuum's emulator gave very different noise results for the same circuit (71.5% vs 92.5% at N = 8), and the real Rigetti machine did worse than both (45%): noise is a property of the machine, not the algorithm. The Shor circuit as written needs about 13,300 two-qubit gates; we had to cut it to 168 by hand to run it at all.
 - What failed or cost us time: the notebook's device list did not show IBM's 156-qubit machines that the web catalog lists; a package update (openqasm3 1.0.2) broke QASM 2 submission from Python until we pinned 1.0.1; the first job path to the Quantinuum emulator needed Quantinuum's terms accepted. Add anything else that went wrong.
 - What we would do next: pilot hybrid ML-KEM on the VPN edge, start a crypto inventory, require PQC-capable hardware in the next procurement.
 - Tools we used: AI assistants helped with drafting and checking code and notes. We reviewed the results ourselves, and everyone presenting can explain what is in the deck.
