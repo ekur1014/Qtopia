@@ -17,10 +17,7 @@ The team's entry for the **Tennessee Quantum Hackathon, "Secure the Grid" track*
 ## 2. Hard rules for agents
 
 1. **Don't overclaim.** Every number needs a source: a notebook output, a job ID, the data, or a cited paper. If you can't verify something, say so or leave it out. Label simulators and emulators as such, never as hardware.
-2. **Real hardware costs credits.** Ask the user before every paid job (any `:qpu:` device). Cap each run at 200 shots.
-   - Rigetti Cepheus costs 38.5 credits per 200-shot run; IonQ Forte through AWS costs about 1,630.
-   - Simulators and emulators are free.
-   - Log every job ID in `WRITEUP.md` (run record at the end).
+2. **Hardware runs.** Cap each run at 200 shots (track rule), and log every job ID in `WRITEUP.md` (run record at the end).
 3. **Secrets.** The qBraid API key lives in `~/.qrypt.env`, outside the repo. Load it with `set -a; . ~/.qrypt.env; set +a`. Never print it, commit it, or copy it into a file.
 4. **Git**
    - Author: the user's GitHub noreply identity (already set in git config).
@@ -34,7 +31,7 @@ The team's entry for the **Tennessee Quantum Hackathon, "Secure the Grid" track*
 7. **Generated files**
    - `site/` is built by `tools/build_site.sh` and ignored by git. Never edit it by hand.
    - `grid_twin.html` is built from `grid-twin/` by `node grid-twin/tools/build_standalone.mjs`. Rebuild it after any change in `grid-twin/`.
-8. **Notebooks.** Keep each notebook's kernelspec as it is: notebook 1 uses the qBraid-SDK kernel so it opens in qBraid Lab. To test, run scratch copies outside the repo. Don't run cells that submit paid jobs without approval.
+8. **Notebooks.** Keep each notebook's kernelspec as it is: notebook 1 uses the qBraid-SDK kernel so it opens in qBraid Lab. To test, run scratch copies outside the repo.
 9. **Scope.** The mentors' advice: "do less better than more worse". Satellites and teleportation between institutions are roadmap only.
 
 ## 3. Current decisions (and one open conflict)
