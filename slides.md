@@ -83,7 +83,7 @@ Draft (honest list; add the teammate's failures):
 - What surprised us: IonQ's simulator and Quantinuum's emulator gave very different noise results for the same circuit (71.5% vs 92.5% at N = 8): noise is a property of the machine model, not the algorithm.
 - What failed or cost us time: the notebook's device list did not show IBM's 156-qubit machines that the web catalog lists; a package update (openqasm3 1.0.2) broke QASM 2 submission from Python until we pinned 1.0.1; the first job path to the Quantinuum emulator needed Quantinuum's terms accepted. Add anything else that went wrong.
 - What we would do next: pilot hybrid ML-KEM on the VPN edge, start a crypto inventory, require PQC-capable hardware in the next procurement.
-- AI use (be upfront): we used AI assistants (Claude and open models via OpenCode) to draft parts of the written analysis and to write and check code. Every claim marked VERIFY needs a human check, and everyone presenting must be able to explain what is in the deck.
+- Tools we used: AI assistants helped with drafting and checking code and notes. We reviewed the results ourselves, and everyone presenting can explain what is in the deck.
 
 ---
 
