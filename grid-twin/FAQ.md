@@ -12,7 +12,7 @@ One Qiskit job per photon takes seconds per fiber; the 34 QKD fibers on the real
 Eve guesses the wrong basis half the time; then her resent photon makes Bob's result random, wrong half of those times: 1/2 × 1/2 = 1/4. With fiber noise p, the error rate is p + f(1/4 − p/2) for a tap on a fraction f of photons.
 
 **Why isn't the alarm at 11%?**
-11% is where no secret key can be made at all (the key fraction 1 − 2h(Q) reaches zero; Shor and Preskill 2000). A careful spy stays far below that. So we warn when a fiber is statistically above its own baseline, about 4.7% to 5.0% here, and keep 11% as the abort line.
+11% is where no secret key can be made at all (the key fraction 1 − 2h(Q) reaches zero; Shor and Preskill 2000). A careful spy stays far below that. So we warn when a fiber is statistically above its own baseline of 3.3%: the warning line is 4.4% to 5.1% on Chattanooga's fibers, depending on how many photons each detects. 11% stays the abort line.
 
 **Can a spy hide?**
 Yes, a little. Tapping about 5% of photons gives a 4.5% error rate, inside normal noise. She learns little, and privacy amplification removes what she learned. Raising sensitivity catches her sooner but causes more false alarms; the panel shows that trade-off.
@@ -57,7 +57,7 @@ The eavesdropping alarm is the part only physics can give: a classical link can 
 No. Detection, the switch to ML-KEM, rerouting, decoy traffic, the tap measurement and the inspection recommendation all run on their own; the incident card shows each step and its time. The one thing left to a person is quarantine, because an automatic quarantine would let an attacker cut communications just by tapping.
 
 **Is there a satellite?**
-Only as a drawing, and it will probably be taken out unless we find a quantum application only a satellite can serve. The mentors put satellites on the roadmap for statewide distances. Our real Chattanooga links are all at most 22.2 km, well within fiber QKD; only the statewide 500 kV view has spans over 80 km.
+No. The mentors put satellites on the roadmap for statewide distances, and the team removed the satellite drawing from the app. Our real Chattanooga links are all at most 22.2 km, well within fiber QKD; only the statewide 500 kV view has spans over 80 km.
 
 **Is the map real?**
 Yes. Substations and lines are public OpenStreetMap data, the same data OpenInfraMap draws. Two things are our assumptions: which two substations hold the keys, and that fiber runs along every power line.
@@ -67,4 +67,4 @@ You pick a start site, an end site and a QBER cutoff (QBER is the share of key b
 Grover is a demonstration, not a speed-up. We list the 8 shortest candidate routes (Yen's method), and notebook 2b's Grover circuit (its oracle extended to mark several items) amplifies the clean ones; the route it draws is then checked normally. With no clean route, every draw fails the check and the search falls back to ML-KEM. Dijkstra already solves this exactly and fast on a normal computer, and the oracle is built from error rates we already know. What it shows is the same circuit from 2b working on a grid problem, with √N oracle queries instead of N.
 
 **Why fewest sites rather than shortest distance?**
-There are no quantum repeaters, so a QKD key only crosses one fiber. Every site in the middle is a trusted relay: it measures the key and re-encrypts it for the next fiber. For that moment, someone inside the site, an insider or a hacked device, could read it. Each extra site is one more place the key can leak, while a few extra kilometres of city fiber barely change the error rate (the model's baseline is 3.3% from 8 to 22 km). So the search minimises the number of sites first and only then the risk-weighted distance. The panel shows the difference: "the shortest route would pass through N sites; this one passes through M".
+There are no quantum repeaters, so a QKD key only crosses one fiber. Every site in the middle is a trusted relay: it measures the key and re-encrypts it for the next fiber. For that moment, someone inside the site, an insider or a hacked device, could read it. Each extra site is one more place the key can leak, while a few extra kilometres of city fiber barely change the error rate (the model's baseline is 3.3% on every Chattanooga fiber, 0.2 to 22.2 km). So the search minimises the number of sites first and only then the risk-weighted distance. The panel shows the difference: "the shortest route would pass through N sites; this one passes through M".

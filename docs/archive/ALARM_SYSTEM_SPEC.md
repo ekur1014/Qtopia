@@ -1,3 +1,11 @@
+> **Archived, 14 Nov 2026: superseded, not our current design.** Kept for the record (author: Asheb). The team's design and numbers are in `WRITEUP.md`. This draft disagrees with them on:
+> - **Tap physics.** Intercepting a share f of photons raises QBER by about f/4. A 1–2% tap adds only about 0.25–0.5 points, so it is not "100% detected" and does not push QBER to 25%. A tap that only diverts light shows up as loss, not errors.
+> - **Response.** An alarm never takes a fiber down: it switches to ML-KEM keys and stays up, and only an operator quarantines.
+> - **Removed from the design:** the dual ring and the satellite tier. The "<12 ms" and "11.4 ms" figures were never measured.
+> - **Wording.** The IP plan and the "EPB Central Command" labels are illustrative, not EPB's.
+>
+> The idea we kept: today's loss monitoring (power levels and OTDR) can miss a small tap, and QBER adds a second, independent signal. See `WRITEUP.md`, Step 1 Part 3.
+
 # Quantum Intrusion Detection System (Q-IDS) & Grid Security Alarm Specification
 ## Tennessee Quantum Hackathon — UTC Track 1: Secure the Grid
 **Authors:** Team Qrypt (Asheb, Ethan Kur, and Team)  

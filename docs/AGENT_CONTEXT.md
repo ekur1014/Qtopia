@@ -26,7 +26,8 @@ The team's entry for the **Tennessee Quantum Hackathon, "Secure the Grid" track*
    - Fetch before pushing; if `origin/main` moved, rebase rather than overwrite.
 5. **One session edits at a time.** Several Claude sessions have worked in this same folder at once, and commits have collided. Before editing, run `git status` and `git log -3`. If files you didn't touch are changing, stop and tell the user.
 6. **Teammates' files.** These were written by teammates; change them only with the user's go-ahead:
-   - Asheb wrote the dual-ring router: `dual_ring_quantum_routing.html`, `dual_ring_router.py`.
+   - Asheb wrote the dual-ring router (since removed; its search logic lives on in `chattanooga_router.py`), and the alarm-system draft now in `docs/archive/`.
+   - **Web uploads have overwritten `WRITEUP.md` twice** (1ee92a3, 1efbdde). After any "Add files via upload" commit, diff `WRITEUP.md` against the last audited version before building on it.
    - Notebooks 1 and 3 were written by teammates.
 7. **Generated files**
    - `site/` is built by `tools/build_site.sh` and ignored by git. Never edit it by hand.
@@ -65,7 +66,7 @@ The team's entry for the **Tennessee Quantum Hackathon, "Secure the Grid" track*
 
 ```bash
 cd ~/VSCode/Qrypt
-cd grid-twin && node --test tests/*.test.mjs && cd ..          # all must pass (35 as of 3982065)
+cd grid-twin && node --test tests/*.test.mjs && cd ..          # all must pass (40 as of the 14 Nov audit fixes)
 python3 -m http.server 8000                                     # site at http://localhost:8000
 python3 grid-twin/start.py                                      # live grid + quantum-code buttons
 bash tools/build_site.sh                                        # build site/ (Vercel runs this too)
@@ -90,7 +91,7 @@ bash tools/build_site.sh                                        # build site/ (V
   | QIR simulator | 0.000 |
 
 - **IonQ Forte was never run:** refused for credits.
-- **Thresholds:** abort at 11% (Shor–Preskill). The alarm is per fiber and statistical. On a 3.3% baseline, a 10% tap is caught, a 7% tap sits on the line, and a 5% tap hides.
+- **Thresholds:** abort at 11% (Shor–Preskill). The alarm is per fiber and statistical, from the exact binomial tail (false alarms at most 3.4e-6 per check at z = 4.5). On Chattanooga (baseline 3.3%) the warning line is 4.4–5.1%: a 10% tap is above it on all 34 QKD fibers (reliably caught on 31), a 7% tap sits near it, and a 5% tap stays under it on 23 of 34.
 - **Partial tap formula:** Q = p + f(1/4 − p/2).
 
 **Step 2 (Shor and Grover)**

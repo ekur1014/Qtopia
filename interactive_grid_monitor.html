@@ -605,7 +605,7 @@
           setPill(qberEval, 'Normal', 'ok');
           policyText.className = 'policy ok';
           policyText.innerHTML = `<strong>Normal noise.</strong> The alarm sounds above ${pct(warnAt, 1)}. Keys for this fiber come from <strong>QKD</strong>` + adv(' (BB84)') + '.' +
-            '<span class="q-note q-adv">The live grid uses a 4.5&sigma; test against each fiber\'s own baseline (about 4.3&ndash;5.0% on Chattanooga\'s QKD fibers); this prototype, the map and the lab use the simple stand-in baseline + 1.4 points.</span>';
+            '<span class="q-note q-adv">The live grid uses a 4.5&sigma; test against each fiber\'s own baseline (about 4.4&ndash;5.1% on Chattanooga\'s QKD fibers); this prototype, the map and the lab use the simple stand-in baseline + 1.4 points.</span>';
         } else if (st === 'warn') {
           setPill(qberEval, 'Alarm', 'warn');
           policyText.className = 'policy warn';

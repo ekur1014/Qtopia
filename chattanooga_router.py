@@ -128,7 +128,10 @@ def find_route(net, start, end, cutoff=DEFAULT_CUTOFF, qber=None, out_of_service
     oos = set(out_of_service)
     q = lambda l: qber.get(l["id"], 0.0)
     by_id = {l["id"]: l for l in net["links"]}
-    blocked = sorted(l["id"] for l in net["links"] if l["kind"] == "qkd" and q(l) >= cutoff)
+    blocked = sorted(l["id"] for l in net["links"] if l["kind"] == "qkd" and l["id"] not in oos and q(l) >= cutoff)
+    if start == end:  # same site: nothing to route (route.js returns the same)
+        return {"ok": True, "mode": "local", "nodes": [start], "links": [], "km": 0, "max_qber": 0.0, "relays": [],
+                "relays_can_read_key": False, "blocked": blocked, "shortest_km_route": None, "reason": "Same site."}
 
     tiers = [
         ("qkd", lambda l: l["kind"] == "qkd" and l["id"] not in oos and q(l) < cutoff),
@@ -149,7 +152,7 @@ def find_route(net, start, end, cutoff=DEFAULT_CUTOFF, qber=None, out_of_service
             "nodes": nodes,
             "links": links,
             "km": js_round1(sum(by_id[i]["km"] for i in links)),
-            "max_qber": max((qber.get(i, 0.0) for i in links), default=0.0),
+            "max_qber": max((qber.get(i, 0.0) for i in links if by_id[i]["kind"] == "qkd"), default=0.0),
             "relays": nodes[1:-1],
             "relays_can_read_key": mode == "qkd",
             "blocked": blocked,

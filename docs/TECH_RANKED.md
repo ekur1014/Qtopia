@@ -30,7 +30,7 @@ Ranked by what each adds to **our pitch by Sunday 9 AM**, given the mentors' adv
 - **ML-KEM:** the 46 kV lines to EPB distribution substations, following the mentors' advice of no QKD to neighborhoods.
 **What it shows that a made-up map cannot:**
 - **Chattanooga:** real line lengths (median 3.5 km, longest 22 km) are all far inside fiber QKD's reach.
-- **Statewide:** 8 of 38 spans are longer than 80 km. That is exactly where trusted relays or repeaters come in; satellites would only matter here, and will probably be dropped.
+- **Statewide:** 8 of 38 spans are longer than 80 km. That is exactly where trusted relays or repeaters come in. Satellites would only matter at this scale; the satellite drawing was removed from the app (14 Nov).
 **Caveat:** real control-center locations are not public, so the two key hubs (Chickamauga and Oglethorpe) are our assumption. Fiber is assumed to run along every power line (OPGW).
 
 ### 3. Visualization linked with real-time code runs
@@ -92,7 +92,7 @@ Ranked by what each adds to **our pitch by Sunday 9 AM**, given the mentors' adv
 
 ## The satellite question (from the mentor recordings)
 
-**The note we keep: the satellite layer will probably be taken out unless we find a quantum application only a satellite can serve.**
+**Decision (14 Nov): the satellite drawing was removed from the app. Satellites stay a roadmap idea only.**
 - **What the mentors said:** satellites belong on the roadmap. They matter at statewide scale, after first showing whether long fiber with repeaters is too expensive.
 - **The useful reference:** China's Beijing–Shanghai backbone.
   - About 2,000 km of fiber with 32 trusted relays, roughly 70 km apart (34 to 89 km).

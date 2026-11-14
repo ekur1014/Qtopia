@@ -33,7 +33,7 @@ const REGIONS = {
     qkdMaxKm: 80,
     nodeScale: 4,
     note: "TVA's 500 kV backbone across Tennessee (OpenStreetMap). We assume fiber runs along every line. Eight spans are longer than about 80 km, past what fiber QKD reaches without relay stations.",
-    design: "QKD only on 500 kV spans under 80 km; longer spans would need trusted relay stations (or, as a roadmap idea, satellite links) and run on ML-KEM here. Key hubs: the two substations with the most QKD fibers (assumed).",
+    design: "QKD only on 500 kV spans under 80 km; longer spans would need trusted relay stations and run on ML-KEM here. Key hubs: the two substations with the most QKD fibers (assumed).",
   },
 };
 

@@ -6,7 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runRounds, mulberry32, expectedQber, baselineQber, secretFraction, ABORT_QBER, estimateTapFraction, transmittance } from "../src/bb84.js";
-import { createDetector, normalTail } from "../src/detector.js";
+import { createDetector, normalTail, binomialCriticalCount } from "../src/detector.js";
 import { buildNetwork, shortestPath, controlCenters } from "../src/network.js";
 import { computeResponse, sitesStrandedWithout } from "../src/response.js";
 import { findRoute, candidateRoutes, grover } from "../src/route.js";
@@ -436,3 +436,58 @@ test("Route search and Grover match the Python router and the Aer state vector (
     out.probs.forEach((p, i) => assert.ok(Math.abs(p - e.probs[i]) < 1e-9, `N=${e.N} marked=${e.marked}: index ${i}`));
   }
 });
+
+// ---- Regression tests for the 14 Nov audit fixes ----------------------------------------------------------
+
+test("Grover over routes is never worse than a random pick, for every number of clean routes (N = 8, 16)", () => {
+  for (const N of [8, 16]) {
+    for (let M = 1; M <= N; M++) {
+      const g = grover(N, [...Array(M).keys()]);
+      assert.ok(g.success >= M / N - 1e-9, `N=${N} M=${M}: ${g.success} < ${M / N}`);
+    }
+  }
+});
+
+test("Exact binomial alarm line: the false-alarm chance per check is at most the normal tail it claims", () => {
+  const lnFact = (x) => { let r = 0; for (let i = 2; i <= x; i++) r += Math.log(i); return r; };
+  const tail = (n, p, k) => { let t = 0; for (let j = k; j <= n; j++) t += Math.exp(lnFact(n) - lnFact(j) - lnFact(n - j) + j * Math.log(p) + (n - j) * Math.log(1 - p)); return t; };
+  for (const [n, p, z] of [[600, 0.033, 4.5], [2240, 0.033, 4.5], [6424, 0.033, 4], [1500, 0.05, 3]]) {
+    const a = normalTail(z);
+    const k = binomialCriticalCount(n, p, a);
+    assert.ok(tail(n, p, k) <= a, `n=${n}: tail at k exceeds alpha`);
+    assert.ok(tail(n, p, k - 1) > a, `n=${n}: k is not the smallest count`);
+  }
+});
+
+test("An alarm does not clear on checks without enough evidence", () => {
+  const d = createDetector({ baseline: 0.033, z: 4.5 });
+  for (let i = 0; i < 16; i++) d.push({ sifted: 300, errors: 90 });
+  let r;
+  for (let i = 0; i < 22; i++) r = d.push({ sifted: 30, errors: 9 });
+  assert.notEqual(r.status, "ok", "thin evidence must not clear the alarm");
+});
+
+test("Yen's route candidates treat parallel fibers as different roots", () => {
+  const n = (id) => ({ id, type: "substation", pos: [0, 0] });
+  const l = (id, a, b, km) => ({ id, a, b, km, kind: "qkd" });
+  const g = buildNetwork({
+    nodes: [n("N0"), n("N1"), n("N3"), n("N4")],
+    links: [l("L0", "N0", "N1", 5), l("L1", "N0", "N1", 5), l("L3", "N0", "N1", 5), l("L10", "N0", "N1", 6),
+            l("L4", "N1", "N3", 4), l("L6", "N1", "N3", 4), l("L2", "N3", "N4", 3), l("L9", "N3", "N4", 4)],
+  });
+  const routes = candidateRoutes(g, "N0", "N4", { k: 8 }).map((r) => r.map((x) => x.id).join(","));
+  assert.equal(new Set(routes).size, routes.length, "routes are distinct");
+  const km = (ids) => ids.split(",").reduce((s, id) => s + g.links.get(id).km, 0);
+  for (let i = 1; i < routes.length; i++) assert.ok(km(routes[i]) >= km(routes[i - 1]), `route ${i} shorter than route ${i - 1}`);
+  const twelve = routes.filter((r) => km(r) === 12);
+  assert.equal(twelve.length, 6, "all six 12 km routes come first (3 parallel first hops x 2 x 1)");
+});
+
+test("Route search: same site is local; out-of-service fibers are not listed as blocked", () => {
+  const ids = [...net.nodes.keys()];
+  assert.equal(findRoute(net, ids[0], ids[0]).mode, "local");
+  const qkd = [...net.links.values()].find((x) => x.kind === "qkd");
+  const r = findRoute(net, ids[0], ids[1], { qberOf: (x) => (x.id === qkd.id ? 0.3 : 0), inService: (x) => x.id !== qkd.id });
+  assert.ok(!r.blocked.includes(qkd.id), "an out-of-service fiber is unavailable, not blocked");
+});
+

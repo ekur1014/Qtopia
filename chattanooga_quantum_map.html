@@ -405,7 +405,7 @@
         "<b>Green lines</b> carry quantum keys (QKD: keys sent as single photons). <b>Blue lines</b> use ML-KEM, post-quantum backup encryption.";
       var byKv = {};
       net.links.forEach(function (l) { var k = l.kv || 0; (byKv[k] = byKv[k] || { n: 0, km: 0, qkd: 0 }); byKv[k].n++; byKv[k].km += l.km; if (l.kind === "qkd") byKv[k].qkd++; });
-      $("volt-lead").innerHTML = "<b>" + net.nodes.length + "</b> substations and <b>" + net.links.length + "</b> lines, " +
+      $("volt-lead").innerHTML = "<b>" + net.nodes.length + "</b> sites and <b>" + net.links.length + "</b> lines, " +
         Math.round(net.links.reduce(function (s, l) { return s + l.km; }, 0)) + " km in all. The longest line is " + longest.toFixed(1) + " km" + (over80 ? ", and " + over80 + " are over 80 km" : "") + ".";
       $("volt").innerHTML = "<tr><th>Voltage</th><th>Lines</th><th>Length</th><th>Keys</th></tr>" +
         Object.keys(byKv).map(Number).sort(function (x, y) { return y - x; }).map(function (k) {
@@ -417,7 +417,7 @@
         $("reach-more").textContent = "No repeaters and no satellite are needed at city scale.";
       } else {
         $("reach").innerHTML = "<b>" + over80 + " of " + net.links.length + "</b> spans are longer than 80 km. Those would need trusted relays: sites that briefly hold the key.";
-        $("reach-more").textContent = "China's Beijing–Shanghai fiber backbone, about 2,000 km long, uses 32 trusted relays (arXiv:2212.10820). This is the only scale where a satellite could ever make sense, and we will probably drop the idea unless a quantum application needs one.";
+        $("reach-more").textContent = "China's Beijing–Shanghai fiber backbone, about 2,000 km long, uses 32 trusted relays (arXiv:2212.10820). This is the only scale where a satellite could ever make sense; satellites stay on our roadmap, not in the design.";
       }
       document.querySelectorAll("[data-region]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.region === region)); });
 

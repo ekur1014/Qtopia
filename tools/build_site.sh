@@ -16,6 +16,7 @@ mkdir -p site/grid-twin/data site/shared
 
 cp index.html                    site/index.html                  # home: links every page below
 cp shared/qrypt.css shared/qbar.js site/shared/                   # one design system and top bar
+cp -r shared/kit                 site/shared/kit                  # the home page's effect module (shared/kit/effects/fx.js)
 cp chattanooga_quantum_map.html  site/                            # Real map
 cp bb84_visualizer.html          site/                            # Photon line (notebook 1, one fiber)
 cp threejs_quantum_grid.html     site/                            # Quantum lab

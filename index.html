@@ -210,8 +210,8 @@
       <div class="wrap hero__inner">
         <div class="hero__copy">
           <h1 id="hero-h">Quantum keys for Chattanooga's power grid</h1>
-          <p class="hero__lead q-enter-item">A working model of the city's real grid whose control links get their keys as single photons (quantum key distribution, QKD). Tap a fiber and the photons give the spy away; the link switches to backup post-quantum encryption and stays up.</p>
-          <p class="hero__fact q-enter-item"><span><b>117</b> real substations</span><i class="sep" aria-hidden="true"></i><span>BB84 on every transmission fiber</span></p>
+          <p class="hero__lead q-enter-item">A working model of the city's real grid whose control links get their keys as single photons (quantum key distribution, QKD). Tap a fiber heavily and the photons give the spy away; a careful tap mostly hides, but only costs key rate. On an alarm the link switches to backup post-quantum encryption and stays up.</p>
+          <p class="hero__fact q-enter-item"><span><b>117</b> real grid sites</span><i class="sep" aria-hidden="true"></i><span>BB84 on every transmission fiber</span></p>
           <div class="hero__actions q-enter-item">
             <a class="btn btn--primary q-btn" href="chattanooga_quantum_map.html">Start with the real map<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             <a class="btn btn--ghost q-btn" href="grid-twin/index.html">Open the live grid</a>
@@ -309,7 +309,7 @@
           <p>Every figure comes from the map data, the model, or a recorded quantum run (job IDs in <a class="q-link" href="WRITEUP.md">WRITEUP.md</a>).</p>
         </div>
         <ul class="nums">
-          <li class="num"><b>117</b><span>real substations around Chattanooga, mostly EPB and TVA, from OpenStreetMap</span></li>
+          <li class="num"><b>117</b><span>real grid sites around Chattanooga (31 substations, 84 smaller sub-units, 2 assumed control centers), mostly EPB and TVA, from OpenStreetMap</span></li>
           <li class="num"><b>34</b><span>fibers running BB84 in the live grid</span></li>
           <li class="num"><b>4.25%</b><span>error rate when notebook 1 ran BB84 on a real Rigetti quantum computer, no spy (51 of 1,200 bits): under the 11% limit</span><span class="q-adv">Job aws:rigetti:qpu:cepheus-1-108q-a7ae-qjob-6af8baa6c8f5265fb3f203f7</span></li>
           <li class="num"><b>83.5%</b><span>of teleported qubits arrived correct on the same Rigetti machine (167 of 200 shots, notebook 3)</span><span class="q-adv">Job aws:rigetti:qpu:cepheus-1-108q-a7ae-qjob-6af8bab8c8f5265fb3f2040a. All three qubits sat on one chip, so this tests the circuit, not distance.</span></li>

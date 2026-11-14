@@ -147,5 +147,8 @@ const manifest = [
   { id: "city", label: "Stylized city network", file: "data/network.json", nodes: 17, links: 21, qkd: 11, note: "Hand-made layout: 2 control centers, 6 substations, 8 sub-units, 1 remote site." },
   ...CASES.map(convert),
 ];
-fs.writeFileSync(path.join(root, "data/networks/index.json"), JSON.stringify(manifest, null, 1) + "\n");
+// Keep the real networks (written by import_osm.mjs) at the top of the picker: only the test grids are replaced here.
+const idxPath = path.join(root, "data/networks/index.json");
+const existing = fs.existsSync(idxPath) ? JSON.parse(fs.readFileSync(idxPath, "utf8")) : [];
+fs.writeFileSync(idxPath, JSON.stringify([...existing.filter((m) => m.real), ...manifest], null, 1) + "\n");
 for (const m of manifest) console.log(`${m.id.padEnd(8)} ${String(m.nodes).padStart(3)} nodes ${String(m.links).padStart(3)} links  ${String(m.qkd).padStart(3)} QKD  ${m.control ?? ""} ${m.substation ?? ""} ${m.subunit ?? ""}`);

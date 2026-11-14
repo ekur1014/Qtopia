@@ -44,7 +44,7 @@ A full tap (f = 1) on a clean fiber gives 25%; on a 3.3% fiber it gives 26.65%.
 
 the single-photon case of Eq. (8) in Lo, Ma and Chen (PRL 94, 230504, 2005), using α = 0.21 dB/km, η_Bob = 4.5%, Y0 = 1.7e-6, e_opt = 3.3%: the GYS 2004 row of Table 1 in Ma, Qi, Zhao and Lo (arXiv quant-ph/0503005). City links (8 to 22 km) sit at 3.30%; 100 km is 3.5%, 150 km 5.7%, 200 km 21%.
 
-**Alarm.** Over a sliding window of n sifted bits, warn when Q̂ > Q_base + z·sqrt(Q_base(1 − Q_base)/n). With n about 2,200 to 3,200 sifted bits (a 4-second window; longer fibers detect fewer photons) and z = 4.5, the warning line is 4.7% to 5.0%. A tap on 10% or more of photons (QBER about 5.6%) is caught within seconds; a 7% tap (4.9%) sits right on the line and is caught only some of the time; a 5% tap (4.5%) hides in the noise (that is the "careful spy" the README asks about; privacy amplification is what makes her information worthless). The false-alarm chance per check is the normal tail at z (3.4e-6 at z = 4.5). Alarms clear only after several calm checks (hysteresis).
+**Alarm.** Over a sliding window of n sifted bits, warn when the error count reaches k, the smallest count whose exact binomial tail P(errors ≥ k | n, Q_base) is at most the normal tail at z. (The plain normal line Q_base + z·sqrt(Q_base(1 − Q_base)/n) alarms several times more often than it claims, because errors at a few percent are skewed.) On Chattanooga, n is about 2,200 to 6,400 sifted bits per 4-second window (longer fibers detect fewer photons), and at z = 4.5 the warning line is 4.4% to 5.1%. A tap on 10% of photons (QBER 5.6%) is above the line on every fiber and reliably caught on 31 of 34; a 7% tap (4.9%) sits near the line; a 5% tap (4.5%) stays under it on 23 of 34 fibers (the "careful spy" the README asks about; privacy amplification is what makes her information worthless). The false-alarm chance per check is at most the normal tail at z (3.4e-6 at z = 4.5). Alarms clear only after several calm checks (hysteresis).
 
 **Secret-key fraction.** r(Q) = max(0, 1 − 2h(Q)), h the binary entropy: 58% at 3.3% QBER, 0 at 11%. This is the asymptotic one-way bound; real systems with finite keys and decoy states get less.
 
@@ -93,7 +93,7 @@ The default view is Chattanooga's real grid from OpenStreetMap, and a statewide 
 
 **What the real data shows:**
 - **Chattanooga:** every link is between 0.2 and 22 km, comfortably inside fiber QKD's reach.
-- **Statewide:** 8 of 38 spans exceed 80 km and would need trusted relays or repeaters. That is the only place a satellite argument could start. It will probably be taken out unless we find a quantum application only a satellite can serve.
+- **Statewide:** 8 of 38 spans exceed 80 km and would need trusted relays or repeaters. That is the only place a satellite argument could start; satellites stay a roadmap idea, and the app no longer draws one.
 
 **Long fibers:** they detect fewer photons. Each fiber gets at least 90 detections per tick (about 45 sifted bits), so one 16-tick window always reaches the detector's 600-bit minimum. Before this floor, fibers over about 50 km stayed in "Measuring" forever.
 

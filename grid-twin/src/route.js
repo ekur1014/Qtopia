@@ -163,7 +163,8 @@ export function candidateRoutes(net, start, end, { k = 8, inService = () => true
       const rootLinks = last.links.slice(0, i);
       const blockedLinks = new Set();
       for (const p of A) {
-        if (p.nodes.length > i && p.nodes.slice(0, i + 1).every((n, j) => n === rootNodes[j])) blockedLinks.add(p.links[i]?.id);
+        // Same root means the same fibers, not just the same sites: two parallel fibers are different roots.
+        if (p.links.length > i && p.links.slice(0, i).every((l, j) => l.id === rootLinks[j].id)) blockedLinks.add(p.links[i].id);
       }
       const blockedNodes = new Set(rootNodes.slice(0, -1));
       const tail = search(net, spur, end, usable, km, blockedNodes, blockedLinks);

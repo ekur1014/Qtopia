@@ -1,3 +1,11 @@
+# ARCHIVED, 14 Nov 2026: superseded, kept for the record (author: Asheb). Not the team's design: see WRITEUP.md.
+# Known problems, so do not quote its output:
+#   - compare_with_legacy_otdr() computes QBER as 0.018 + 0.25 * (f / 0.02), which grows past 100% (126.8% for f = 0.10).
+#     The correct value is p + f * (0.25 - p / 2): 2.28% for a 2% tap, 4.21% for a 10% tap. So a 2% tap does not trip 11%.
+#   - The ring reroute can reuse the tapped span, and only the first compromised span is handled.
+#   - The 11.4 ms failover and the "mile marker" are hard-coded or random, not measured.
+#   - It models the dual ring, which the team removed.
+
 """
 Quantum Intrusion Detection System (Q-IDS) & Grid Network Security Alarm Engine
 Tennessee Quantum Hackathon — UTC Track 1: Secure the Grid

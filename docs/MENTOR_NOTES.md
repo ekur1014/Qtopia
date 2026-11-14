@@ -21,7 +21,7 @@ Saturday 14 November 2026. Source: `Additional Mentor Recordings IMPORTANT/`. It
 - Show it as a separate view with the real data.
 
 ### Distance, repeaters and satellites
-- Fiber QKD reaches roughly 80 to 100 km; substations can act as relays. Repeaters are expensive (a mentor said "half a mil" in passing).
+- Fiber QKD reaches roughly 80 to 100 km; substations can act as relays. Repeaters are expensive (a mentor's passing remark; we found no published price).
 - Use **China's network** as the reference for when fiber stops making sense.
 - Satellites (a LEO swarm, or a geostationary one, which needs government permission) are a **reach goal** for statewide scale. First work out whether long fiber is too expensive.
 
@@ -34,10 +34,10 @@ Saturday 14 November 2026. Source: `Additional Mentor Recordings IMPORTANT/`. It
 
 | Mentor point | Change |
 |---|---|
-| Use OpenInfraMap, show the real grid | New hero view **Tennessee Quantum Grid**: 117 real substations and 145 real lines around Chattanooga (EPB and TVA, from OpenStreetMap), and Tennessee's 500 kV backbone (33 substations). Grid Twin's stylized city and IEEE grids became the "Simulation lab" |
+| Use OpenInfraMap, show the real grid | New hero view **Tennessee Quantum Grid**: 117 real sites (31 substations, 84 sub-units and 2 control centers whose locations we assumed) and 145 real lines around Chattanooga (EPB and TVA, from OpenStreetMap), and Tennessee's 500 kV backbone (33 sites). Grid Twin's stylized city and IEEE grids became the "Simulation lab" |
 | QKD at high-value points only | On the real grid: QKD on 161 kV and above, ML-KEM on 46 kV distribution |
 | Distances decide fiber vs satellite | The statewide view marks the 8 spans over 80 km as needing relays (ML-KEM in the model). Real Chattanooga links are 0.2 to 22 km |
-| Satellite is roadmap only | The satellite layer stays off by default, labeled "concept, not simulated". **It will probably be taken out unless we find a quantum application only a satellite can serve** |
+| Satellite is roadmap only | The satellite drawing was removed (14 Nov): no part of our design needs one. Satellites stay a roadmap idea for statewide distances |
 | Decoy traffic and rerouting on an alarm | Already built; now automatic when a tap is placed |
 | Teleportation is roadmap | The teleportation view stays an optional layer, not part of the main demo |
 
@@ -45,8 +45,8 @@ Saturday 14 November 2026. Source: `Additional Mentor Recordings IMPORTANT/`. It
 
 Update: at the user's request these pages were fixed and restyled as part of one project site (see grid-twin/BUILD_LOG.md, "One project"). What we found:
 
-- `chattanooga_quantum_map.html` follows the same OpenInfraMap idea. Some of its sites match real places (the EPB headquarters address), others could not be matched to OpenStreetMap. Its cost figures ($100k per mile, "satellite saves over 90%") have no source.
-- `threejs_quantum_grid.html` shows "IonQ Forte: 98.5% fidelity". The job ID on that page is a simulator job (`ionq:sim:simulator-…`), so "Forte" should not be claimed; we could not match the ID to any run in our logs. Our own IonQ run was also on the simulator.
-- The same page claims teleportation gives breaker trips in under 16 ms. That is not supported: teleportation needs a classical message, so it is never faster than the fiber.
+- `chattanooga_quantum_map.html` followed the same OpenInfraMap idea. Some of its sites matched real places (the EPB headquarters address), others could not be matched to OpenStreetMap. Its cost figures ($100k per mile, "satellite saves over 90%") had no source.
+- `threejs_quantum_grid.html` showed "IonQ Forte: 98.5% fidelity". The job ID on that page was a simulator job (`ionq:sim:simulator-…`), so "Forte" should not have been claimed; we could not match the ID to any run in our logs. Our own IonQ run was also on the simulator.
+- The same page claimed teleportation gives breaker trips in under 16 ms. That is not supported: teleportation needs a classical message, so it is never faster than the fiber.
 
 All three are corrected now.

@@ -8,6 +8,8 @@ Sources of truth used:
 - **Map data**: `grid-twin/data/networks/chattanooga.json` (117 nodes, 145 links) and `tennessee500.json` (33 nodes, 38 links).
 - **Cited sources named on the page**: Ma, Qi, Zhao and Lo, Table 1 (map page); Shor-Preskill 11% (WRITEUP line 47).
 
+**Update, 14 Nov (later):** the alarm line now uses the exact binomial tail, so on Chattanooga it runs 4.4–5.1% (not 4.3–5.0%); the pages, docs and `WRITEUP.md` quote the new range. The test count is 40.
+
 Recomputed locally (no qBraid, no paid jobs):
 - `node --test tests/engine.test.mjs`: 35 of 35 pass.
 - `check_grover.py`: total mismatches 0.
@@ -51,7 +53,7 @@ Recomputed locally (no qBraid, no paid jobs):
 
 | Page | Location | Claim | Verdict and source |
 |---|---|---|---|
-| Home | `index.html:214` | "117 real substations" | SOURCED (c): `chattanooga.json` has 117 nodes, each with an OSM way link; WRITEUP:181 |
+| Home | `index.html:214` | "117 real grid sites" (was "117 real substations" until the 14 Nov fixes: 31 are substations) | SOURCED (c): `chattanooga.json` has 117 nodes, each with an OSM way link; WRITEUP:181 |
 | Home | `index.html:214` | "BB84 on every transmission fiber" | COMPUTED-OK: all 34 QKD links are 161/230/500 kV; all 111 PQC links are 46 kV (map data) |
 | Home | `index.html:261` | "runs four times a second on every QKD fiber" | COMPUTED-OK: `main.js:13` `TICK_MS = 250` |
 | Home | `index.html:263` | "error-rate cutoff (11% by default)" | SOURCED: WRITEUP:204; `ui.js:96` |
