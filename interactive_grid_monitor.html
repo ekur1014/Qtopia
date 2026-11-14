@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EPB Chattanooga Quantum Grid Monitor — QBER & Teleportation Tracker</title>
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #121826;
+      --accent-cyan: #00f2fe;
+      --accent-blue: #4facfe;
+      --secure-green: #00e676;
+      --warn-yellow: #ffd600;
+      --danger-red: #ff1744;
+      --text: #e0e6ed;
+      --text-dim: #94a3b8;
+      --border: #1e293b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    
+    header {
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo-area { display: flex; align-items: center; gap: 12px; }
+    .logo-badge { background: linear-gradient(135deg, var(--accent-blue), var(--accent-cyan)); color: #000; font-weight: 800; font-size: 13px; padding: 4px 8px; border-radius: 4px; }
+    h1 { font-size: 18px; font-weight: 700; color: #fff; }
+    .status-pill { display: flex; align-items: center; gap: 8px; background: rgba(0,230,118,0.1); border: 1px solid var(--secure-green); color: var(--secure-green); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--secure-green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+    main { display: flex; flex: 1; overflow: hidden; }
+    
+    /* Left / Canvas Graph View */
+    #graph-container { flex: 1; position: relative; background: radial-gradient(circle at center, #131d33 0%, var(--bg) 80%); }
+    canvas { width: 100%; height: 100%; display: block; }
+    
+    /* Overlay Instructions */
+    .map-overlay {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      background: rgba(18, 24, 38, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      pointer-events: none;
+      max-width: 320px;
+    }
+    .map-overlay h3 { font-size: 14px; margin-bottom: 4px; color: var(--accent-cyan); }
+    .map-overlay p { color: var(--text-dim); line-height: 1.4; }
+
+    /* Right Control Panel */
+    #sidebar {
+      width: 380px;
+      background: var(--card-bg);
+      border-left: 1px solid var(--border);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+    }
+    .card-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-dim);
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    /* QBER Metric Big Display */
+    .metric-row { display: flex; align-items: baseline; gap: 10px; }
+    .metric-val { font-size: 36px; font-weight: 800; }
+    .metric-status { font-size: 13px; font-weight: 700; padding: 2px 8px; border-radius: 4px; }
+    
+    /* Threshold Bar */
+    .bar-container { height: 10px; background: #1e293b; border-radius: 5px; position: relative; margin: 12px 0 6px; overflow: hidden; }
+    .bar-fill { height: 100%; width: 2%; transition: width 0.3s ease, background-color 0.3s ease; }
+    .bar-marker { position: absolute; top: 0; bottom: 0; width: 2px; z-index: 2; }
+    .marker-alarm { left: 32%; background: var(--warn-yellow); } /* 8% / 25% max scale */
+    .marker-shor { left: 44%; background: var(--danger-red); } /* 11% / 25% max scale */
+    .marker-labels { display: flex; justify-content: space-between; font-size: 10px; color: var(--text-dim); }
+
+    /* Interactive Eve Controls */
+    .slider-group { margin-top: 10px; }
+    .slider-header { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; color: var(--text-dim); }
+    input[type=range] { width: 100%; accent-color: var(--accent-cyan); }
+    
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      margin-top: 8px;
+    }
+    .btn-danger { background: rgba(255, 23, 68, 0.15); color: var(--danger-red); border: 1px solid var(--danger-red); }
+    .btn-danger:hover { background: var(--danger-red); color: #fff; }
+    .btn-reset { background: rgba(0, 242, 254, 0.1); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+    .btn-reset:hover { background: var(--accent-cyan); color: #000; }
+
+    /* Teleportation Feasibility Card */
+    .teleport-box {
+      border: 1px dashed var(--accent-cyan);
+      background: rgba(0, 242, 254, 0.03);
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .teleport-status { font-weight: 700; color: var(--secure-green); }
+    
+    /* Whiteboard Legend */
+    .legend { display: flex; flex-direction: column; gap: 8px; font-size: 12px; }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-line { width: 24px; height: 3px; border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo-area">
+      <div class="logo-badge">EPB CHATTANOOGA</div>
+      <h1>Quantum Grid Teleportation & QKD Monitor</h1>
+    </div>
+    <div class="status-pill" id="global-pill">
+      <div class="status-dot" id="global-dot"></div>
+      <span id="global-status-text">NETWORK SECURE (QBER &lt; 7%)</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Left Interactive Graph -->
+    <div id="graph-container">
+      <canvas id="gridCanvas"></canvas>
+      <div class="map-overlay">
+        <h3>Interactive Grid Topology</h3>
+        <p>Click on any connection line to attach an <strong>Eavesdropper (Eve)</strong> and observe real-time QBER spikes & Teleportation cutoff!</p>
+      </div>
+    </div>
+
+    <!-- Right Telemetry & Simulation Panel -->
+    <div id="sidebar">
+      
+      <!-- Selected Link Info -->
+      <div class="card">
+        <div class="card-title">Active Monitored Link</div>
+        <div style="font-size: 15px; font-weight: 700; color: #fff;" id="selected-link-title">Primary Hub &harr; North Substation</div>
+        <div style="font-size: 12px; color: var(--text-dim); margin-top: 3px;" id="selected-link-type">QKD Metro Fiber (12.4 km)</div>
+      </div>
+
+      <!-- Live QBER Gauge -->
+      <div class="card">
+        <div class="card-title">
+          <span>Observed QBER (Quantum Error Rate)</span>
+          <span id="qber-eval" class="metric-status" style="background: rgba(0,230,118,0.2); color: var(--secure-green);">NORMAL</span>
+        </div>
+        <div class="metric-row">
+          <div class="metric-val" id="qber-value" style="color: var(--secure-green);">1.8%</div>
+          <div style="font-size: 12px; color: var(--text-dim);">Baseline Line Noise: 1.8%</div>
+        </div>
+        
+        <div class="bar-container">
+          <div class="bar-fill" id="qber-bar" style="width: 7.2%; background: var(--secure-green);"></div>
+          <div class="bar-marker marker-alarm" title="Utility Alarm Threshold (8%)"></div>
+          <div class="bar-marker marker-shor" title="Shor-Preskill Breakdown (11%)"></div>
+        </div>
+        <div class="marker-labels">
+          <span>0%</span>
+          <span style="color: var(--warn-yellow);">8% Alarm</span>
+          <span style="color: var(--danger-red);">11% Shor-Preskill Cutoff</span>
+          <span>25% Spy</span>
+        </div>
+      </div>
+
+      <!-- Eavesdropper Injection -->
+      <div class="card">
+        <div class="card-title">Adversary Interception (Eve)</div>
+        <div class="slider-group">
+          <div class="slider-header">
+            <span>Eve Tapping Intensity:</span>
+            <span id="eve-rate-text" style="font-weight: 700; color: var(--accent-cyan);">0% (No Spy)</span>
+          </div>
+          <input type="range" id="eve-slider" min="0" max="100" value="0">
+        </div>
+        <button class="btn btn-danger" id="toggle-eve-btn">Inject 100% Intercept-Resend Spy</button>
+        <button class="btn btn-reset" id="reset-btn" style="display: none;">Remove Eavesdropper</button>
+      </div>
+
+      <!-- Quantum Teleportation & Entanglement Status -->
+      <div class="card">
+        <div class="card-title">Quantum Teleportation Link (Step 3)</div>
+        <div class="teleport-box" id="teleport-card">
+          <div>Entanglement Status: <span class="teleport-status" id="teleport-status-text">HEALTHY (QBER &lt; 11%)</span></div>
+          <div style="margin-top: 6px; color: var(--text-dim);" id="teleport-desc">
+            IonQ Forte Verified: Qubit 2 teleportation fidelity at <strong>98.5% (197/200 shots)</strong>. Arbitrary quantum states are transmitted end-to-end without measuring at intermediate nodes.
+          </div>
+        </div>
+      </div>
+
+      <!-- Architecture Whiteboard Legend -->
+      <div class="card">
+        <div class="card-title">Whiteboard Architecture Mapping</div>
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-line" style="background: var(--accent-cyan);"></div>
+            <span><strong>Point-to-Point QKD Link:</strong> Direct single-photon fiber</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-line" style="background: #a855f7; border-top: 2px dashed #a855f7;"></div>
+            <span><strong>Quantum Teleportation:</strong> Entanglement distribution backbone</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-line" style="background: #64748b;"></div>
+            <span><strong>Post-Quantum (PQC Edge):</strong> NIST ML-KEM/ML-DSA</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    const canvas = document.getElementById('gridCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    function resize() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Topology Nodes matching Ethan's Whiteboard
+    const nodes = [
+      { id: 'center', label: 'Central Grid EMS (Tower)', x: 0.5, y: 0.5, type: 'core', radius: 24 },
+      { id: 'north', label: 'North Regional Substation', x: 0.32, y: 0.28, type: 'primary', radius: 18 },
+      { id: 'south', label: 'South Regional Substation', x: 0.32, y: 0.72, type: 'primary', radius: 18 },
+      { id: 'east', label: 'East Regional Substation', x: 0.68, y: 0.28, type: 'primary', radius: 18 },
+      { id: 'west', label: 'West Regional Substation', x: 0.68, y: 0.72, type: 'primary', radius: 18 },
+      
+      // Feeders
+      { id: 'f1', label: 'Downtown Feeder A', x: 0.20, y: 0.20, type: 'feeder', radius: 10 },
+      { id: 'f2', label: 'Industrial Feeder B', x: 0.20, y: 0.36, type: 'feeder', radius: 10 },
+      { id: 'f3', label: 'Residential Feeder C', x: 0.20, y: 0.64, type: 'feeder', radius: 10 },
+      { id: 'f4', label: 'Hospital Microgrid D', x: 0.20, y: 0.80, type: 'feeder', radius: 10 },
+      { id: 'f5', label: 'Substation E', x: 0.80, y: 0.20, type: 'feeder', radius: 10 },
+      { id: 'f6', label: 'Substation F', x: 0.80, y: 0.36, type: 'feeder', radius: 10 },
+      { id: 'f7', label: 'Substation G', x: 0.80, y: 0.64, type: 'feeder', radius: 10 },
+      { id: 'f8', label: 'Substation H', x: 0.80, y: 0.80, type: 'feeder', radius: 10 },
+
+      // Teleportation Hub at the top (from Ethan's Whiteboard)
+      { id: 'teleport_hub', label: 'Quantum Teleportation / Entangled Source', x: 0.5, y: 0.12, type: 'teleport', radius: 16 }
+    ];
+
+    // Links between nodes
+    const links = [
+      { id: 'l1', from: 'center', to: 'north', dist: 12.4, type: 'qkd', eve: 0 },
+      { id: 'l2', from: 'center', to: 'south', dist: 14.1, type: 'qkd', eve: 0 },
+      { id: 'l3', from: 'center', to: 'east', dist: 11.8, type: 'qkd', eve: 0 },
+      { id: 'l4', from: 'center', to: 'west', dist: 16.5, type: 'qkd', eve: 0 },
+
+      // Teleportation Entanglement backbone
+      { id: 't1', from: 'teleport_hub', to: 'north', dist: 22.0, type: 'teleport', eve: 0 },
+      { id: 't2', from: 'teleport_hub', to: 'east', dist: 24.5, type: 'teleport', eve: 0 },
+
+      // Feeders (PQC edge)
+      { id: 'p1', from: 'north', to: 'f1', dist: 4.2, type: 'pqc', eve: 0 },
+      { id: 'p2', from: 'north', to: 'f2', dist: 5.1, type: 'pqc', eve: 0 },
+      { id: 'p3', from: 'south', to: 'f3', dist: 6.0, type: 'pqc', eve: 0 },
+      { id: 'p4', from: 'south', to: 'f4', dist: 3.8, type: 'pqc', eve: 0 },
+      { id: 'p5', from: 'east', to: 'f5', dist: 4.5, type: 'pqc', eve: 0 },
+      { id: 'p6', from: 'east', to: 'f6', dist: 7.2, type: 'pqc', eve: 0 },
+      { id: 'p7', from: 'west', to: 'f7', dist: 5.8, type: 'pqc', eve: 0 },
+      { id: 'p8', from: 'west', to: 'f8', dist: 6.4, type: 'pqc', eve: 0 }
+    ];
+
+    let selectedLink = links[0];
+    let animationPhase = 0;
+
+    function getNode(id) {
+      return nodes.find(n => n.id === id);
+    }
+
+    // UI elements
+    const eveSlider = document.getElementById('eve-slider');
+    const eveRateText = document.getElementById('eve-rate-text');
+    const qberValue = document.getElementById('qber-value');
+    const qberBar = document.getElementById('qber-bar');
+    const qberEval = document.getElementById('qber-eval');
+    const toggleEveBtn = document.getElementById('toggle-eve-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const selectedLinkTitle = document.getElementById('selected-link-title');
+    const selectedLinkType = document.getElementById('selected-link-type');
+    const teleportStatusText = document.getElementById('teleport-status-text');
+    const teleportDesc = document.getElementById('teleport-desc');
+    const globalPill = document.getElementById('global-pill');
+    const globalDot = document.getElementById('global-dot');
+    const globalStatusText = document.getElementById('global-status-text');
+
+    function updateSimulation() {
+      const baseNoise = 1.5 + (selectedLink.dist * 0.05); // 1.5% to 2.5% natural line noise
+      const eveContribution = (selectedLink.eve / 100) * 25.0; // max 25% error when Eve intercepts 100%
+      const currentQBER = baseNoise + eveContribution;
+
+      qberValue.innerText = currentQBER.toFixed(1) + '%';
+      
+      // Bar is scaled to 25% max
+      const pct = Math.min(100, (currentQBER / 25.0) * 100);
+      qberBar.style.width = pct + '%';
+
+      if (currentQBER < 7.0) {
+        qberValue.style.color = 'var(--secure-green)';
+        qberBar.style.backgroundColor = 'var(--secure-green)';
+        qberEval.innerText = 'NORMAL (LINE NOISE)';
+        qberEval.style.background = 'rgba(0,230,118,0.2)';
+        qberEval.style.color = 'var(--secure-green)';
+        
+        teleportStatusText.innerText = 'HEALTHY (QBER < 11%)';
+        teleportStatusText.style.color = 'var(--secure-green)';
+        teleportDesc.innerHTML = 'IonQ Forte Verified: Qubit 2 teleportation fidelity at <strong>98.5% (197/200 shots)</strong>. Arbitrary quantum states are transmitted end-to-end without measuring at intermediate nodes.';
+
+        globalPill.style.borderColor = 'var(--secure-green)';
+        globalPill.style.color = 'var(--secure-green)';
+        globalPill.style.background = 'rgba(0,230,118,0.1)';
+        globalDot.style.background = 'var(--secure-green)';
+        globalStatusText.innerText = 'NETWORK SECURE (QBER < 7%)';
+      } else if (currentQBER < 11.0) {
+        qberValue.style.color = 'var(--warn-yellow)';
+        qberBar.style.backgroundColor = 'var(--warn-yellow)';
+        qberEval.innerText = 'WARNING: ALARM THRESHOLD EXCEEDED';
+        qberEval.style.background = 'rgba(255,214,0,0.2)';
+        qberEval.style.color = 'var(--warn-yellow)';
+
+        teleportStatusText.innerText = 'DEGRADED (APPROACHING LIMIT)';
+        teleportStatusText.style.color = 'var(--warn-yellow)';
+        teleportDesc.innerHTML = 'Warning: Noise approaching 11% Shor-Preskill limit. Privacy amplification key distillation efficiency dropping rapidly.';
+
+        globalPill.style.borderColor = 'var(--warn-yellow)';
+        globalPill.style.color = 'var(--warn-yellow)';
+        globalPill.style.background = 'rgba(255,214,0,0.1)';
+        globalDot.style.background = 'var(--warn-yellow)';
+        globalStatusText.innerText = 'EAVESDROPPER DETECTED (>8% ALARM)';
+      } else {
+        qberValue.style.color = 'var(--danger-red)';
+        qberBar.style.backgroundColor = 'var(--danger-red)';
+        qberEval.innerText = 'DANGER: SHOR-PRESKILL CUTOFF (ABORT)';
+        qberEval.style.background = 'rgba(255,23,68,0.2)';
+        qberEval.style.color = 'var(--danger-red)';
+
+        teleportStatusText.innerText = 'ABORTED: LINK COMPROMISED';
+        teleportStatusText.style.color = 'var(--danger-red)';
+        teleportDesc.innerHTML = '<strong style="color: var(--danger-red);">EMERGENCY FAILOVER ACTIVATED:</strong> Key generation halted on this link. Traffic automatically rerouted through authenticated NIST Post-Quantum Cryptography (ML-KEM / FIPS 203).';
+
+        globalPill.style.borderColor = 'var(--danger-red)';
+        globalPill.style.color = 'var(--danger-red)';
+        globalPill.style.background = 'rgba(255,23,68,0.1)';
+        globalDot.style.background = 'var(--danger-red)';
+        globalStatusText.innerText = 'CRITICAL ATTACK: KEY ABORTED';
+      }
+
+      eveSlider.value = selectedLink.eve;
+      eveRateText.innerText = selectedLink.eve + '% ' + (selectedLink.eve > 0 ? '(Eavesdropper Active)' : '(No Spy)');
+      
+      if (selectedLink.eve > 0) {
+        toggleEveBtn.style.display = 'none';
+        resetBtn.style.display = 'block';
+      } else {
+        toggleEveBtn.style.display = 'block';
+        resetBtn.style.display = 'none';
+      }
+    }
+
+    eveSlider.addEventListener('input', (e) => {
+      selectedLink.eve = parseInt(e.target.value);
+      updateSimulation();
+    });
+
+    toggleEveBtn.addEventListener('click', () => {
+      selectedLink.eve = 100;
+      updateSimulation();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      selectedLink.eve = 0;
+      updateSimulation();
+    });
+
+    // Canvas rendering loop
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      animationPhase += 0.03;
+
+      // Draw links
+      links.forEach(l => {
+        const fromNode = getNode(l.from);
+        const toNode = getNode(l.to);
+        const x1 = fromNode.x * canvas.width;
+        const y1 = fromNode.y * canvas.height;
+        const x2 = toNode.x * canvas.width;
+        const y2 = toNode.y * canvas.height;
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+
+        const isSelected = (l === selectedLink);
+
+        if (l.eve > 0) {
+          ctx.strokeStyle = '#ff1744';
+          ctx.lineWidth = isSelected ? 4 : 3;
+          ctx.setLineDash([6, 4]);
+        } else if (l.type === 'qkd') {
+          ctx.strokeStyle = isSelected ? '#00f2fe' : 'rgba(0, 242, 254, 0.5)';
+          ctx.lineWidth = isSelected ? 3 : 2;
+          ctx.setLineDash([]);
+        } else if (l.type === 'teleport') {
+          ctx.strokeStyle = isSelected ? '#c084fc' : 'rgba(168, 85, 247, 0.6)';
+          ctx.lineWidth = isSelected ? 3 : 2;
+          ctx.setLineDash([4, 4]);
+        } else {
+          ctx.strokeStyle = isSelected ? '#94a3b8' : 'rgba(148, 163, 184, 0.3)';
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([]);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Animated photon pulse on active QKD/Teleport links
+        if (l.eve === 0 && (l.type === 'qkd' || l.type === 'teleport')) {
+          const t = (animationPhase % 1);
+          const px = x1 + (x2 - x1) * t;
+          const py = y1 + (y2 - y1) * t;
+          ctx.beginPath();
+          ctx.arc(px, py, 3, 0, Math.PI * 2);
+          ctx.fillStyle = l.type === 'teleport' ? '#e9d5ff' : '#00f2fe';
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = l.type === 'teleport' ? '#c084fc' : '#00f2fe';
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+
+        // Eavesdropper icon indicator
+        if (l.eve > 0) {
+          const midX = (x1 + x2) / 2;
+          const midY = (y1 + y2) / 2;
+          ctx.beginPath();
+          ctx.arc(midX, midY, 10, 0, Math.PI * 2);
+          ctx.fillStyle = '#ff1744';
+          ctx.fill();
+          ctx.fillStyle = '#fff';
+          ctx.font = 'bold 9px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('EVE', midX, midY);
+        }
+      });
+
+      // Draw nodes
+      nodes.forEach(n => {
+        const nx = n.x * canvas.width;
+        const ny = n.y * canvas.height;
+
+        ctx.beginPath();
+        ctx.arc(nx, ny, n.radius, 0, Math.PI * 2);
+
+        if (n.type === 'core') {
+          ctx.fillStyle = '#1e293b';
+          ctx.strokeStyle = '#00f2fe';
+          ctx.lineWidth = 3;
+        } else if (n.type === 'primary') {
+          ctx.fillStyle = '#1e293b';
+          ctx.strokeStyle = '#4facfe';
+          ctx.lineWidth = 2.5;
+        } else if (n.type === 'teleport') {
+          ctx.fillStyle = '#2e1065';
+          ctx.strokeStyle = '#c084fc';
+          ctx.lineWidth = 2.5;
+        } else {
+          ctx.fillStyle = '#0f172a';
+          ctx.strokeStyle = '#64748b';
+          ctx.lineWidth = 1.5;
+        }
+        ctx.fill();
+        ctx.stroke();
+
+        // Node label
+        ctx.fillStyle = '#e2e8f0';
+        ctx.font = (n.type === 'core' || n.type === 'teleport') ? 'bold 12px sans-serif' : '11px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(n.label, nx, ny + n.radius + 14);
+      });
+
+      requestAnimationFrame(render);
+    }
+
+    // Canvas click detection for link selection
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
+      const clickY = e.clientY - rect.top;
+
+      let closestLink = null;
+      let minDistance = 25; // threshold in pixels
+
+      links.forEach(l => {
+        const fromNode = getNode(l.from);
+        const toNode = getNode(l.to);
+        const x1 = fromNode.x * canvas.width;
+        const y1 = fromNode.y * canvas.height;
+        const x2 = toNode.x * canvas.width;
+        const y2 = toNode.y * canvas.height;
+
+        // Distance from point to line segment
+        const A = clickX - x1;
+        const B = clickY - y1;
+        const C = x2 - x1;
+        const D = y2 - y1;
+        const dot = A * C + B * D;
+        const lenSq = C * C + D * D;
+        let param = -1;
+        if (lenSq !== 0) param = dot / lenSq;
+
+        let xx, yy;
+        if (param < 0) { xx = x1; yy = y1; }
+        else if (param > 1) { xx = x2; yy = y2; }
+        else { xx = x1 + param * C; yy = y1 + param * D; }
+
+        const dx = clickX - xx;
+        const dy = clickY - yy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestLink = l;
+        }
+      });
+
+      if (closestLink) {
+        selectedLink = closestLink;
+        const fromName = getNode(selectedLink.from).label;
+        const toName = getNode(selectedLink.to).label;
+        selectedLinkTitle.innerHTML = `${fromName} &harr; ${toName}`;
+        selectedLinkType.innerText = `${selectedLink.type.toUpperCase()} Link (${selectedLink.dist} km)`;
+        updateSimulation();
+      }
+    });
+
+    updateSimulation();
+    render();
+  </script>
+</body>
+</html>
