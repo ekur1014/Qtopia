@@ -39,11 +39,11 @@ Draft (DONE, from Step 2):
 Questions to answer: What does a utility like EPB run on these links today? How long do field devices stay in service? Who signs off on a change like this, and which rules apply?
 
 Draft (mostly DONE, needs VERIFY on numbers):
-- Customer: a city-scale utility like EPB in Chattanooga. EPB serves a 600-square-mile territory with a 100% community-wide fiber network, and EPB Fiber Optics has 132,658 customers (EPB Annual Report 2025; 131,233 in 2024). EPB's quantum-network press release cites a separate 9,000-mile community-wide fiber network. Electric customer count: about 200,000 (VERIFY, we did not confirm it from EPB's own report).
+- Customer: a city-scale utility like EPB in Chattanooga. EPB serves a 600-square-mile territory with a 100% community-wide fiber network, and EPB Fiber Optics has 132,658 customers (EPB Annual Report 2025; 131,233 in 2024). EPB's quantum-network press release cites a separate 9,000-mile community-wide fiber network. EPB serves over 202,000 electric customers (EPB Financial Report FY2025).
 - It also runs the EPB Quantum Network: 216 dedicated dark fibers with room for 10 quantum nodes in downtown Chattanooga (EPB press release, Sept 2023; promotional source). It has a history of QKD field tests on its own fiber (Evans et al., IEEE Access 2021, trusted-node QKD, three systems).
-- What they run on these links: DNP3 (SAv5), IEC 61850 (MMS, GOOSE), IEC 62351, ICCP, VPNs, smart-meter systems. Most of it is secured with RSA/ECC today. VERIFY the exact protocol crypto per vendor.
+- What they run on these links: DNP3 (SAv5), IEC 61850 (MMS, GOOSE), IEC 62351, ICCP, VPNs, smart-meter systems. Most of it is secured with RSA/ECC today. DNP3 SAv5 uses symmetric HMAC-SHA-256 for message authentication; IEC 62351-6:2020 moved GOOSE authentication to symmetric MACs. VERIFY the exact protocol crypto per vendor.
 - Device life: protection relays and RTUs are planned for roughly 20-30 years; AMI meters 10-20 (SEL, ABB, utility planning documents). That is why a signature trusted today must hold into the 2040s.
-- Who decides and which rules: the utility's engineering and security leadership and its board; NERC CIP-012-2 (control-center-to-control-center data protection, enforceable since 1 July 2026; technology-neutral, does not mandate encryption); CIP-005-8 (not yet enforceable; effective 1 July 2028, per NERC's standard page). NIST IR 8547 sets 2030 deprecation / 2035 disallowance for RSA and ECC in NIST standards; it binds a municipal utility through contracts, regulators or policy, not automatically.
+- Who decides and which rules: the utility's engineering and security leadership and its board; NERC CIP-012-2 (control-center-to-control-center data protection, enforceable since 1 July 2026; technology-neutral, does not mandate encryption); CIP-005-8 (not yet enforceable; effective 1 July 2028, per NERC's standard page). NIST IR 8547 sets 2030 deprecation / 2035 disallowance for RSA and ECC in NIST standards; it binds a municipal utility through contracts, regulators or policy, not automatically. Federal systems (EO 14412): PQC key establishment by end of 2030 and PQC signatures by end of 2031.
 - What an attack costs them (use sparingly, label as context): the 2015 Ukraine grid attack cut power to about 225,000 customers for 1-6 hours (E-ISAC report). The IBM Cost of a Data Breach 2024 average is $4.88M across all industries (not utility-specific).
 
 ### Why they would adopt or pay (the value argument; belongs on slide 2)
@@ -91,7 +91,7 @@ Draft (honest list; add the teammate's failures):
 - [ ] Teammate's Step 1 (BB84) and Step 3 (capstone) added to slides 1, 3, 5; names and roles on slide 4.
 - [ ] Open the template .pptx (now in this repo) and fill in its five slides.
 - [ ] Merge `WRITEUP_step2.md` and the other steps into one `WRITEUP.md` (the README's required name), labeled by Step and Part.
-- [ ] Resolve the remaining VERIFY items (EPB electric customer count, exact protocol crypto per vendor) or remove the claim.
+- [ ] Resolve the remaining VERIFY items (exact protocol crypto per vendor) or remove the claim.
 - [ ] Run record complete (job IDs are in `WRITEUP_step2.md`).
 - [ ] Rehearse: everyone can explain the Shor, Grover, QKD-vs-PQC and migration-ranking choices in plain words.
 - [ ] Make the ZIP of the track folder; test every shared link in a private window; bring the deck on a USB stick.
