@@ -248,3 +248,21 @@ Fixed from its findings (each checked by hand first):
 - **Bug found while checking:** test networks were titled as the dual ring, because their `meta.design` text field was read as a flag. Fixed with `meta.teamDesign`.
 - **The pitch deck is no longer published** by the Vercel build (the team removed it).
 
+## Design pass: taste skill, Simple/Detailed, simple-to-complex journey
+
+User request: make the dual ring the first step (hypothetical), go from simple to complex, unslop the whole site with the "taste" skill, make it intuitive, readable, cinematic and quantum, and use Opus as much as needed.
+
+- **Installed the taste skill** (Leonxlnx/taste-skill, MIT) for the user as `~/.claude/skills/design-taste-frontend`. Its files were read before installing; its scripts are local dev tools (an icon fetcher, a preview server, headless Chrome checks).
+- **Shared foundation** (`shared/`):
+  - The Simple/Detailed switch.
+  - The journey order in the bar.
+  - The skill's motion rules: a one-time hero entrance; hover lift 2px; buttons step 1px and press; ease-out only.
+  - Post-quantum moves from violet to blue: the skill bans violet.
+  - The skill's prism-dispersion effect, a beam splitting into a spectrum, copied in for the home hero (MIT).
+- **Six Opus workers** redesigned one page each in parallel, under a shared brief: home, dual ring, real map, photon line, quantum lab, monitor.
+- **The live grid** (by hand):
+  - A "Try it" box with "Tap a fiber for me".
+  - Panel order for first-time visitors.
+  - Ten expert parts Detailed-only.
+  - Short site names.
+- **Copy-lint** (the skill's checker) on the live grid's visible text: 0 FAIL. Its one WARN came from JavaScript operators in the extraction, not copy.

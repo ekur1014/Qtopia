@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dual Ring · Tennessee Quantum Grid</title>
+  <title>Dual ring (hypothetical) · Tennessee Quantum Grid</title>
+  <meta name="description" content="A hypothetical dual-ring design for quantum key routing: nine grid supernodes, two rings running opposite ways, and a key that goes the other way round when a span is tapped.">
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="shared/qrypt.css" />
   <script src="shared/qbar.js" data-page="ring" data-root="./"></script>
@@ -14,57 +15,191 @@
       background: var(--q-bg);
       color: var(--q-ink);
       font-family: var(--q-font);
+      font-size: 15px;
+      line-height: 1.5;
       height: 100vh;
       overflow: hidden;
       padding-top: var(--q-bar-h);
       display: flex;
       flex-direction: column;
     }
-    button { font: inherit; }
-    a { color: var(--q-ink); text-decoration-color: var(--q-ink-faint); text-underline-offset: 3px; }
-    a:hover { text-decoration-color: var(--q-ink); }
+    button { font: inherit; color: inherit; }
+    a { color: var(--q-ink); }
+    :focus-visible { outline: 2px solid var(--q-ok); outline-offset: 2px; }
+    h1, h2, p { margin: 0; }
 
-    /* Page intro */
+    /* ---------- Header: what this is, why it is hypothetical, and the three-step guide ---------- */
     .intro {
       display: flex;
       justify-content: space-between;
-      align-items: flex-end;
-      gap: 24px;
-      padding: 18px 20px 14px;
+      align-items: flex-start;
+      gap: 32px;
+      padding: 18px 24px 16px;
     }
+    .intro-main { min-width: 0; max-width: 720px; }
+    .intro-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 8px; }
+    /* Dashed edge = hypothetical, the same mark as in the ring's legend */
+    .q-pill.hypo {
+      color: var(--q-ink);
+      background: var(--q-tint);
+      border: 1px dashed var(--q-ink-dim);
+      padding: 3px 10px;
+      font-size: 12px;
+      letter-spacing: .02em;
+    }
+    .step-of { font-family: var(--q-mono); font-size: 12px; color: var(--q-ink-dim); }
     .intro h1 {
-      margin: 6px 0 8px;
-      font-size: 26px;
+      font-size: clamp(26px, 2.4vw, 34px);
       font-weight: 600;
-      letter-spacing: -0.02em;
-      line-height: 1.15;
+      letter-spacing: -0.025em;
+      line-height: 1.1;
+      margin-bottom: 10px;
     }
-    .intro .q-note { margin: 0; max-width: 880px; }
-    .intro .q-note + .q-note { margin-top: 4px; }
-    .intro-pills { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+    .lead { font-size: 16px; color: var(--q-ink); max-width: 68ch; }
+    .why { font-size: 14px; color: var(--q-ink-dim); max-width: 72ch; margin-top: 6px; }
+    .why a { color: var(--q-ink); font-weight: 500; }
 
-    /* Workspace: ring on the left, controls on the right */
+    .guide {
+      flex-shrink: 0;
+      width: 440px;
+      background: var(--q-surface);
+      border: 1px solid var(--q-line);
+      border-radius: 14px;
+      box-shadow: var(--q-shadow);
+      padding: 12px 14px;
+    }
+    .guide h2 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+    .guide ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+    .guide li {
+      display: grid;
+      grid-template-columns: 26px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 8px;
+      border-radius: 10px;
+      border: 1px solid transparent;
+      font-size: 14px;
+      color: var(--q-ink-dim);
+      transition: background var(--q-m-in) var(--q-ease), border-color var(--q-m-in) var(--q-ease);
+    }
+    .guide li b { color: var(--q-ink); font-weight: 600; }
+    .g-num {
+      width: 26px; height: 26px;
+      display: grid; place-items: center;
+      border-radius: 50%;
+      border: 1px solid var(--q-line);
+      font-family: var(--q-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--q-ink);
+    }
+    .g-state { font-family: var(--q-mono); font-size: 11px; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+    .g-state svg { width: 12px; height: 12px; }
+    .guide li.is-current {
+      border-color: color-mix(in srgb, var(--q-gold) 55%, transparent);
+      background: color-mix(in srgb, var(--q-gold) 9%, transparent);
+      color: var(--q-ink);
+    }
+    .guide li.is-current .g-num { background: var(--q-gold); border-color: var(--q-gold); color: var(--q-surface); }
+    .guide li.is-current .g-state { color: var(--q-ink); }
+    .guide li.is-done .g-num { background: color-mix(in srgb, var(--q-ok) 14%, transparent); border-color: color-mix(in srgb, var(--q-ok) 45%, transparent); }
+    .guide li.is-done .g-state { color: var(--q-ink-dim); }
+    .guide li.is-done .g-state svg { stroke: var(--q-ok); }
+    .guide-next { font-size: 14px; color: var(--q-ink-dim); margin-top: 8px; padding: 0 8px; }
+
+    /* ---------- Workspace: the ring stage on the left, the controls on the right ---------- */
     .workspace {
       flex: 1;
       min-height: 0;
       display: flex;
       gap: 16px;
-      padding: 0 20px 20px;
+      padding: 0 24px 20px;
     }
 
-    #canvas-container {
+    .stage {
       flex: 1;
       min-width: 0;
       min-height: 0;
-      position: relative;
+      display: flex;
+      flex-direction: column;
       background: var(--q-surface);
       border: 1px solid var(--q-line);
-      border-radius: 16px;
+      border-radius: 18px;
       box-shadow: var(--q-shadow);
       overflow: hidden;
+      transition: border-color var(--q-m-in) var(--q-ease), box-shadow var(--q-m-in) var(--q-ease);
     }
-    canvas { position: absolute; inset: 0; display: block; cursor: crosshair; }
+    .stage.is-next {
+      border-color: color-mix(in srgb, var(--q-gold) 55%, var(--q-line));
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--q-gold) 14%, transparent), var(--q-shadow);
+    }
+    #canvas-container {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+      /* a soft vignette that puts the eye on the ring: deeper at the edges */
+      background: radial-gradient(circle at 50% 50%, var(--q-surface) 0 42%, color-mix(in srgb, var(--q-bg) 70%, var(--q-surface)) 100%);
+    }
+    canvas { position: absolute; inset: 0; display: block; }
 
+    .state-chip {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px 7px 10px;
+      border-radius: 999px;
+      background: var(--q-glass-strong);
+      border: 1px solid var(--q-line);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--q-ink);
+      pointer-events: none;
+      max-width: calc(100% - 28px);
+    }
+    .state-chip svg { width: 16px; height: 16px; flex-shrink: 0; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .state-chip[data-state="ok"] { border-color: color-mix(in srgb, var(--q-ok) 45%, var(--q-line)); }
+    .state-chip[data-state="ok"] svg { stroke: var(--q-ok); }
+    .state-chip[data-state="reroute"] { border-color: color-mix(in srgb, var(--q-gold) 60%, var(--q-line)); }
+    .state-chip[data-state="reroute"] svg { stroke: var(--q-gold); }
+    .state-chip[data-state="fallback"] { border-color: color-mix(in srgb, var(--q-pqc) 55%, var(--q-line)); }
+    .state-chip[data-state="fallback"] svg { stroke: var(--q-pqc); }
+
+    .canvas-legend {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px 18px;
+      padding: 10px 14px;
+      border-top: 1px solid var(--q-line);
+      font-size: 12px;
+      color: var(--q-ink-dim);
+      line-height: 1.4;
+    }
+    .legend-item { display: flex; align-items: center; gap: 7px; }
+    .legend-item svg { width: 22px; height: 12px; flex-shrink: 0; }
+    .photon-toggle {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 34px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--q-line);
+      background: var(--q-tint);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--q-ink);
+      cursor: pointer;
+    }
+    .photon-toggle:hover { background: var(--q-tint-2); }
+    .photon-toggle svg { width: 12px; height: 12px; fill: currentColor; }
+    @media (prefers-reduced-motion: reduce) { .photon-toggle { display: none; } }
+
+    /* ---------- Sidebar ---------- */
     #sidebar {
       width: 400px;
       flex-shrink: 0;
@@ -72,265 +207,333 @@
       flex-direction: column;
       gap: 12px;
       overflow-y: auto;
+      padding: 2px 4px 2px 2px;
     }
-
     .card {
       background: var(--q-surface);
       border: 1px solid var(--q-line);
       border-radius: 14px;
       box-shadow: var(--q-shadow);
-      padding: 14px 16px;
+      padding: 14px 16px 16px;
     }
-    .card-title {
-      font-family: var(--q-mono);
-      font-size: 10.5px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      color: var(--q-ink-faint);
-      margin-bottom: 10px;
+    .card.is-next {
+      border-color: color-mix(in srgb, var(--q-gold) 55%, var(--q-line));
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--q-gold) 14%, transparent), var(--q-shadow);
+    }
+    .card-h {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 6px;
     }
-    .card-hint { font-size: 12px; color: var(--q-ink-dim); margin-bottom: 4px; }
+    .c-num {
+      width: 24px; height: 24px;
+      display: grid; place-items: center;
+      border-radius: 50%;
+      border: 1px solid var(--q-line);
+      font-family: var(--q-mono);
+      font-size: 12px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .card.is-next .c-num { background: var(--q-gold); border-color: var(--q-gold); color: var(--q-surface); }
+    .card-next {
+      display: none;
+      margin-left: auto;
+      font-family: var(--q-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--q-ink);
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--q-gold) 16%, transparent);
+    }
+    .card.is-next .card-next { display: inline-block; }
+    .hint { font-size: 14px; color: var(--q-ink-dim); margin-bottom: 10px; }
 
-    .hero-path {
+    /* Sender picker */
+    .node-selector { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; }
+    .node-btn {
+      height: 40px;
+      border-radius: 9px;
+      background: var(--q-surface);
+      border: 1px solid var(--q-line);
+      font-family: var(--q-mono);
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+    }
+    .node-btn:hover { background: var(--q-tint-2); }
+    .node-btn[aria-pressed="true"] { background: var(--q-ink); color: var(--q-surface); border-color: var(--q-ink); }
+    .node-btn.is-gw { border-style: double; border-width: 3px; }
+    .picker-note { font-size: 13px; color: var(--q-ink-dim); margin-top: 8px; }
+
+    /* Tap buttons */
+    .btn {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 2px 10px;
+      padding: 9px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--q-line);
+      background: var(--q-surface);
+      cursor: pointer;
+      margin-top: 6px;
+      text-align: left;
+    }
+    .btn-main { font-size: 14px; font-weight: 600; }
+    .btn-sub { grid-column: 1; font-size: 13px; color: var(--q-ink-dim); }
+    .btn-state {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      display: none;
+      align-items: center;
+      gap: 5px;
+      font-family: var(--q-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--q-bad);
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--q-bad) 12%, transparent);
+    }
+    .btn-state svg { width: 10px; height: 10px; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; }
+    .btn-attack { border-color: color-mix(in srgb, var(--q-bad) 30%, var(--q-line)); }
+    .btn-attack .btn-main { color: var(--q-bad); }
+    .btn-attack:hover { background: color-mix(in srgb, var(--q-bad) 7%, var(--q-surface)); }
+    .btn-attack.is-on { background: color-mix(in srgb, var(--q-bad) 8%, var(--q-surface)); border-color: var(--q-bad); }
+    .btn-attack.is-on .btn-main { color: var(--q-ink); }
+    .btn-attack.is-on .btn-state { display: flex; }
+    .btn-clear { background: var(--q-tint); }
+    .btn-clear:hover { background: var(--q-tint-2); }
+    .btn-clear .btn-main { color: var(--q-ink); }
+
+    /* Route readout */
+    .route-path { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 4px 0 10px; min-height: 34px; }
+    .chip {
+      min-width: 32px; height: 32px;
+      padding: 0 8px;
+      display: inline-grid; place-items: center;
+      border-radius: 8px;
       font-family: var(--q-mono);
       font-size: 14px;
       font-weight: 600;
-      color: var(--q-gold);
-      background: color-mix(in srgb, var(--q-gold) 9%, var(--q-surface));
-      border: 1px solid color-mix(in srgb, var(--q-gold) 30%, transparent);
-      padding: 8px 12px;
-      border-radius: 8px;
-      word-break: break-word;
+      color: var(--q-ink);
+      background: color-mix(in srgb, var(--q-gold) 12%, var(--q-surface));
+      border: 1px solid color-mix(in srgb, var(--q-gold) 55%, transparent);
     }
-    .hero-path .sev { color: var(--q-bad); }
-    .hero-path .fallback { font-size: 11px; color: var(--q-pqc); }
-
-    /* Route stats */
-    .stats { margin-top: 12px; }
+    .chip--src { background: var(--q-ink); color: var(--q-surface); border-color: var(--q-ink); }
+    .chip--cc { border-width: 2px; }
+    .arr { color: var(--q-ink-dim); font-size: 14px; }
+    .fallback-line {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--q-ink);
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: 1px dashed var(--q-pqc);
+      background: color-mix(in srgb, var(--q-pqc) 8%, var(--q-surface));
+    }
+    .route-explain { font-size: 14px; color: var(--q-ink); margin-bottom: 10px; }
+    .stats { margin: 0; }
     .stat-row {
       display: flex;
       justify-content: space-between;
       gap: 12px;
-      font-size: 12.5px;
-      padding: 5px 0;
-      border-bottom: 1px solid var(--q-line);
-      color: var(--q-ink-dim);
+      padding: 6px 0;
+      border-top: 1px solid var(--q-line);
+      font-size: 14px;
     }
-    .stat-row:last-of-type { border-bottom: none; }
-    .stat-val { font-weight: 600; color: var(--q-ink); font-family: var(--q-mono); font-size: 12px; text-align: right; }
-    .threshold-note { margin: 2px 0 6px; font-size: 11.5px; }
+    .stat-row dt { color: var(--q-ink-dim); }
+    .stat-row dd { margin: 0; font-family: var(--q-mono); font-size: 13px; font-weight: 600; text-align: right; }
 
-    /* Buttons */
-    .btn {
-      width: 100%;
-      padding: 9px 12px;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 12.5px;
-      cursor: pointer;
-      border: 1px solid var(--q-line);
-      background: var(--q-surface);
-      color: var(--q-ink);
-      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-      margin-top: 6px;
-      text-align: left;
-    }
-    .btn-attack {
-      color: var(--q-bad);
-      border-color: color-mix(in srgb, var(--q-bad) 35%, transparent);
-      background: color-mix(in srgb, var(--q-bad) 5%, var(--q-surface));
-    }
-    .btn-attack:hover { background: var(--q-bad); border-color: var(--q-bad); color: var(--q-surface); }
-    .btn-clear { background: var(--q-tint); }
-    .btn-clear:hover { background: var(--q-tint-2); }
-
-    /* Source supernode selector */
-    .node-selector { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-    .node-btn {
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
-      background: var(--q-surface);
-      border: 1px solid var(--q-line);
-      color: var(--q-ink);
+    /* Detailed mode: how the router decides, and the event log */
+    .detail p { font-size: 14px; color: var(--q-ink-dim); }
+    .detail p + p { margin-top: 8px; }
+    .detail .formula {
       font-family: var(--q-mono);
-      font-weight: 600;
-      font-size: 12px;
-      cursor: pointer;
-      transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+      font-size: 14px;
+      color: var(--q-ink);
+      background: var(--q-tint);
+      border: 1px solid var(--q-line);
+      border-radius: 8px;
+      padding: 8px 10px;
     }
-    .node-btn:hover { background: var(--q-tint-2); }
-    .node-btn.active { background: var(--q-ink); color: var(--q-surface); border-color: var(--q-ink); }
-
-    /* Event terminal */
-    .terminal-card { flex: 1; display: flex; flex-direction: column; min-height: 200px; }
     .terminal-box {
-      flex: 1;
-      min-height: 120px;
+      height: 180px;
       background: var(--q-tint);
       border: 1px solid var(--q-line);
       border-radius: 8px;
       padding: 10px 12px;
       font-family: var(--q-mono);
-      font-size: 11px;
+      font-size: 12px;
       color: var(--q-ink-dim);
       overflow-y: auto;
       white-space: pre-wrap;
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
-    /* Legend: a compact strip along the top of the ring card, clear of the ring itself */
-    .canvas-legend {
-      position: absolute;
-      top: 12px;
-      left: 14px;
-      right: 14px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 2px 16px;
-      font-size: 11px;
-      color: var(--q-ink-dim);
-      pointer-events: none;
-      line-height: 1.6;
+    @media (max-width: 1240px) {
+      .guide { width: 380px; }
     }
-    .canvas-legend .q-label { display: none; }
-    .legend-item { display: flex; align-items: center; gap: 8px; }
-    .legend-line { width: 18px; height: 3px; border-radius: 2px; flex-shrink: 0; }
-    .legend-box { width: 9px; height: 9px; margin: 0 4.5px; background: var(--q-off); flex-shrink: 0; }
-    .legend-hint { display: none; } /* the intro above already says how to use the ring */
-
+    @media (max-width: 1100px) {
+      .intro { flex-direction: column; gap: 14px; }
+      .guide { width: 100%; max-width: 560px; }
+    }
     @media (max-width: 1000px) {
       body { height: auto; overflow: auto; }
-      .intro { flex-direction: column; align-items: flex-start; }
-      .intro-pills { align-items: flex-start; flex-direction: row; flex-wrap: wrap; }
       .workspace { flex-direction: column; }
-      #canvas-container { flex: none; height: 600px; }
-      #sidebar { width: auto; overflow: visible; }
+      .stage { flex: none; }
+      #canvas-container { flex: none; height: 560px; }
+      #sidebar { width: auto; overflow: visible; padding: 0; }
+    }
+    @media (max-width: 600px) {
+      .intro { padding: 16px 16px 14px; }
+      .workspace { padding: 0 16px 16px; }
+      #canvas-container { height: 460px; }
+      .guide li { grid-template-columns: 26px 1fr; }
+      .g-state { grid-column: 2; }
+      .node-btn { height: 44px; }
+      .node-selector { grid-template-columns: repeat(5, 1fr); }
+      .photon-toggle { margin-left: 0; }
     }
   </style>
 </head>
 <body>
 
-  <section class="intro">
-    <div>
-      <div class="q-label">Team design (Ethan's architecture) · 2D routing model</div>
-      <h1>The dual ring: nine supernodes around the command center</h1>
-      <p class="q-note">Every supernode sits on two counter-rotating QKD rings: a working ring that runs clockwise and a protection ring that runs counter-clockwise. Supernodes 3 and 7 are the gateways to the command center. Pick a source, then tap a span (click it on the ring or use the buttons): the router runs Dijkstra over the spans that still give key and picks the best path. If no quantum path is left, that traffic falls back to a post-quantum (ML-KEM-768) tunnel.</p>
-      <p class="q-note">See it in 3D: <a href="grid-twin/index.html?net=dualring">open the dual ring in the live grid</a>. There each span is one QKD fiber pair carrying both rings in one corridor, with 8.5 km spans and 6 km command-center links, the same as this page.</p>
+  <header class="intro" data-enter>
+    <div class="intro-main">
+      <div class="intro-tags">
+        <span class="q-pill hypo">Hypothetical design · the lead's architecture</span>
+        <span class="step-of">Step 1 of 5, the simplest model</span>
+      </div>
+      <h1>Dual-ring quantum key routing for nine grid supernodes</h1>
+      <p class="lead q-enter-item">Each supernode makes encryption keys with its neighbours by QKD (keys sent as single photons). Two rings run opposite ways, so when a spy taps one span, the key goes the other way round to the command center.</p>
+      <p class="why q-enter-item">The real ring's layout is not public, so this is the team lead's design with illustrative distances: 8.5 km spans and 6 km gateway links. <a class="q-link" href="grid-twin/index.html?net=dualring">Open this ring in the live 3D grid</a></p>
     </div>
-    <div class="intro-pills">
-      <span class="q-pill q-pill--ok">9 supernodes · 2 gateways</span>
-      <span class="q-pill q-pill--pqc">Spans 8.5 km · CC links 6 km</span>
-    </div>
-  </section>
 
-  <div class="workspace">
-    <!-- The ring -->
-    <div id="canvas-container">
-      <canvas id="ringCanvas"></canvas>
+    <section class="guide q-enter-item" aria-labelledby="guide-h">
+      <h2 id="guide-h">Try it in three steps</h2>
+      <ol id="guide">
+        <li data-step="1"><span class="g-num">1</span><span><b>Pick a sender.</b> Click any supernode.</span><span class="g-state"></span></li>
+        <li data-step="2"><span class="g-num">2</span><span><b>Tap a span.</b> Click the gold key path.</span><span class="g-state"></span></li>
+        <li data-step="3"><span class="g-num">3</span><span><b>Watch the reroute.</b> The key goes the other way.</span><span class="g-state"></span></li>
+      </ol>
+      <p class="guide-next" id="guide-next" hidden>All three done. Now isolate supernode 1, or clear the taps and start again.</p>
+    </section>
+  </header>
 
+  <main class="workspace">
+    <!-- The ring: the hero of the page -->
+    <div class="stage" id="stage">
+      <div id="canvas-container">
+        <canvas id="ringCanvas" role="img" aria-label="Hypothetical dual ring: nine supernodes around a command center. The gold line is the key path; the route card next to it says the same in words."></canvas>
+        <div id="route-badge" class="state-chip" data-state="ok"></div>
+      </div>
       <div class="canvas-legend">
-        <span class="q-label">Legend</span>
-        <div class="legend-item"><div class="legend-line" style="background: var(--q-ok);"></div> Working ring (clockwise QKD)</div>
-        <div class="legend-item"><div class="legend-line" style="background: var(--q-pqc);"></div> Protection ring (counter-clockwise QKD)</div>
-        <div class="legend-item"><div class="legend-line" style="background: var(--q-ink-faint);"></div> Gateway link to the command center</div>
-        <div class="legend-item"><div class="legend-line" style="background: var(--q-gold); height: 5px;"></div> Active key path (best route right now)</div>
-        <div class="legend-item"><div class="legend-line" style="background: var(--q-bad);"></div> Tapped span: QBER above the 11% limit, no key</div>
-        <div class="legend-item"><div class="legend-box"></div> Substation (illustrative)</div>
-        <div class="legend-hint">Click a span to add or remove a fiber tap (Eve). Click a supernode to make it the source.</div>
+        <span class="q-pill hypo">Hypothetical layout</span>
+        <span class="legend-item"><svg viewBox="0 0 22 12" aria-hidden="true"><line x1="1" y1="6" x2="21" y2="6" style="stroke:var(--q-ok)" stroke-width="2.5"/><path d="M9 2.5 L13 6 L9 9.5" fill="none" style="stroke:var(--q-ok)" stroke-width="1.6"/></svg>Working ring, clockwise</span>
+        <span class="legend-item"><svg viewBox="0 0 22 12" aria-hidden="true"><line x1="1" y1="6" x2="21" y2="6" style="stroke:var(--q-tele)" stroke-width="2.5"/><path d="M13 2.5 L9 6 L13 9.5" fill="none" style="stroke:var(--q-tele)" stroke-width="1.6"/></svg>Protection ring, counter-clockwise</span>
+        <span class="legend-item"><svg viewBox="0 0 22 12" aria-hidden="true"><line x1="1" y1="6" x2="21" y2="6" style="stroke:var(--q-gold)" stroke-width="4" stroke-linecap="round"/><circle cx="14" cy="6" r="3.2" style="fill:var(--q-gold);stroke:var(--q-surface)" stroke-width="1.2"/></svg>Key path, photons moving</span>
+        <span class="legend-item"><svg viewBox="0 0 22 12" aria-hidden="true"><line x1="1" y1="6" x2="7" y2="6" style="stroke:var(--q-bad)" stroke-width="2" stroke-dasharray="3 2"/><line x1="15" y1="6" x2="21" y2="6" style="stroke:var(--q-bad)" stroke-width="2" stroke-dasharray="3 2"/><path d="M8.5 2.5 L13.5 9.5 M13.5 2.5 L8.5 9.5" style="stroke:var(--q-bad)" stroke-width="2"/></svg>Tapped span: no key</span>
+        <span class="legend-item"><svg viewBox="0 0 22 12" aria-hidden="true"><line x1="1" y1="6" x2="21" y2="6" style="stroke:var(--q-ink-dim)" stroke-width="2"/></svg>Gateway link to the command center</span>
+        <span class="legend-item q-adv"><svg viewBox="0 0 22 12" aria-hidden="true"><line x1="1" y1="6" x2="21" y2="6" style="stroke:var(--q-pqc)" stroke-width="2" stroke-dasharray="5 3"/></svg>ML-KEM backup (no quantum key)</span>
+        <span class="legend-item q-adv"><svg viewBox="0 0 22 12" aria-hidden="true"><rect x="6" y="1" width="10" height="10" style="fill:var(--q-off)"/></svg>Substation (illustrative)</span>
+        <button class="photon-toggle q-btn" id="photon-toggle" type="button" aria-pressed="false" onclick="togglePhotons()"></button>
       </div>
     </div>
 
-    <!-- Controls -->
-    <div id="sidebar">
+    <!-- Controls, numbered like the guide -->
+    <aside id="sidebar" aria-label="Ring controls">
 
-      <!-- Source supernode selector -->
-      <div class="card">
-        <div class="card-title">Source supernode &rarr; Command center (CC)</div>
-        <div class="card-hint">Pick the supernode that sends:</div>
-        <div class="node-selector">
-          <button class="node-btn active" onclick="setSource(1)">1</button>
-          <button class="node-btn" onclick="setSource(2)">2</button>
-          <button class="node-btn" onclick="setSource(3)">3</button>
-          <button class="node-btn" onclick="setSource(4)">4</button>
-          <button class="node-btn" onclick="setSource(5)">5</button>
-          <button class="node-btn" onclick="setSource(6)">6</button>
-          <button class="node-btn" onclick="setSource(7)">7</button>
-          <button class="node-btn" onclick="setSource(8)">8</button>
-          <button class="node-btn" onclick="setSource(9)">9</button>
+      <section class="card q-card" id="card-source" aria-labelledby="h-source">
+        <h2 class="card-h" id="h-source"><span class="c-num">1</span>Pick the sender<span class="card-next">Next step</span></h2>
+        <p class="hint">The supernode that sends its key to the command center (CC). You can also click a circle on the ring.</p>
+        <div class="node-selector" role="group" aria-label="Sending supernode">
+          <button class="node-btn q-btn" type="button" aria-pressed="true" onclick="setSource(1)">1</button>
+          <button class="node-btn q-btn" type="button" aria-pressed="false" onclick="setSource(2)">2</button>
+          <button class="node-btn q-btn is-gw" type="button" aria-pressed="false" onclick="setSource(3)" aria-label="3, gateway">3</button>
+          <button class="node-btn q-btn" type="button" aria-pressed="false" onclick="setSource(4)">4</button>
+          <button class="node-btn q-btn" type="button" aria-pressed="false" onclick="setSource(5)">5</button>
+          <button class="node-btn q-btn" type="button" aria-pressed="false" onclick="setSource(6)">6</button>
+          <button class="node-btn q-btn is-gw" type="button" aria-pressed="false" onclick="setSource(7)" aria-label="7, gateway">7</button>
+          <button class="node-btn q-btn" type="button" aria-pressed="false" onclick="setSource(8)">8</button>
+          <button class="node-btn q-btn" type="button" aria-pressed="false" onclick="setSource(9)">9</button>
         </div>
-      </div>
+        <p class="picker-note">Double border: a gateway (3 and 7) with its own link to the command center.</p>
+      </section>
 
-      <!-- Best-path readout -->
-      <div class="card">
-        <div class="card-title">
-          <span>Active route</span>
-          <span id="route-badge" class="q-pill q-pill--ok">OPTIMAL</span>
-        </div>
-        <div class="hero-path" id="route-path-text">[1] &rarr; [2] &rarr; [3] &rarr; [CC]</div>
+      <section class="card q-card" id="card-taps" aria-labelledby="h-taps">
+        <h2 class="card-h" id="h-taps"><span class="c-num">2</span>Tap a span<span class="card-next">Next step</span></h2>
+        <p class="hint">A tap is a spy on the fiber. Click any span on the ring, or use a button.</p>
+        <button class="btn btn-attack q-btn" type="button" data-preset="span12" aria-pressed="false" onclick="attackLink(1, 2)">
+          <span class="btn-main">Tap span 1–2</span>
+          <span class="btn-sub">A spy on the fiber between supernodes 1 and 2</span>
+          <span class="btn-state"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 2 L8 8 M8 2 L2 8"/></svg>Tapped</span>
+        </button>
+        <button class="btn btn-attack q-btn" type="button" data-preset="gw3" aria-pressed="false" onclick="attackLink(3, 'CC')">
+          <span class="btn-main">Cut gateway 3</span>
+          <span class="btn-sub">Breaks the link from gateway 3 to the command center</span>
+          <span class="btn-state"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 2 L8 8 M8 2 L2 8"/></svg>Cut</span>
+        </button>
+        <button class="btn btn-attack q-btn" type="button" data-preset="iso1" aria-pressed="false" onclick="partitionRing()">
+          <span class="btn-main">Isolate supernode 1</span>
+          <span class="btn-sub">Taps both spans next to supernode 1</span>
+          <span class="btn-state"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M2 2 L8 8 M8 2 L2 8"/></svg>Isolated</span>
+        </button>
+        <button class="btn btn-clear q-btn" type="button" onclick="clearAllAttacks()">
+          <span class="btn-main">Clear all taps</span>
+          <span class="btn-sub">Puts every span back to normal</span>
+        </button>
+      </section>
 
-        <div class="stats">
-          <div class="stat-row">
-            <span>Gateway</span>
-            <span class="stat-val" id="route-gw">Supernode 3 (East gateway)</span>
-          </div>
-          <div class="stat-row">
-            <span>Hop count</span>
-            <span class="stat-val" id="route-hops">3 hops</span>
-          </div>
-          <div class="stat-row">
-            <span>Fiber distance</span>
-            <span class="stat-val" id="route-dist">23.0 km</span>
-          </div>
-          <div class="stat-row">
-            <span>Worst link QBER</span>
-            <span class="stat-val" id="route-qber" style="color: var(--q-ok);">1.8%</span>
-          </div>
-          <div class="q-note threshold-note">Simplified rule here: alarm at 8%, no key above 11%. The live 3D grid uses each fiber's own measured baseline (about 3.3% on a 10 km fiber) and a statistical alarm.</div>
-          <div class="stat-row">
-            <span>Reroute</span>
-            <span class="stat-val">computed instantly in this model</span>
-          </div>
-        </div>
-      </div>
+      <section class="card q-card" id="card-route" aria-labelledby="h-route">
+        <h2 class="card-h" id="h-route"><span class="c-num">3</span>Where the key goes now<span class="card-next">Watch the ring</span></h2>
+        <div class="route-path" id="route-path-text"></div>
+        <p class="route-explain" id="route-explain" aria-live="polite"></p>
+        <dl class="stats">
+          <div class="stat-row"><dt>Gateway</dt><dd id="route-gw"></dd></div>
+          <div class="stat-row"><dt>Trusted relays (sites that briefly hold the key)</dt><dd id="route-relays"></dd></div>
+          <div class="stat-row"><dt>Fiber distance</dt><dd id="route-dist"></dd></div>
+          <div class="stat-row q-adv"><dt>Hops</dt><dd id="route-hops"></dd></div>
+          <div class="stat-row q-adv"><dt>Worst-span QBER</dt><dd id="route-qber"></dd></div>
+          <div class="stat-row q-adv"><dt>Reroute time</dt><dd>Instant in this model</dd></div>
+        </dl>
+      </section>
 
-      <!-- Preset attack scenarios -->
-      <div class="card">
-        <div class="card-title">Fiber taps &amp; failover</div>
-        <div class="card-hint">Try the ring's protection switching:</div>
+      <section class="card q-card detail q-adv" aria-labelledby="h-how">
+        <h2 class="card-h" id="h-how">How the router picks a path</h2>
+        <p>It runs Dijkstra's shortest-path search from the sender to the command center, over every span that can still make key. On this page each span costs:</p>
+        <p class="formula">cost = length × (1 + 10 × QBER)</p>
+        <p>QBER is the share of key bits that arrive wrong. A clean ring span reads 1.8% and a gateway link 1.5%. A tapped span reads 26.8%, above the 11% limit, so it is dropped from the search.</p>
+        <p>Simplified rule here: alarm at 8%, no key above 11%. The live 3D grid uses each fiber's own measured baseline (about 3.3% on a 10 km fiber) and a statistical alarm.</p>
+        <p>Each span is one QKD fiber pair carrying both rings in one corridor, so a tap cuts both directions on that span. With no quantum path left, traffic falls back to an ML-KEM-768 tunnel (post-quantum backup encryption).</p>
+      </section>
 
-        <button class="btn btn-attack" onclick="attackLink(1, 2)">Tap span 1 &harr; 2 (forces the counter-clockwise way round)</button>
-        <button class="btn btn-attack" onclick="attackLink(3, 'CC')">Sever gateway 3 &harr; CC (fail over to gateway 7)</button>
-        <button class="btn btn-attack" onclick="partitionRing()">Ring partition attack (cut both sides of supernode 1)</button>
-        <button class="btn btn-clear" onclick="clearAllAttacks()">Clear all taps (restore baseline)</button>
-      </div>
+      <section class="card q-card q-adv" aria-labelledby="h-log">
+        <h2 class="card-h" id="h-log">Event log</h2>
+        <div class="terminal-box" id="term-log">Dual ring loaded (hypothetical design).
+Working ring: clockwise. Protection ring: counter-clockwise.
+Gateways to the command center: supernode 3 (east) and supernode 7 (west).
+Baseline QBER: 1.8% on ring spans, 1.5% on gateway links. Alarm at 8%, no key above 11%.</div>
+      </section>
 
-      <!-- Event log -->
-      <div class="card terminal-card">
-        <div class="card-title">Self-healing event terminal</div>
-        <div class="terminal-box" id="term-log">[SYSTEM INITIALIZED] 9-supernode dual ring (team design) active.
-Counter-rotating rings:
-  - Working ring: clockwise (green)
-  - Protection ring: counter-clockwise (violet)
-Gateways to the command center: node 3 (east) &amp; node 7 (west).
-Baseline QBER: 1.8% on ring spans, 1.5% on gateway links (simplified alarm at 8%).</div>
-      </div>
-
-    </div>
-  </div>
+    </aside>
+  </main>
 
   <script>
     // -------------------------------------------------------------
-    // TOPOLOGY & NETWORK GRAPH DEFINITION (9 SUPERNODES + CC)
+    // TOPOLOGY: 9 supernodes on a dual ring + the command center (CC)
     // -------------------------------------------------------------
     const canvas = document.getElementById('ringCanvas');
     const ctx = canvas.getContext('2d');
     const container = document.getElementById('canvas-container');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
     let currentSource = 1;
     const targetNode = 'CC';
@@ -340,18 +543,15 @@ Baseline QBER: 1.8% on ring spans, 1.5% on gateway links (simplified alarm at 8%
     const RING_GAP = 5;        // px between the working (outer) and protection (inner) ring lines
     let W = 0, H = 0;          // canvas size in CSS pixels
 
-    // Links between adjacent supernodes: 1-2, 2-3, 3-4, 4-5, 5-6, 6-7, 7-8, 8-9, 9-1
-    // (each span carries both rings in one corridor, so a tap cuts both directions on that span)
-    // And gateway links: 3-CC, 7-CC
+    // Ring spans 1-2 ... 9-1 (each span carries both rings in one corridor, so a tap cuts both
+    // directions on that span) and the gateway links 3-CC and 7-CC.
     const links = [];
-
     for (let i = 1; i <= 9; i++) {
       const next = i === 9 ? 1 : i + 1;
-      links.push({ u: i, v: next, dist: 8.5, base: 0.018, qber: 0.018, eve: false });
+      links.push({ u: i, v: next, dist: 8.5, base: 0.018, qber: 0.018, eve: false, brokeAt: 0 });
     }
-    // Radial ties to the command center
-    links.push({ u: 3, v: 'CC', dist: 6.0, base: 0.015, qber: 0.015, eve: false });
-    links.push({ u: 7, v: 'CC', dist: 6.0, base: 0.015, qber: 0.015, eve: false });
+    links.push({ u: 3, v: 'CC', dist: 6.0, base: 0.015, qber: 0.015, eve: false, brokeAt: 0 });
+    links.push({ u: 7, v: 'CC', dist: 6.0, base: 0.015, qber: 0.015, eve: false, brokeAt: 0 });
 
     const TAPPED_QBER = 0.268;
 
@@ -367,7 +567,7 @@ Baseline QBER: 1.8% on ring spans, 1.5% on gateway links (simplified alarm at 8%
     ];
 
     // -------------------------------------------------------------
-    // COLORS FROM THE SHARED DESIGN TOKENS (re-read on theme change)
+    // COLOURS FROM THE SHARED DESIGN TOKENS (re-read on theme change)
     // -------------------------------------------------------------
     let C = {};
     function tok(name) {
@@ -380,13 +580,16 @@ Baseline QBER: 1.8% on ring spans, 1.5% on gateway links (simplified alarm at 8%
         dim: tok('--q-ink-dim'),
         faint: tok('--q-ink-faint'),
         line: tok('--q-line'),
+        tint: tok('--q-tint-2'),
         ok: tok('--q-ok'),
+        tele: tok('--q-tele'),
         pqc: tok('--q-pqc'),
         gold: tok('--q-gold'),
         bad: tok('--q-bad'),
         off: tok('--q-off'),
         font: tok('--q-font') || 'sans-serif',
-        mono: tok('--q-mono') || 'monospace'
+        mono: tok('--q-mono') || 'monospace',
+        dark: document.documentElement.dataset.theme === 'dark'
       };
     }
     readColors();
@@ -400,7 +603,7 @@ Baseline QBER: 1.8% on ring spans, 1.5% on gateway links (simplified alarm at 8%
       canvas.style.width = W + 'px';
       canvas.style.height = H + 'px';
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ringRadius = Math.max(110, Math.min(220, Math.min(W, H) / 2 - 95));
+      ringRadius = Math.max(110, Math.min(260, W / 2 - 100, H / 2 - 92));
     }
     window.addEventListener('resize', resizeCanvas);
     if (window.ResizeObserver) new ResizeObserver(resizeCanvas).observe(container);
@@ -409,47 +612,35 @@ Baseline QBER: 1.8% on ring spans, 1.5% on gateway links (simplified alarm at 8%
     function getNodePos(id) {
       const cx = W / 2;
       const cy = H / 2;
-
       if (id === 'CC') return { x: cx, y: cy };
-
-      // Nodes 1 through 9 arranged clockwise, 1 at top (-PI/2)
+      // Supernodes 1 to 9 clockwise, 1 at the top
       const angle = -Math.PI / 2 + ((id - 1) * 2 * Math.PI / numNodes);
-      return {
-        x: cx + ringRadius * Math.cos(angle),
-        y: cy + ringRadius * Math.sin(angle),
-        angle: angle
-      };
+      return { x: cx + ringRadius * Math.cos(angle), y: cy + ringRadius * Math.sin(angle), angle: angle };
     }
 
     // -------------------------------------------------------------
     // DIJKSTRA BEST-PATH ROUTING WITH QBER PENALTY
+    // useTaps = false gives the untapped baseline, used only to explain a reroute in words
     // -------------------------------------------------------------
-    function computeBestPath(src, tgt) {
+    function computeBestPath(src, tgt, useTaps = true) {
       const allNodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 'CC'];
       const dist = {};
       const prev = {};
       const unvisited = new Set(allNodes);
 
-      allNodes.forEach(n => {
-        dist[n] = Infinity;
-        prev[n] = null;
-      });
+      allNodes.forEach(n => { dist[n] = Infinity; prev[n] = null; });
       dist[src] = 0;
 
       while (unvisited.size > 0) {
         let curr = null;
         let minDist = Infinity;
         unvisited.forEach(n => {
-          if (dist[n] < minDist) {
-            minDist = dist[n];
-            curr = n;
-          }
+          if (dist[n] < minDist) { minDist = dist[n]; curr = n; }
         });
 
         if (curr === null || dist[curr] === Infinity || curr === tgt) break;
         unvisited.delete(curr);
 
-        // Find neighbors
         links.forEach(l => {
           let neighbor = null;
           if (l.u === curr) neighbor = l.v;
@@ -457,30 +648,54 @@ Baseline QBER: 1.8% on ring spans, 1.5% on gateway links (simplified alarm at 8%
 
           if (neighbor !== null && unvisited.has(neighbor)) {
             // A tapped span is above the 11% limit: no key can be made on it
-            if (l.eve) return; // Cut/Blocked
-
-            const weight = l.dist * (1.0 + 10.0 * l.qber);
+            if (useTaps && l.eve) return;
+            const q = useTaps ? l.qber : l.base;
+            const weight = l.dist * (1.0 + 10.0 * q);
             const alt = dist[curr] + weight;
-            if (alt < dist[neighbor]) {
-              dist[neighbor] = alt;
-              prev[neighbor] = curr;
-            }
+            if (alt < dist[neighbor]) { dist[neighbor] = alt; prev[neighbor] = curr; }
           }
         });
       }
 
-      // Reconstruct path
       const path = [];
       let step = tgt;
-      while (step !== null) {
-        path.unshift(step);
-        step = prev[step];
-      }
+      while (step !== null) { path.unshift(step); step = prev[step]; }
 
-      if (path.length <= 1 || path[0] !== src) {
-        return { success: false, path: [] };
-      }
+      if (path.length <= 1 || path[0] !== src) return { success: false, path: [] };
       return { success: true, path: path };
+    }
+
+    // -------------------------------------------------------------
+    // GUIDE STATE: 1 pick a sender, 2 tap a span on the key path, 3 watch the reroute
+    // -------------------------------------------------------------
+    const guide = { picked: false, rerouted: false, watched: false };
+
+    function guideStep() {
+      if (!guide.picked) return 1;
+      if (!guide.rerouted) return 2;
+      if (!guide.watched) return 3;
+      return 4;
+    }
+
+    const CHECK = '<svg viewBox="0 0 12 12" aria-hidden="true" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5 L5 9 L10 3"/></svg>';
+
+    function renderGuide() {
+      const cur = guideStep();
+      const done = [guide.picked, guide.rerouted, guide.watched];
+      document.querySelectorAll('#guide li').forEach((li, i) => {
+        const n = i + 1;
+        const isDone = done[i] && n < cur;
+        const isCur = n === cur;
+        li.classList.toggle('is-done', isDone);
+        li.classList.toggle('is-current', isCur);
+        if (isCur) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+        li.querySelector('.g-state').innerHTML = isDone ? CHECK + 'Done' : (isCur ? 'Next' : '');
+      });
+      document.getElementById('guide-next').hidden = cur !== 4;
+      document.getElementById('card-source').classList.toggle('is-next', cur === 1);
+      document.getElementById('card-taps').classList.toggle('is-next', cur === 2);
+      document.getElementById('card-route').classList.toggle('is-next', cur === 3);
+      document.getElementById('stage').classList.toggle('is-next', cur === 3);
     }
 
     // -------------------------------------------------------------
@@ -489,58 +704,64 @@ Baseline QBER: 1.8% on ring spans, 1.5% on gateway links (simplified alarm at 8%
     function setSource(n) {
       currentSource = n;
       document.querySelectorAll('.node-btn').forEach((b, idx) => {
-        if (idx + 1 === n) b.classList.add('active');
-        else b.classList.remove('active');
+        b.setAttribute('aria-pressed', String(idx + 1 === n));
       });
-      log(`[SOURCE CHANGED] Supernode ${n} now sends SCADA telemetry to the command center.`);
-      updateRoutingHUD();
+      log(`Sender is now supernode ${n}. It sends grid control data to the command center.`);
+      updateRoutingHUD('source');
     }
 
     function findLink(u, v) {
       return links.find(item => (item.u === u && item.v === v) || (item.u === v && item.v === u));
     }
 
-    function toggleLinkEve(u, v) {
-      const l = findLink(u, v);
-      if (l) {
-        l.eve = !l.eve;
-        l.qber = l.eve ? TAPPED_QBER : l.base;
-        if (l.eve) {
-          log(`[EAVESDROPPER INJECTED] Fiber tap on span ${u} <-> ${v}. QBER jumped to ${(TAPPED_QBER * 100).toFixed(1)}%, above the 11% limit: no key on this span, rerouting.`);
-        } else {
-          log(`[LINE RESTORED] Tap removed on span ${u} <-> ${v}. QBER back to its ${(l.base * 100).toFixed(1)}% baseline.`);
-        }
-        updateRoutingHUD();
-      }
+    function spanName(l) {
+      return l.v === 'CC' ? `gateway ${l.u}'s link` : `span ${l.u}–${l.v}`;
     }
 
+    function setTap(l, on) {
+      l.eve = on;
+      l.qber = on ? TAPPED_QBER : l.base;
+      if (on) l.brokeAt = performance.now();
+    }
+
+    function toggleLinkEve(u, v) {
+      const l = findLink(u, v);
+      if (!l) return;
+      setTap(l, !l.eve);
+      if (l.eve) log(`Tap on ${spanName(l)}. QBER jumped to ${(TAPPED_QBER * 100).toFixed(1)}%, above the 11% limit: no key on it. Rerouting.`);
+      else log(`Tap removed from ${spanName(l)}. QBER back to its ${(l.base * 100).toFixed(1)}% baseline.`);
+      updateRoutingHUD('tap');
+    }
+
+    // Preset buttons: a second click puts the span back
     function attackLink(u, v) {
       const l = findLink(u, v);
-      if (l) {
-        l.eve = true;
-        l.qber = TAPPED_QBER;
-        log(`[ATTACK TRIGGERED] Eavesdropper tapping span ${u} <-> ${v}. Rerouting over the other way round the ring.`);
-        updateRoutingHUD();
-      }
+      if (!l) return;
+      if (l.eve) { toggleLinkEve(u, v); return; }
+      setTap(l, true);
+      log(`Preset: spy on ${spanName(l)}. QBER ${(TAPPED_QBER * 100).toFixed(1)}%, so the key takes another way round.`);
+      updateRoutingHUD('tap');
     }
 
     function partitionRing() {
-      // Cut spans 1-2 and 1-9 to isolate node 1
+      // Cut spans 1-2 and 9-1 to isolate supernode 1
       const l1 = findLink(1, 2);
       const l2 = findLink(1, 9);
-      if (l1) { l1.eve = true; l1.qber = TAPPED_QBER; }
-      if (l2) { l2.eve = true; l2.qber = TAPPED_QBER; }
-      log(`[RING PARTITION] Spans 1 <-> 2 and 9 <-> 1 cut: supernode 1 has no quantum path left on either ring. Its traffic falls back to the NIST ML-KEM-768 post-quantum tunnel.`);
-      updateRoutingHUD();
+      if (l1.eve && l2.eve) {
+        setTap(l1, false); setTap(l2, false);
+        log('Spans 1–2 and 9–1 restored: supernode 1 is back on both rings.');
+      } else {
+        if (!l1.eve) setTap(l1, true);
+        if (!l2.eve) setTap(l2, true);
+        log('Spans 1–2 and 9–1 tapped: supernode 1 has no quantum path left on either ring. Its traffic falls back to the ML-KEM-768 post-quantum tunnel.');
+      }
+      updateRoutingHUD('tap');
     }
 
     function clearAllAttacks() {
-      links.forEach(l => {
-        l.eve = false;
-        l.qber = l.base;
-      });
-      log(`[RESTORED] All fiber taps cleared. Dual-ring baseline restored.`);
-      updateRoutingHUD();
+      links.forEach(l => setTap(l, false));
+      log('All taps cleared. Both rings back to baseline.');
+      updateRoutingHUD('clear');
     }
 
     function log(msg) {
@@ -550,60 +771,152 @@ Baseline QBER: 1.8% on ring spans, 1.5% on gateway links (simplified alarm at 8%
     }
 
     // -------------------------------------------------------------
-    // HUD UPDATE
+    // ROUTE STATE (what the ring draws) AND THE READOUT
     // -------------------------------------------------------------
-    function updateRoutingHUD() {
+    const DRAW_MS = 1400;   // the key path draws in from the sender
+    const FADE_MS = 600;    // the old path fades out
+    const BREAK_MS = 450;   // a tapped span opens its gap
+    const route = { key: null, path: [], prev: [], fallback: false, t0: 0, watchPending: false };
+
+    function listWords(a) {
+      if (a.length <= 1) return a.join('');
+      return a.slice(0, -1).join(', ') + ' and ' + a[a.length - 1];
+    }
+    function isRingEdge(a, b) { return a !== 'CC' && b !== 'CC'; }
+    function isClockwise(a, b) { return b === (a % numNodes) + 1; }
+    function pathDirection(path) {
+      for (let i = 0; i < path.length - 1; i++) {
+        if (isRingEdge(path[i], path[i + 1])) {
+          return isClockwise(path[i], path[i + 1]) ? 'clockwise on the working ring' : 'counter-clockwise on the protection ring';
+        }
+      }
+      return null;
+    }
+    function onPath(path, l) {
+      for (let i = 0; i < path.length - 1; i++) {
+        if ((path[i] === l.u && path[i + 1] === l.v) || (path[i] === l.v && path[i + 1] === l.u)) return true;
+      }
+      return false;
+    }
+
+    const ICONS = {
+      ok: '<svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6"/><path d="M5 8.3 L7.2 10.4 L11 6"/></svg>',
+      reroute: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8 A5 5 0 1 1 9.6 3.3"/><path d="M9 1.2 L11.6 3.4 L9.4 6"/></svg>',
+      fallback: '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5 L13.5 3.5 V8 C13.5 11 11 13.6 8 14.5 C5 13.6 2.5 11 2.5 8 V3.5 Z"/></svg>'
+    };
+
+    function updateRoutingHUD(reason) {
       const res = computeBestPath(currentSource, targetNode);
+      const base = computeBestPath(currentSource, targetNode, false).path;
+      const key = res.success ? res.path.join('>') : 'none:' + currentSource;
+      const changed = key !== route.key;
+
+      if (changed) {
+        route.prev = route.fallback ? [] : route.path;
+        route.path = res.success ? res.path : [];
+        route.fallback = !res.success;
+        route.key = key;
+        route.t0 = performance.now();
+      }
+
+      // Guide progress
+      if (reason === 'source') guide.picked = true;
+      if (reason === 'tap') {
+        guide.picked = true;
+        if (changed && links.some(l => l.eve)) {
+          guide.rerouted = true;
+          if (reduceMotion.matches) guide.watched = true;
+          else route.watchPending = true;
+        }
+      }
+      if (reason === 'clear') { guide.rerouted = false; guide.watched = false; route.watchPending = false; }
+
+      const tapped = links.filter(l => l.eve);
       const pathText = document.getElementById('route-path-text');
       const badge = document.getElementById('route-badge');
-      const hopsText = document.getElementById('route-hops');
-      const distText = document.getElementById('route-dist');
-      const qberText = document.getElementById('route-qber');
-      const gwText = document.getElementById('route-gw');
+      const explain = document.getElementById('route-explain');
+      const s = currentSource;
 
       if (res.success) {
-        pathText.textContent = res.path.map(n => `[${n}]`).join(' → ');
-        const hops = res.path.length - 1;
-        hopsText.textContent = hops + (hops === 1 ? ' hop' : ' hops');
+        const p = res.path;
+        pathText.innerHTML = p.map((n, i) =>
+          `<span class="chip${i === 0 ? ' chip--src' : ''}${n === 'CC' ? ' chip--cc' : ''}">${n}</span>`
+        ).join('<span class="arr" aria-hidden="true">→</span>');
+        pathText.setAttribute('aria-label', 'Key path: ' + p.join(' to '));
 
-        // Calculate metrics
-        let totalDist = 0;
-        let maxQber = 0;
-        for (let i = 0; i < res.path.length - 1; i++) {
-          const l = findLink(res.path[i], res.path[i + 1]);
-          if (l) {
-            totalDist += l.dist;
-            maxQber = Math.max(maxQber, l.qber);
-          }
+        const hops = p.length - 1;
+        let totalDist = 0, maxQber = 0;
+        for (let i = 0; i < p.length - 1; i++) {
+          const l = findLink(p[i], p[i + 1]);
+          if (l) { totalDist += l.dist; maxQber = Math.max(maxQber, l.qber); }
         }
-        distText.textContent = totalDist.toFixed(1) + ' km';
-        qberText.textContent = (maxQber * 100).toFixed(1) + '%';
-        qberText.style.color = 'var(--q-ok)';
+        const gw = p[p.length - 2];
+        const relays = p.slice(1, -1);
+        const dir = pathDirection(p);
 
-        const gwNode = res.path[res.path.length - 2];
-        gwText.textContent = `Supernode ${gwNode} (${gwNode === 3 ? 'East gateway' : 'West gateway'})`;
+        document.getElementById('route-hops').textContent = hops + (hops === 1 ? ' hop' : ' hops');
+        document.getElementById('route-dist').textContent = totalDist.toFixed(1) + ' km';
+        document.getElementById('route-qber').textContent = (maxQber * 100).toFixed(1) + '%';
+        document.getElementById('route-gw').textContent = `Supernode ${gw} (${gw === 3 ? 'east' : 'west'})`;
+        document.getElementById('route-relays').textContent = relays.length ? relays.join(', ') : 'None';
 
-        badge.textContent = 'SELF-HEALED / OPTIMAL';
-        badge.className = 'q-pill q-pill--ok';
+        const relayLine = relays.length === 0 ? '' : relays.length === 1
+          ? ` Supernode ${relays[0]} passes it on as a trusted relay.`
+          : ` Supernodes ${listWords(relays)} pass it on as trusted relays.`;
+        const sameAsBase = p.join('>') === base.join('>');
+
+        if (sameAsBase) {
+          badge.dataset.state = 'ok';
+          badge.innerHTML = ICONS.ok + '<span>Key flowing · shortest path</span>';
+          if (tapped.length === 0) {
+            explain.textContent = hops === 1
+              ? `Supernode ${s} is a gateway, so its key goes straight to the command center over a 6 km link.`
+              : `Supernode ${s} sends its key ${dir} to gateway ${gw}, the shortest way in.${relayLine}`;
+          } else {
+            const names = tapped.map(spanName);
+            explain.textContent = `${names.length === 1 ? 'A tap sits on ' + names[0] : 'Taps sit on ' + listWords(names)}, but this key never used ${names.length === 1 ? 'it' : 'them'}, so the route stays the same. Click a span on the gold path to force a reroute.`;
+          }
+        } else {
+          const hit = tapped.filter(l => onPath(base, l)).map(spanName);
+          const names = hit.length ? hit : tapped.map(spanName);
+          badge.dataset.state = 'reroute';
+          badge.innerHTML = ICONS.reroute + '<span>Rerouted around the tap</span>';
+          explain.textContent = `The spy on ${listWords(names)} makes about 27% of key bits arrive wrong, above the 11% limit, so no key can be made there. The key now goes ${dir || 'straight in'} through gateway ${gw}.${relayLine}`;
+        }
       } else {
-        pathText.innerHTML = '<span class="sev">ALL QUANTUM PATHS SEVERED</span><br><span class="fallback">→ FALLBACK: NIST ML-KEM-768 TUNNEL</span>';
-        badge.textContent = 'PQC FALLBACK';
-        badge.className = 'q-pill q-pill--bad';
-        hopsText.textContent = 'n/a (post-quantum tunnel)';
-        distText.textContent = 'n/a';
-        qberText.textContent = '>25% (tapped)';
-        qberText.style.color = 'var(--q-bad)';
-        gwText.textContent = 'None (post-quantum tunnel)';
+        pathText.innerHTML = '<span class="fallback-line">No quantum path · ML-KEM-768 backup</span>';
+        pathText.removeAttribute('aria-label');
+        badge.dataset.state = 'fallback';
+        badge.innerHTML = ICONS.fallback + '<span>No quantum path · ML-KEM backup</span>';
+        explain.textContent = `Every quantum path from supernode ${s} is cut. Its traffic switches to ML-KEM-768, the post-quantum backup encryption, so it stays encrypted without a quantum key.`;
+        document.getElementById('route-hops').textContent = 'n/a (post-quantum tunnel)';
+        document.getElementById('route-dist').textContent = 'n/a';
+        document.getElementById('route-qber').textContent = '26.8% (tapped)';
+        document.getElementById('route-gw').textContent = 'None';
+        document.getElementById('route-relays').textContent = 'None';
       }
+
+      // Preset buttons show their state in words, and say what a second click does
+      const set = (sel, on, onText, offText) => {
+        const b = document.querySelector(`[data-preset="${sel}"]`);
+        b.classList.toggle('is-on', on);
+        b.setAttribute('aria-pressed', String(on));
+        b.querySelector('.btn-main').textContent = on ? onText : offText;
+      };
+      const t12 = findLink(1, 2).eve, t19 = findLink(1, 9).eve;
+      set('span12', t12, 'Remove the tap on span 1–2', 'Tap span 1–2');
+      set('gw3', findLink(3, 'CC').eve, 'Restore gateway 3', 'Cut gateway 3');
+      set('iso1', t12 && t19, 'Reconnect supernode 1', 'Isolate supernode 1');
+
+      renderGuide();
     }
 
     // -------------------------------------------------------------
     // CANVAS RENDERING
     // -------------------------------------------------------------
-    let animOffset = 0;
-
-    function isRingEdge(a, b) { return a !== 'CC' && b !== 'CC'; }
-    function isClockwise(a, b) { return b === (a % numNodes) + 1; }
+    const clamp01 = x => Math.max(0, Math.min(1, x));
+    const easeIO = t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const easeOut = t => 1 - Math.pow(1 - t, 3);
 
     // The two lines of a ring span: side +1 = outer (working ring), -1 = inner (protection ring)
     function ringLine(a, b, side) {
@@ -620,15 +933,58 @@ Baseline QBER: 1.8% on ring spans, 1.5% on gateway links (simplified alarm at 8%
       return [getNodePos(a), getNodePos(b)];
     }
 
-    function strokeLine(p, q, color, width, alpha) {
+    function pathSegs(path) {
+      const segs = [];
+      for (let i = 0; i < path.length - 1; i++) {
+        const [p, q] = pathSegment(path[i], path[i + 1]);
+        segs.push({ p, q, len: Math.hypot(q.x - p.x, q.y - p.y) });
+      }
+      return segs;
+    }
+    const segsLength = segs => segs.reduce((a, s) => a + s.len, 0);
+
+    function strokePath(segs, upto, color, width, alpha) {
+      ctx.save();
       ctx.globalAlpha = alpha;
       ctx.strokeStyle = color;
       ctx.lineWidth = width;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      let acc = 0;
+      for (const s of segs) {
+        if (acc >= upto) break;
+        const t = Math.min(1, (upto - acc) / s.len);
+        ctx.moveTo(s.p.x, s.p.y);
+        ctx.lineTo(s.p.x + (s.q.x - s.p.x) * t, s.p.y + (s.q.y - s.p.y) * t);
+        acc += s.len;
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function pointAt(segs, d) {
+      let acc = 0;
+      for (const s of segs) {
+        if (d <= acc + s.len) {
+          const t = (d - acc) / s.len;
+          return { x: s.p.x + (s.q.x - s.p.x) * t, y: s.p.y + (s.q.y - s.p.y) * t };
+        }
+        acc += s.len;
+      }
+      return segs[segs.length - 1].q;
+    }
+
+    function strokeLine(p, q, color, width, alpha, dash) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = width;
+      if (dash) ctx.setLineDash(dash);
       ctx.beginPath();
       ctx.moveTo(p.x, p.y);
       ctx.lineTo(q.x, q.y);
       ctx.stroke();
-      ctx.globalAlpha = 1;
+      ctx.restore();
     }
 
     // Small chevron at the middle of p -> q, pointing from p towards q
@@ -640,211 +996,371 @@ Baseline QBER: 1.8% on ring spans, 1.5% on gateway links (simplified alarm at 8%
       ctx.translate(mx, my);
       ctx.rotate(ang);
       ctx.strokeStyle = color;
-      ctx.lineWidth = 1.5;
+      ctx.lineWidth = 1.6;
       ctx.beginPath();
-      ctx.moveTo(-3.5, -3.5);
+      ctx.moveTo(-4, -4);
       ctx.lineTo(1.5, 0);
-      ctx.lineTo(-3.5, 3.5);
+      ctx.lineTo(-4, 4);
       ctx.stroke();
       ctx.restore();
     }
 
-    function draw() {
-      ctx.clearRect(0, 0, W, H);
-      const cx = W / 2;
-      const cy = H / 2;
-      const scale = ringRadius / 220;
-      const nodeR = ringRadius < 170 ? 17 : 21;
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
 
-      const res = computeBestPath(currentSource, targetNode);
-      const activePathEdges = new Set();
-      if (res.success) {
-        for (let i = 0; i < res.path.length - 1; i++) {
-          activePathEdges.add(`${res.path[i]}-${res.path[i+1]}`);
-          activePathEdges.add(`${res.path[i+1]}-${res.path[i]}`);
-        }
+    // A word label in a box, so nothing on the ring relies on colour alone
+    function tagLabel(text, x, y, color, opts = {}) {
+      ctx.save();
+      ctx.font = `600 ${opts.size || 11}px ${opts.mono === false ? C.font : C.mono}`;
+      const w = ctx.measureText(text).width + 14;
+      const h = (opts.size || 11) + 10;
+      let bx = x - w / 2, by = y - h / 2;
+      bx = Math.max(6, Math.min(W - w - 6, bx));
+      by = Math.max(6, Math.min(H - h - 6, by));
+      roundRect(bx, by, w, h, 6);
+      ctx.fillStyle = C.surface;
+      ctx.globalAlpha = opts.alpha == null ? 1 : opts.alpha;
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      ctx.fillStyle = opts.textColor || color;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, bx + w / 2, by + h / 2 + 0.5);
+      ctx.restore();
+    }
+
+    function linkMid(l) {
+      const a = getNodePos(l.u), b = getNodePos(l.v);
+      return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+    }
+
+    // A tapped span breaks: dashed red, a gap opens in the middle, a cross, and the words "Tapped: no key"
+    function drawTapped(l, now) {
+      const k = reduceMotion.matches ? 1 : easeOut(clamp01((now - l.brokeAt) / BREAK_MS));
+      const gap = 3 + 9 * k;
+      const lines = isRingEdge(l.u, l.v) ? [ringLine(l.u, l.v, 1), ringLine(l.u, l.v, -1)] : [[getNodePos(l.u), getNodePos(l.v)]];
+      lines.forEach(([p, q]) => {
+        const len = Math.hypot(q.x - p.x, q.y - p.y) || 1;
+        const ux = (q.x - p.x) / len, uy = (q.y - p.y) / len;
+        const mx = (p.x + q.x) / 2, my = (p.y + q.y) / 2;
+        strokeLine(p, { x: mx - ux * gap, y: my - uy * gap }, C.bad, 2.2, 0.95, [6, 4]);
+        strokeLine({ x: mx + ux * gap, y: my + uy * gap }, q, C.bad, 2.2, 0.95, [6, 4]);
+      });
+
+      const m = linkMid(l);
+      const s = 4 + 3 * k;
+      ctx.save();
+      ctx.strokeStyle = C.bad;
+      ctx.lineWidth = 2.6;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(m.x - s, m.y - s); ctx.lineTo(m.x + s, m.y + s);
+      ctx.moveTo(m.x + s, m.y - s); ctx.lineTo(m.x - s, m.y + s);
+      ctx.stroke();
+      ctx.restore();
+
+      let lx, ly;
+      if (isRingEdge(l.u, l.v)) {
+        const ox = m.x - W / 2, oy = m.y - H / 2, len = Math.hypot(ox, oy) || 1;
+        lx = m.x + ox / len * 30; ly = m.y + oy / len * 30;
+      } else {
+        const a = getNodePos(l.u), cc = getNodePos('CC');
+        const px = cc.x + (a.x - cc.x) * 0.62, py = cc.y + (a.y - cc.y) * 0.62;
+        let nx = -(a.y - cc.y), ny = a.x - cc.x;
+        const nl = Math.hypot(nx, ny) || 1; nx /= nl; ny /= nl;
+        if (ny < 0) { nx = -nx; ny = -ny; }
+        lx = px + nx * 22; ly = py + ny * 22;
+      }
+      tagLabel('Tapped: no key', lx, ly, C.bad, { alpha: k });
+    }
+
+    // Hover and guide hints
+    let hover = null;
+    let photonT = 0, lastT = performance.now(), paused = false;
+
+    function nodeRadius() { return ringRadius < 170 ? 18 : 22; }
+
+    function labelAngle(i, a) {
+      // keep word labels clear of the illustrative substations on supernodes 3, 4 and 5
+      if (i === 3 || i === 4) return a - 0.3;
+      if (i === 5) return a + 0.3;
+      return a;
+    }
+
+    function draw(now) {
+      ctx.clearRect(0, 0, W, H);
+      const cx = W / 2, cy = H / 2;
+      const scale = ringRadius / 220;
+      const nodeR = nodeRadius();
+      const reduce = reduceMotion.matches;
+      const pDraw = reduce ? 1 : clamp01((now - route.t0) / DRAW_MS);
+      const pFade = reduce ? 1 : clamp01((now - route.t0) / FADE_MS);
+
+      if (route.watchPending && pDraw >= 1) {
+        route.watchPending = false;
+        guide.watched = true;
+        renderGuide();
       }
 
       // 1. Faint ring guides
       ctx.strokeStyle = C.line;
       ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.arc(cx, cy, ringRadius + 14, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.arc(cx, cy, ringRadius - 14, 0, Math.PI * 2);
-      ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx, cy, ringRadius + 16, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx, cy, ringRadius - 16, 0, Math.PI * 2); ctx.stroke();
 
-      // 2. Leaf substation connections (illustrative)
+      // 2. Leaf substations (illustrative)
       leafNodes.forEach(leaf => {
         const pPos = getNodePos(leaf.parent);
-        const leafAngle = pPos.angle + leaf.angleOffset;
+        const a = pPos.angle + leaf.angleOffset;
         const r = ringRadius + leaf.dist * scale;
-        const lx = cx + r * Math.cos(leafAngle);
-        const ly = cy + r * Math.sin(leafAngle);
-
+        const lx = cx + r * Math.cos(a), ly = cy + r * Math.sin(a);
         strokeLine(pPos, { x: lx, y: ly }, C.off, 1, 1);
-
         ctx.fillStyle = C.off;
         ctx.fillRect(lx - 5, ly - 5, 10, 10);
       });
 
-      // 3. All network links: each ring span drawn as its working (outer) and protection (inner) line
+      // 3. Every span that still works: working ring outside, protection ring inside, with direction chevrons
       links.forEach(l => {
-        const onPath = activePathEdges.has(`${l.u}-${l.v}`);
-
+        if (l.eve) return;
         if (isRingEdge(l.u, l.v)) {
-          // Which ring the active path uses on this span (+1 working / -1 protection)
-          let pathSide = 0;
-          if (onPath) {
-            const a = res.path.indexOf(l.u) < res.path.indexOf(l.v) ? l.u : l.v;
-            const b = a === l.u ? l.v : l.u;
-            pathSide = isClockwise(a, b) ? 1 : -1;
-          }
           [1, -1].forEach(side => {
             const seg = ringLine(l.u, l.v, side);
-            let color = side === 1 ? C.ok : C.pqc, width = 2, alpha = 0.55;
-            if (l.eve) { color = C.bad; width = 2; alpha = 0.9; }
-            else if (pathSide === side) { color = C.gold; width = 4.5; alpha = 1; }
-            strokeLine(seg[0], seg[1], color, width, alpha);
-            if (!l.eve) {
-              // Working ring runs clockwise, protection ring counter-clockwise
-              const cwFirst = isClockwise(l.u, l.v);
-              const forward = (side === 1) === cwFirst;
-              chevron(forward ? seg[0] : seg[1], forward ? seg[1] : seg[0], color, Math.min(1, alpha + 0.3));
-            }
+            const color = side === 1 ? C.ok : C.tele;
+            strokeLine(seg[0], seg[1], color, 2, 0.6);
+            const forward = (side === 1) === isClockwise(l.u, l.v);
+            chevron(forward ? seg[0] : seg[1], forward ? seg[1] : seg[0], color, 0.9);
           });
         } else {
-          const p1 = getNodePos(l.u), p2 = getNodePos(l.v);
-          if (l.eve) strokeLine(p1, p2, C.bad, 3, 0.9);
-          else if (onPath) strokeLine(p1, p2, C.gold, 4.5, 1);
-          else strokeLine(p1, p2, C.faint, 2, 0.7);
-        }
-
-        // If the span is tapped, draw an X marker
-        if (l.eve) {
-          const p1 = getNodePos(l.u), p2 = getNodePos(l.v);
-          const mx = (p1.x + p2.x) / 2;
-          const my = (p1.y + p2.y) / 2;
-          ctx.strokeStyle = C.bad;
-          ctx.lineWidth = 3;
-          ctx.beginPath();
-          ctx.moveTo(mx - 7, my - 7); ctx.lineTo(mx + 7, my + 7);
-          ctx.moveTo(mx + 7, my - 7); ctx.lineTo(mx - 7, my + 7);
-          ctx.stroke();
-
-          ctx.fillStyle = C.bad;
-          ctx.font = `600 10px ${C.mono}`;
-          ctx.textAlign = 'center';
-          ctx.fillText('EVE · QBER > 11%', mx, my - 13);
+          strokeLine(getNodePos(l.u), getNodePos(l.v), C.dim, 2, 0.6);
         }
       });
 
-      // 4. Moving key pulses along the active path
-      if (res.success) {
-        for (let i = 0; i < res.path.length - 1; i++) {
-          const seg = pathSegment(res.path[i], res.path[i + 1]);
-          const px = seg[0].x + (seg[1].x - seg[0].x) * animOffset;
-          const py = seg[0].y + (seg[1].y - seg[0].y) * animOffset;
+      // 4. The previous key path fades out
+      if (pFade < 1 && route.prev.length) {
+        const segs = pathSegs(route.prev);
+        strokePath(segs, segsLength(segs), C.gold, 4.5, 1 - pFade);
+      }
 
+      // 5. Tapped spans break
+      links.forEach(l => { if (l.eve) drawTapped(l, now); });
+
+      // 6. The key path draws in from the sender, then photons travel along it to the command center
+      if (route.path.length) {
+        const segs = pathSegs(route.path);
+        const total = segsLength(segs);
+        const drawn = total * easeIO(pDraw);
+        strokePath(segs, drawn, C.gold, C.dark ? 14 : 11, C.dark ? 0.2 : 0.12);
+        strokePath(segs, drawn, C.gold, 4.5, 1);
+
+        const photons = [];
+        if (pDraw < 1) {
+          photons.push(pointAt(segs, Math.max(0.01, drawn)));
+        } else {
+          const spacing = 62, speed = 120;
+          const n = Math.max(1, Math.floor(total / spacing));
+          for (let k = 0; k < n; k++) {
+            const d = (photonT * speed + k * (total / n)) % total;
+            const pt = pointAt(segs, d);
+            pt.a = clamp01(Math.min(d, total - d) / 24);
+            photons.push(pt);
+          }
+        }
+        ctx.save();
+        ctx.shadowColor = C.gold;
+        ctx.shadowBlur = C.dark ? 16 : 7;
+        photons.forEach(pt => {
+          ctx.globalAlpha = pt.a == null ? 1 : pt.a;
           ctx.fillStyle = C.gold;
-          ctx.strokeStyle = C.surface;
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(px, py, 5, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.stroke();
+          ctx.beginPath(); ctx.arc(pt.x, pt.y, 5, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.shadowBlur = 0;
+        photons.forEach(pt => {
+          ctx.globalAlpha = pt.a == null ? 1 : pt.a;
+          ctx.fillStyle = C.dark ? C.ink : C.surface;
+          ctx.beginPath(); ctx.arc(pt.x, pt.y, 1.8, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.restore();
+
+        // Guide step 2: mark the spans of the key path you can click
+        if (guideStep() === 2 && pDraw >= 1) {
+          for (let i = 0; i < route.path.length - 1; i++) {
+            const m = linkMid(findLink(route.path[i], route.path[i + 1]));
+            ctx.save();
+            ctx.strokeStyle = C.ink;
+            ctx.globalAlpha = 0.75;
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([3, 3]);
+            ctx.beginPath(); ctx.arc(m.x, m.y, 15, 0, Math.PI * 2); ctx.stroke();
+            ctx.restore();
+          }
+          const first = linkMid(findLink(route.path[0], route.path[1]));
+          const ox = first.x - cx, oy = first.y - cy, ol = Math.hypot(ox, oy) || 1;
+          if (isRingEdge(route.path[0], route.path[1])) {
+            tagLabel('Click to tap', first.x - ox / ol * 40, first.y - oy / ol * 40, C.ink, { textColor: C.ink });
+          } else {
+            tagLabel('Click to tap', first.x, first.y + 32, C.ink, { textColor: C.ink });
+          }
         }
       }
 
-      // 5. Command center (CC) box
-      const ccW = 116;
-      const ccH = 66;
+      // 7. No quantum path: a dashed backup line, ML-KEM over ordinary links
+      if (route.fallback) {
+        const a = getNodePos(currentSource), b = getNodePos('CC');
+        const k = easeIO(pDraw);
+        strokeLine(a, { x: a.x + (b.x - a.x) * k, y: a.y + (b.y - a.y) * k }, C.pqc, 2.5, 1, [8, 6]);
+        if (pDraw >= 1) tagLabel('ML-KEM backup, no quantum key', (a.x + b.x) / 2, (a.y + b.y) / 2, C.pqc, { textColor: C.ink });
+      }
+
+      // 8. Command center
+      const ccW = 132, ccH = 70;
+      ctx.save();
+      roundRect(cx - ccW / 2, cy - ccH / 2, ccW, ccH, 10);
       ctx.fillStyle = C.surface;
+      ctx.fill();
       ctx.strokeStyle = C.ink;
       ctx.lineWidth = 1.5;
-      ctx.fillRect(cx - ccW / 2, cy - ccH / 2, ccW, ccH);
-      ctx.strokeRect(cx - ccW / 2, cy - ccH / 2, ccW, ccH);
-
+      ctx.stroke();
       ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
       ctx.fillStyle = C.ink;
-      ctx.font = `600 20px ${C.font}`;
-      ctx.fillText('CC', cx, cy + 2);
-      ctx.fillStyle = C.faint;
-      ctx.font = `500 8.5px ${C.mono}`;
-      ctx.fillText('COMMAND CENTER', cx, cy + 20);
+      ctx.font = `600 22px ${C.font}`;
+      ctx.fillText('CC', cx, cy + 3);
+      ctx.fillStyle = C.dim;
+      ctx.font = `500 11px ${C.font}`;
+      ctx.fillText('Command center', cx, cy + 21);
+      ctx.restore();
 
-      // 6. The 9 supernodes
+      // 9. The nine supernodes (filled = sender, double ring = gateway, gold edge = on the key path)
       for (let i = 1; i <= 9; i++) {
         const pos = getNodePos(i);
-        const isSrc = (i === currentSource);
-        const inPath = res.success && res.path.includes(i);
+        const isSrc = i === currentSource;
+        const inPath = route.path.includes(i) && pDraw >= 1;
+        const isGw = i === 3 || i === 7;
 
+        if (isGw) {
+          ctx.save();
+          ctx.strokeStyle = isSrc ? C.ink : C.dim;
+          ctx.lineWidth = 1.2;
+          ctx.beginPath(); ctx.arc(pos.x, pos.y, nodeR + 4, 0, Math.PI * 2);
+          ctx.fillStyle = C.surface; ctx.fill(); ctx.stroke();
+          ctx.restore();
+        }
         ctx.fillStyle = isSrc ? C.ink : C.surface;
         ctx.strokeStyle = inPath ? C.gold : (isSrc ? C.ink : C.dim);
         ctx.lineWidth = inPath ? 3 : 1.5;
-
-        ctx.beginPath();
-        ctx.arc(pos.x, pos.y, nodeR, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
+        ctx.beginPath(); ctx.arc(pos.x, pos.y, nodeR, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
 
         ctx.fillStyle = isSrc ? C.surface : C.ink;
-        ctx.font = `600 14px ${C.mono}`;
+        ctx.font = `600 15px ${C.mono}`;
         ctx.textAlign = 'center';
-        ctx.fillText(i, pos.x, pos.y + 5);
+        ctx.textBaseline = 'middle';
+        ctx.fillText(i, pos.x, pos.y + 1);
 
-        ctx.fillStyle = C.faint;
-        ctx.font = `500 10px ${C.mono}`;
-        const labelRadius = ringRadius + nodeR + 18;
-        const lx = cx + labelRadius * Math.cos(pos.angle);
-        const ly = cy + labelRadius * Math.sin(pos.angle);
-        ctx.fillText(`SN-${i}`, lx, ly + 3);
+        const words = isSrc && isGw ? 'Sender · gateway' : isSrc ? 'Sender' : isGw ? 'Gateway' : '';
+        if (words) {
+          const a = labelAngle(i, pos.angle);
+          const lr = ringRadius + nodeR + (isGw ? 22 : 18);
+          ctx.font = `600 12px ${C.font}`;
+          ctx.fillStyle = isSrc ? C.ink : C.dim;
+          ctx.fillText(words, cx + lr * Math.cos(a), cy + lr * Math.sin(a));
+        }
+      }
+      ctx.textBaseline = 'alphabetic';
+
+      // 10. Hover: show the click target and what a click will do
+      if (hover) {
+        let tip;
+        ctx.save();
+        ctx.strokeStyle = C.ink;
+        ctx.lineWidth = 1.5;
+        ctx.fillStyle = C.tint;
+        if (hover.type === 'link') {
+          const m = linkMid(hover.link);
+          ctx.beginPath(); ctx.arc(m.x, m.y, 16, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+          const l = hover.link;
+          tip = l.eve ? `Click to remove the tap on ${spanName(l)}` : (l.v === 'CC' ? `Click to cut gateway ${l.u}` : `Click to tap span ${l.u}–${l.v}`);
+        } else {
+          const p = getNodePos(hover.id);
+          ctx.beginPath(); ctx.arc(p.x, p.y, nodeR + 8, 0, Math.PI * 2); ctx.stroke();
+          tip = hover.id === currentSource ? `Supernode ${hover.id} is the sender` : `Click to send from supernode ${hover.id}`;
+        }
+        ctx.restore();
+        ctx.font = `500 13px ${C.font}`;
+        const tw = ctx.measureText(tip).width + 18;
+        tagLabel(tip, hover.x + 16 + tw / 2, hover.y - 22, C.line, { size: 13, mono: false, textColor: C.ink });
       }
     }
 
-    function loop() {
-      animOffset += 0.012;
-      if (animOffset > 1) animOffset = 0;
-      draw();
+    function loop(now) {
+      const dt = Math.min(0.05, (now - lastT) / 1000);
+      lastT = now;
+      if (!paused && !reduceMotion.matches) photonT += dt;
+      draw(now);
       requestAnimationFrame(loop);
     }
 
+    // Pause control for the moving photons
+    function togglePhotons() {
+      paused = !paused;
+      renderPhotonToggle();
+    }
+    function renderPhotonToggle() {
+      const b = document.getElementById('photon-toggle');
+      b.setAttribute('aria-pressed', String(paused));
+      b.innerHTML = paused
+        ? '<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 1.5 L10.5 6 L3 10.5 Z"/></svg>Play photons'
+        : '<svg viewBox="0 0 12 12" aria-hidden="true"><rect x="2.5" y="1.5" width="2.6" height="9" rx=".6"/><rect x="6.9" y="1.5" width="2.6" height="9" rx=".6"/></svg>Pause photons';
+    }
+
     // Follow the shared light/dark switch
-    window.addEventListener('qrypt:theme', () => {
-      readColors();
-      draw();
-    });
+    window.addEventListener('qrypt:theme', () => { readColors(); draw(performance.now()); });
 
-    // Canvas click detection on links and supernodes
-    canvas.addEventListener('click', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
-
-      // Check if clicked near any link midpoint
-      links.forEach(l => {
-        const p1 = getNodePos(l.u);
-        const p2 = getNodePos(l.v);
-        const midX = (p1.x + p2.x) / 2;
-        const midY = (p1.y + p2.y) / 2;
-        const dist = Math.hypot(mx - midX, my - midY);
-        if (dist < 25) {
-          toggleLinkEve(l.u, l.v);
-        }
-      });
-
-      // Check if clicked any supernode to select it
+    // Canvas: one hit test for hover and click (supernodes win over span midpoints)
+    function hitTest(mx, my) {
+      const nodeR = nodeRadius();
       for (let i = 1; i <= 9; i++) {
-        const pos = getNodePos(i);
-        if (Math.hypot(mx - pos.x, my - pos.y) < 25) {
-          setSource(i);
-        }
+        const p = getNodePos(i);
+        if (Math.hypot(mx - p.x, my - p.y) < nodeR + 8) return { type: 'node', id: i };
       }
+      let best = null, bestD = 24;
+      links.forEach(l => {
+        const m = linkMid(l);
+        const d = Math.hypot(mx - m.x, my - m.y);
+        if (d < bestD) { bestD = d; best = l; }
+      });
+      return best ? { type: 'link', link: best } : null;
+    }
+    function pointer(e) {
+      const rect = canvas.getBoundingClientRect();
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+    canvas.addEventListener('mousemove', e => {
+      const p = pointer(e);
+      const h = hitTest(p.x, p.y);
+      hover = h ? Object.assign(h, p) : null;
+      canvas.style.cursor = h ? 'pointer' : 'default';
+    });
+    canvas.addEventListener('mouseleave', () => { hover = null; canvas.style.cursor = 'default'; });
+    canvas.addEventListener('click', e => {
+      const p = pointer(e);
+      const h = hitTest(p.x, p.y);
+      if (!h) return;
+      if (h.type === 'link') toggleLinkEve(h.link.u, h.link.v);
+      else setSource(h.id);
     });
 
-    updateRoutingHUD();
-    loop();
+    renderPhotonToggle();
+    updateRoutingHUD('init');
+    requestAnimationFrame(loop);
   </script>
 </body>
 </html>

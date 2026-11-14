@@ -152,3 +152,20 @@ The GPU state-vector simulator costs credits, so it is offered only with `GRIDTW
   - A key there would only matter if someone later added a server function, and then a public page could spend the team's qBraid credits.
 - The build writes `site/.vercelignore` so local `.env*` files and `.vercel/` are never uploaded.
 - The map loads standard OpenStreetMap tiles. That is fine for a demo; heavy public traffic would need another tile provider under OSM's tile usage policy.
+
+## Simple and Detailed
+
+Every page has a **Simple / Detailed** switch in the top bar (default Simple, remembered per browser, `?mode=detailed` in a link).
+- **Simple** shows the whole story and every main interaction.
+- **Detailed** adds what an expert wants: sensitivity, coverage, layers, raw readings, formulas, job IDs, logs.
+
+Pages mark detail with `class="q-adv"`.
+
+**The journey runs from simple to complex**, in the top bar's order:
+1. The hypothetical dual ring.
+2. The real map.
+3. The live grid.
+4. The photon line.
+5. The quantum lab.
+
+**In the live grid**, "Tap a fiber for me" taps the network's demo fiber, so a first-time visitor sees the automatic response at once.
