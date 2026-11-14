@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Photon Line</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a live 3D fiber link up top (the lab bench), then the notebook's steps in order, one column of reading width with wide figures. */
+:root {
+  --ground: #edf0f3;
+  --panel: #ffffff;
+  --ink: #15212c;
+  --muted: #586977;
+  --line: #cbd3db;
+  --z: #2a5bd7;       /* Z basis (+): |0>, |1> */
+  --x: #c76a12;       /* X basis (x): |+>, |-> */
+  --eve: #c42f3a;
+  --ok: #1f8a5b;
+  --scene: #dfe5eb;
+  --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --ground: #0f161d; --panel: #17212b; --ink: #e5ecf2; --muted: #93a4b3; --line: #2c3a47;
+    --z: #7aa2ff; --x: #f0a352; --eve: #ff6670; --ok: #4fc48d; --scene: #0b1117;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ground: #0f161d; --panel: #17212b; --ink: #e5ecf2; --muted: #93a4b3; --line: #2c3a47;
+  --z: #7aa2ff; --x: #f0a352; --eve: #ff6670; --ok: #4fc48d; --scene: #0b1117;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--ground); color: var(--ink);
+  font: 16px/1.6 var(--f-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 64px;
+}
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 56px; }
+.read { max-width: 66ch; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; line-height: 1.1; }
+h1 { font-size: clamp(2.1rem, 5vw, 3.4rem); font-weight: 700; letter-spacing: -0.02em; }
+h2 { font-size: 1.7rem; font-weight: 700; }
+h3 { font-size: 1.1rem; font-weight: 500; }
+p { margin: 0; }
+.eyebrow { font: 500 0.75rem/1 var(--f-mono); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.lede { font-size: 1.12rem; color: var(--muted); }
+code, .mono { font-family: var(--f-mono); font-size: 0.9em; }
+.z { color: var(--z); font-weight: 600; } .x { color: var(--x); font-weight: 600; } .e { color: var(--eve); font-weight: 600; }
+
+header { display: grid; gap: 14px; }
+
+/* ---------- bench ---------- */
+.bench { display: grid; gap: 14px; }
+.stage {
+  position: relative; background: var(--scene); border: 1px solid var(--line);
+  border-radius: 6px; overflow: hidden; height: clamp(300px, 44vw, 440px);
+}
+.stage canvas { display: block; width: 100%; height: 100%; }
+.tag {
+  position: absolute; transform: translate(-50%, 0); pointer-events: none; white-space: nowrap;
+  font: 500 0.78rem/1.25 var(--f-mono); color: var(--ink); text-align: center;
+}
+.tag small { display: block; color: var(--muted); font-weight: 400; }
+.tag.eve { color: var(--eve); }
+.caption {
+  position: absolute; left: 12px; right: 12px; bottom: 10px; pointer-events: none;
+  font: 0.92rem/1.4 var(--f-body); color: var(--ink);
+  background: color-mix(in srgb, var(--panel) 86%, transparent);
+  border: 1px solid var(--line); border-radius: 4px; padding: 8px 12px;
+}
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+button {
+  font: 500 0.92rem/1 var(--f-body); color: var(--ink); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 4px; padding: 10px 14px; cursor: pointer;
+}
+button.primary { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+button:hover { border-color: var(--ink); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--z); outline-offset: 2px; }
+.evebox { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-left: auto; }
+.evebox label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+input[type="range"] { accent-color: var(--eve); width: 140px; }
+input[type="checkbox"] { accent-color: var(--eve); width: 18px; height: 18px; }
+#fracOut { font-family: var(--f-mono); min-width: 4ch; font-variant-numeric: tabular-nums; }
+
+.readout { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; }
+@media (max-width: 760px) { .readout { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px; }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 460px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.stat .v { font: 700 1.7rem/1.1 var(--f-display); font-variant-numeric: tabular-nums; }
+.stat .k { font-size: 0.8rem; color: var(--muted); }
+.meter { margin-top: 18px; }
+.meter .track { position: relative; height: 12px; background: var(--ground); border: 1px solid var(--line); border-radius: 2px; }
+.meter .fill { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--ok); transition: width .3s, background .3s; }
+.meter .mark { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); }
+.meter .scale { position: relative; height: 34px; font: 0.72rem/1.2 var(--f-mono); color: var(--muted); }
+.meter .scale span { position: absolute; top: 6px; transform: translateX(-50%); white-space: nowrap; text-align: center; }
+.verdict { margin-top: 4px; font-weight: 500; }
+
+table { width: 100%; border-collapse: collapse; font: 0.86rem/1.3 var(--f-mono); font-variant-numeric: tabular-nums; }
+th { text-align: left; font: 500 0.7rem/1.2 var(--f-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 0 6px 8px; }
+td { padding: 6px; border-top: 1px solid var(--line); }
+tr.drop td { color: var(--muted); }
+.chip { display: inline-block; padding: 1px 6px; border-radius: 3px; font-size: 0.75rem; }
+.chip.keep { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+.chip.err { background: color-mix(in srgb, var(--eve) 16%, transparent); color: var(--eve); }
+.chip.tap { color: var(--eve); }
+.empty { color: var(--muted); font-size: 0.9rem; padding-top: 6px; }
+.tablebox { overflow-x: auto; }
+
+/* ---------- steps ---------- */
+.step { display: grid; gap: 18px; border-top: 1px solid var(--line); padding-top: 28px; }
+.step .head { display: flex; gap: 16px; align-items: baseline; flex-wrap: wrap; }
+.step .num { font: 500 0.8rem/1 var(--f-mono); color: var(--muted); letter-spacing: 0.08em; }
+.cellref { font: 0.78rem/1 var(--f-mono); color: var(--muted); margin-left: auto; }
+.states { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 620px) { .states { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.state { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px; display: grid; gap: 6px; justify-items: center; text-align: center; }
+.state svg { width: 76px; height: 76px; }
+.state .ket { font: 500 1.05rem/1 var(--f-mono); }
+.state .how { font-size: 0.8rem; color: var(--muted); }
+pre { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; overflow-x: auto; font: 0.85rem/1.55 var(--f-mono); }
+pre .c { color: var(--muted); }
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 700px) { .two { grid-template-columns: 1fr; } }
+.rule { font: 500 1.05rem/1.4 var(--f-display); }
+.math { font: 500 1.25rem/1.3 var(--f-mono); }
+
+.chartbox { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px; }
+.chartbox svg { display: block; width: 100%; min-width: 520px; height: auto; }
+.ax { stroke: var(--line); stroke-width: 1; fill: none; }
+.tick { fill: var(--muted); font: 11px var(--f-mono); }
+.lab { fill: var(--ink); font: 12px var(--f-body); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 0.85rem; color: var(--muted); margin-top: 8px; }
+.legend i { display: inline-block; width: 18px; height: 0; border-top: 2px solid; vertical-align: middle; margin-right: 6px; }
+
+.qubits { display: grid; grid-template-columns: repeat(16, minmax(0, 1fr)); gap: 4px; overflow-x: auto; }
+@media (max-width: 700px) { .qubits { grid-template-columns: repeat(8, minmax(0, 1fr)); } }
+.q { border: 1px solid var(--line); border-radius: 4px; padding: 6px 2px; text-align: center; font: 0.78rem/1.5 var(--f-mono); background: var(--panel); color: var(--muted); }
+.q b { display: block; color: var(--ink); font-weight: 500; }
+.q.kept { border-color: var(--ok); box-shadow: inset 0 0 0 1px var(--ok); color: var(--ink); }
+.q.flag { border-color: var(--eve); box-shadow: inset 0 0 0 1px var(--eve); }
+.facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; font-size: 0.92rem; }
+.facts dt { color: var(--muted); } .facts dd { margin: 0; font-variant-numeric: tabular-nums; word-break: break-all; }
+footer { color: var(--muted); font-size: 0.85rem; }
+@media (prefers-reduced-motion: reduce) { .meter .fill { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Secure the Grid · Step 1 · BB84</span>
+    <h1>Catch the eavesdropper on the fiber</h1>
+    <p class="lede read">Alice, at a substation, sends single photons to Bob, at the control center. Each photon carries one bit of a secret key in its polarization. If Eve taps the fiber and looks at the photons, she leaves errors behind. Send some photons and watch.</p>
+  </header>
+
+  <section class="bench" aria-label="BB84 simulator">
+    <div class="stage" id="stage">
+      <div class="tag" id="tagA">Alice<small>substation</small></div>
+      <div class="tag eve" id="tagE">Eve<small>fiber tap</small></div>
+      <div class="tag" id="tagB">Bob<small>control center</small></div>
+      <div class="caption" id="caption" aria-live="polite">Press “Send one photon” to watch a single round of BB84.</div>
+    </div>
+
+    <div class="controls">
+      <button class="primary" id="btnOne">Send one photon</button>
+      <button id="btnAuto" aria-pressed="false">Keep sending</button>
+      <button id="btn200">Send 200 at once</button>
+      <button id="btnReset">Reset</button>
+      <div class="evebox">
+        <label for="eveOn"><input type="checkbox" id="eveOn"> <span>Eve taps the fiber</span></label>
+        <label for="eveFrac"><span class="tick" style="font-size:.85rem;color:var(--muted)">intercepts</span>
+          <input type="range" id="eveFrac" min="0" max="100" step="5" value="100"></label>
+        <output id="fracOut" for="eveFrac">100%</output>
+      </div>
+    </div>
+
+    <div class="readout">
+      <div class="card">
+        <div class="stats">
+          <div class="stat"><div class="v" id="sSent">0</div><div class="k">photons sent</div></div>
+          <div class="stat"><div class="v" id="sKept">0</div><div class="k">bases matched (kept)</div></div>
+          <div class="stat"><div class="v" id="sErr">0</div><div class="k">errors in kept bits</div></div>
+          <div class="stat"><div class="v" id="sQ">–</div><div class="k">error rate (QBER)</div></div>
+        </div>
+        <div class="meter">
+          <div class="track"><div class="fill" id="mFill"></div>
+            <div class="mark" style="left:36.67%"></div><div class="mark" style="left:83.33%"></div></div>
+          <div class="scale">
+            <span style="left:0;transform:none">0%</span>
+            <span style="left:36.67%">11%<br>BB84 gives up</span>
+            <span style="left:83.33%">25%<br>Eve on every photon</span>
+          </div>
+          <p class="verdict" id="verdict">No kept bits yet.</p>
+        </div>
+      </div>
+      <div class="card tablebox">
+        <table>
+          <thead><tr><th>#</th><th>Alice</th><th>Eve</th><th>Bob</th><th>Result</th></tr></thead>
+          <tbody id="log"></tbody>
+        </table>
+        <p class="empty" id="logEmpty">The latest rounds show up here. Each cell is bit and basis, like 1<span class="x">×</span>.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="head"><span class="num">STEP 1</span><h2>Alice encodes a bit</h2><span class="cellref">notebook cells 2–3 · encode()</span></div>
+    <p class="read">For every photon Alice flips two coins: one for the bit (0 or 1) and one for the basis. The basis is the pair of directions she uses. In the <span class="z">+ basis</span> (called Z) a 0 is horizontal and a 1 is vertical. In the <span class="x">× basis</span> (called X) a 0 is tilted 45° and a 1 is tilted 135°. In the circuit, an X gate turns 0 into 1, and an H gate moves the state into the × basis.</p>
+    <div class="states" id="states"></div>
+    <pre><span class="c"># the encode() you filled in</span>
+if bit == 1:
+    qc.x(0)      <span class="c"># |0> -> |1></span>
+if basis == 1:
+    qc.h(0)      <span class="c"># Z basis -> X basis: |0> -> |+>, |1> -> |-></span></pre>
+  </section>
+
+  <section class="step">
+    <div class="head"><span class="num">STEP 2</span><h2>Bob measures in a basis of his own</h2><span class="cellref">notebook cell 4 · measure()</span></div>
+    <p class="read">Bob doesn't know Alice's basis, so he guesses. To measure in the × basis he applies an H gate first, then reads the qubit.</p>
+    <div class="two">
+      <div class="card"><p class="rule">Same basis as Alice</p><p>Bob gets Alice's bit, every time.</p></div>
+      <div class="card"><p class="rule">Different basis</p><p>The result is a coin flip: 0 or 1 at 50/50. The bit is lost.</p></div>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="head"><span class="num">STEP 3</span><h2>Sift the key and count the errors</h2><span class="cellref">notebook cell 6 · qber()</span></div>
+    <p class="read">Afterwards Alice and Bob say out loud which basis they used for each photon, but never the bits. They keep only the rounds where the bases matched, which is about half. Then they compare some of the kept bits. The share that disagree is the <b>quantum bit error rate</b>, or QBER. With nobody on the line it is 0. Your notebook got QBER 0.0 for 200 photons.</p>
+  </section>
+
+  <section class="step">
+    <div class="head"><span class="num">STEP 4</span><h2>Eve intercepts and resends</h2><span class="cellref">notebook cell 5 · run_bb84(eavesdrop=True)</span></div>
+    <p class="read">Eve can't copy a photon (the no-cloning theorem), so to learn the bit she has to measure it, then send Bob a new photon with what she saw. Like Bob, she has to guess the basis.</p>
+    <div class="two">
+      <div class="card"><p class="math">½ × ½ = 25%</p><p>Half the time Eve guesses the wrong basis and sends the wrong kind of photon. Bob's result on that photon is then a coin flip, wrong half the time.</p></div>
+      <div class="card"><p class="math">QBER 0.247</p><p>Your notebook's result with Eve on every photon, against 0.0 without her. Turn on “Eve taps the fiber” above to see the jump yourself.</p></div>
+    </div>
+  </section>
+
+  <section class="step">
+    <div class="head"><span class="num">STEP 5</span><h2>Can a careful spy hide in the noise?</h2><span class="cellref">Part 3 · threshold reasoning</span></div>
+    <p class="read">A careful Eve listens to only some photons. Each extra 10% she intercepts adds about 2.5% to the QBER. Real lines also have some noise of their own, so a small Eve can hide inside it. Real QKD systems therefore treat every error as Eve's: they shrink the key with privacy amplification, and above about 11% they throw the key away.</p>
+    <div class="chartbox"><svg id="chart" viewBox="0 0 600 320" role="img" aria-label="QBER against the fraction of photons Eve intercepts"></svg></div>
+    <div class="legend">
+      <span><i style="border-color:var(--z)"></i>Simulated QBER, 200 photons per point</span>
+      <span><i style="border-color:var(--muted);border-top-style:dashed"></i>Theory: 0.25 × fraction</span>
+      <span><i style="border-color:var(--eve);border-top-style:dotted"></i>BB84 gives up, 11%</span>
+      <span><i style="border-color:var(--ok)"></i>IonQ simulator noise, 0.08%</span>
+    </div>
+    <div><button id="btnSweep">Run the sweep again</button></div>
+  </section>
+
+  <section class="step">
+    <div class="head"><span class="num">STEP 6</span><h2>One cloud job: 16 rounds side by side</h2><span class="cellref">notebook cells 8 and 10 · bb84_batch_circuit()</span></div>
+    <p class="read">On real hardware one photon per job would mean hundreds of paid jobs. Instead the notebook puts 16 rounds on 16 qubits in one circuit and runs it 200 times. These are the first 16 rounds from the notebook (seed 42). Six have matching bases, so each shot gives 6 bits to check.</p>
+    <div class="qubits" id="qubits"></div>
+    <div class="two">
+      <dl class="facts card">
+        <dt>Device</dt><dd>IonQ simulator, “aria-1” noise model</dd>
+        <dt>Job ID</dt><dd class="mono">ionq:ionq:sim:simulator-a7b0-qjob-6af7c328f15852ed27b72012</dd>
+        <dt>Shots</dt><dd>200</dd>
+        <dt>Kept bits</dt><dd>6 × 200 = 1,200</dd>
+        <dt>Errors</dt><dd>1, on qubit 10</dd>
+        <dt>QBER</dt><dd><b>0.08%</b></dd>
+      </dl>
+      <div class="card"><p class="rule">What the 0.08% tells you</p><p>It is a simulator, not hardware. Its noise model is mostly about two-qubit gates, and BB84 uses none, so the result is close to a perfect line. The Quantinuum H2 emulator and the real IonQ Forte also model readout errors and should come out higher.</p></div>
+    </div>
+  </section>
+
+  <footer>Built from <span class="mono">1_bb84_eavesdropper.ipynb</span> in the Qrypt repo. The live bench and the sweep run in your browser with fresh random bits, so their numbers vary from run to run.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const BAS = ["+", "×"];
+  const angle = (bit, basis) => (basis === 0 ? 0 : 45) + (bit ? 90 : 0); // degrees
+  const measure = (bit, basis, mBasis, rnd) => basis === mBasis ? bit : (rnd() < 0.5 ? 1 : 0);
+
+  /* ---------- static figures ---------- */
+  function stateSVG(deg, color) {
+    const r = (deg - 90) * Math.PI / 180; // svg: 0deg horizontal
+    const a = deg * Math.PI / 180, dx = 28 * Math.cos(a), dy = -28 * Math.sin(a);
+    return `<svg viewBox="-38 -38 76 76" aria-hidden="true">
+      <circle r="34" fill="none" stroke="var(--line)" stroke-width="1.5"/>
+      <line x1="${-dx}" y1="${-dy}" x2="${dx}" y2="${dy}" stroke="${color}" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="${dx}" cy="${dy}" r="4.5" fill="${color}"/><circle cx="${-dx}" cy="${-dy}" r="4.5" fill="${color}"/></svg>`;
+  }
+  $("states").innerHTML = [
+    [0, 0, "|0⟩", "bit 0, + basis", "no gates"],
+    [1, 0, "|1⟩", "bit 1, + basis", "X"],
+    [0, 1, "|+⟩", "bit 0, × basis", "H"],
+    [1, 1, "|−⟩", "bit 1, × basis", "X then H"],
+  ].map(([b, s, ket, what, gates]) => `<div class="state">${stateSVG(angle(b, s), s ? "var(--x)" : "var(--z)")}
+     <span class="ket ${s ? "x" : "z"}">${ket}</span><span>${what}</span><span class="how">gates: ${gates}</span></div>`).join("");
+
+  // first 16 rounds of the notebook (numpy default_rng(42))
+  const HW = { a: [0,1,1,0,0,1,0,1,0,0,1,1,1,1,1,1], s: [0,1,0,1,0,0,1,1,0,1,0,1,1,0,1,0], b: [1,1,0,1,0,1,0,0,1,0,0,0,0,0,0,1] };
+  $("qubits").innerHTML = HW.a.map((bit, q) => {
+    const kept = HW.s[q] === HW.b[q];
+    return `<div class="q ${kept ? "kept" : ""} ${q === 10 ? "flag" : ""}" title="qubit ${q}${kept ? ", kept" : ", bases differ"}">
+      q${q}<b>${bit}${BAS[HW.s[q]]}</b>Bob ${BAS[HW.b[q]]}<br>${kept ? "kept" : "drop"}</div>`;
+  }).join("");
+
+  /* ---------- sweep chart ---------- */
+  function mulberry(seed) { return () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function runQBER(frac, n, rnd) {
+    let kept = 0, err = 0;
+    for (let i = 0; i < n; i++) {
+      const a = rnd() < .5 ? 1 : 0, s = rnd() < .5 ? 1 : 0, b = rnd() < .5 ? 1 : 0;
+      let bit = a, basis = s;
+      if (rnd() < frac) { const eb = rnd() < .5 ? 1 : 0; bit = measure(bit, basis, eb, rnd); basis = eb; }
+      const r = measure(bit, basis, b, rnd);
+      if (s === b) { kept++; if (r !== a) err++; }
+    }
+    return kept ? err / kept : 0;
+  }
+  let sweepSeed = 42;
+  function drawChart() {
+    const rnd = mulberry(sweepSeed++);
+    const W = 600, H = 320, L = 54, R = 20, T = 16, B = 46, ymax = 0.35;
+    const X = f => L + f * (W - L - R), Y = q => T + (1 - q / ymax) * (H - T - B);
+    const fr = Array.from({ length: 11 }, (_, i) => i / 10), q = fr.map(f => runQBER(f, 200, rnd));
+    let s = "";
+    for (let v = 0; v <= 0.35001; v += 0.05) s += `<line class="ax" x1="${L}" x2="${W - R}" y1="${Y(v)}" y2="${Y(v)}" opacity=".6"/><text class="tick" x="${L - 8}" y="${Y(v) + 4}" text-anchor="end">${Math.round(v * 100)}%</text>`;
+    for (let f = 0; f <= 1.0001; f += 0.2) s += `<text class="tick" x="${X(f)}" y="${H - B + 18}" text-anchor="middle">${Math.round(f * 100)}%</text>`;
+    s += `<text class="lab" x="${(L + W - R) / 2}" y="${H - 8}" text-anchor="middle">Share of photons Eve intercepts</text>`;
+    s += `<text class="lab" transform="translate(14 ${(T + H - B) / 2}) rotate(-90)" text-anchor="middle">QBER on kept bits</text>`;
+    s += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(1)}" y2="${Y(.25)}" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="5 4" fill="none"/>`;
+    s += `<line x1="${L}" x2="${W - R}" y1="${Y(.11)}" y2="${Y(.11)}" stroke="var(--eve)" stroke-width="1.5" stroke-dasharray="2 3" fill="none"/>`;
+    s += `<text class="tick" x="${W - R - 4}" y="${Y(.11) - 6}" text-anchor="end" style="fill:var(--eve)">11%: discard the key</text>`;
+    s += `<line x1="${L}" x2="${W - R}" y1="${Y(.0008)}" y2="${Y(.0008)}" stroke="var(--ok)" stroke-width="2" fill="none"/>`;
+    s += `<polyline points="${fr.map((f, i) => `${X(f)},${Y(q[i])}`).join(" ")}" fill="none" stroke="var(--z)" stroke-width="2.5"/>`;
+    s += fr.map((f, i) => `<circle cx="${X(f)}" cy="${Y(q[i])}" r="4" fill="var(--z)"><title>${Math.round(f * 100)}%: QBER ${(q[i] * 100).toFixed(1)}%</title></circle>`).join("");
+    const i = 10; s += `<text class="tick" x="${X(1) - 8}" y="${Y(q[i]) - 10}" text-anchor="end" style="fill:var(--ink)">${(q[i] * 100).toFixed(1)}%</text>`;
+    $("chart").innerHTML = s;
+  }
+  drawChart();
+  $("btnSweep").onclick = drawChart;
+
+  /* ---------- live stats ---------- */
+  const st = { sent: 0, kept: 0, err: 0, n: 0 };
+  const rows = [];
+  function record(r) {
+    st.sent++; st.n++;
+    const kept = r.s === r.b;
+    if (kept) { st.kept++; if (r.r !== r.a) st.err++; }
+    rows.unshift({ ...r, i: st.n, kept });
+    if (rows.length > 8) rows.pop();
+  }
+  function render() {
+    $("sSent").textContent = st.sent; $("sKept").textContent = st.kept; $("sErr").textContent = st.err;
+    const q = st.kept ? st.err / st.kept : null;
+    $("sQ").textContent = q === null ? "–" : (q * 100).toFixed(1) + "%";
+    $("mFill").style.width = q === null ? "0" : Math.min(100, q / 0.30 * 100) + "%";
+    $("mFill").style.background = q !== null && q > 0.11 ? "var(--eve)" : q > 0.03 ? "var(--x)" : "var(--ok)";
+    $("verdict").textContent = q === null ? "No kept bits yet." :
+      st.kept < 20 ? `Only ${st.kept} kept bits so far. Send more for a steady number.` :
+      q > 0.11 ? "Above 11%: Alice and Bob throw this key away. Someone is on the line." :
+      q > 0.03 ? "Errors are showing up. Keep the key only after privacy amplification shrinks it." :
+      "Clean line. The kept bits match, so this key is safe to use.";
+    $("logEmpty").hidden = rows.length > 0;
+    const c = (bit, s) => `${bit}<span class="${s ? "x" : "z"}">${BAS[s]}</span>`;
+    $("log").innerHTML = rows.map(r => `<tr class="${r.kept ? "" : "drop"}"><td>${r.i}</td><td>${c(r.a, r.s)}</td>
+      <td>${r.tap ? `<span class="chip tap">${c(r.eBit, r.eB)}</span>` : "·"}</td><td>${c(r.r, r.b)}</td>
+      <td>${!r.kept ? "drop: bases differ" : r.r === r.a ? '<span class="chip keep">kept, match</span>' : '<span class="chip err">kept, error</span>'}</td></tr>`).join("");
+  }
+  render();
+
+  const eveOn = $("eveOn"), eveFrac = $("eveFrac");
+  const frac = () => eveOn.checked ? eveFrac.value / 100 : 0;
+  eveFrac.oninput = () => { $("fracOut").textContent = eveFrac.value + "%"; };
+  function makeRound() {
+    const rnd = Math.random, bit = () => rnd() < .5 ? 1 : 0;
+    const r = { a: bit(), s: bit(), b: bit(), tap: rnd() < frac() };
+    let cb = r.a, cs = r.s;
+    if (r.tap) { r.eB = bit(); r.eBit = measure(cb, cs, r.eB, rnd); cb = r.eBit; cs = r.eB; }
+    r.r = measure(cb, cs, r.b, rnd);
+    return r;
+  }
+
+  /* ---------- three.js bench ---------- */
+  const stage = $("stage");
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  stage.prepend(renderer.domElement);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(38, 2, 0.1, 100);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.7); sun.position.set(3, 6, 8); scene.add(sun);
+
+  const XA = -5.2, XB = 5.2, XE = 0;
+  const mat = c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.55, metalness: 0.1 });
+  const M = { ink: mat(0), line: mat(0), z: mat(0), x: mat(0), eve: mat(0), ok: mat(0), panel: mat(0) };
+  const fiberMat = new THREE.MeshStandardMaterial({ color: 0, transparent: true, opacity: 0.35, roughness: 0.2 });
+
+  function station(x, y, w, h, m) {
+    const g = new THREE.Group();
+    const box = new THREE.Mesh(new THREE.BoxGeometry(w, h, 1.2), m); box.position.y = -h / 2 - 0.9; g.add(box);
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.9), M.line); post.position.y = -0.45; g.add(post);
+    g.position.set(x, y, 0); scene.add(g); return g;
+  }
+  station(XA, 0, 1.6, 1.3, M.panel); station(XB, 0, 1.9, 1.6, M.panel);
+  const eveSt = station(XE, 0, 1.0, 0.9, M.eve);
+
+  const fiber = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, XB - XA, 24, 1, true), fiberMat);
+  fiber.rotation.z = Math.PI / 2; scene.add(fiber);
+
+  function filter(x) {               // a polarizer ring with two bars showing a basis
+    const g = new THREE.Group();
+    g.add(new THREE.Mesh(new THREE.TorusGeometry(0.85, 0.05, 12, 64), M.line));
+    const bars = new THREE.Group();
+    for (const r of [0, Math.PI / 2]) { const b = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.05, 0.05), M.z); b.rotation.z = r; bars.add(b); }
+    g.add(bars); g.userData.bars = bars; g.position.set(x, 0, 0); scene.add(g);
+    g.setBasis = s => { bars.rotation.z = s ? Math.PI / 4 : 0; bars.children.forEach(c => c.material = s ? M.x : M.z); bars.visible = true; };
+    bars.visible = false; return g;
+  }
+  const fA = filter(XA + 0.6), fB = filter(XB - 0.6), fE = filter(XE);
+
+  const photon = new THREE.Group();
+  const glow = new THREE.Mesh(new THREE.SphereGeometry(0.2, 24, 16), M.ink); photon.add(glow);
+  const arrow = new THREE.Group();
+  const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 1.2, 12), M.z); arrow.add(shaft);
+  for (const sgn of [1, -1]) { const tip = new THREE.Mesh(new THREE.ConeGeometry(0.13, 0.28, 16), M.z); tip.position.y = sgn * 0.7; if (sgn < 0) tip.rotation.z = Math.PI; arrow.add(tip); }
+  photon.add(arrow); photon.visible = false; scene.add(photon);
+  function setPhoton(bit, basis, evil) {
+    arrow.rotation.z = angle(bit, basis) * Math.PI / 180 - Math.PI / 2;
+    arrow.children.forEach(c => c.material = basis ? M.x : M.z);
+    glow.material = evil ? M.eve : M.ink;
+  }
+
+  function applyTheme() {
+    const set = (m, v) => m.color.set(css(v) || "#888");
+    set(M.ink, "--ink"); set(M.line, "--line"); set(M.z, "--z"); set(M.x, "--x"); set(M.eve, "--eve"); set(M.ok, "--ok"); set(M.panel, "--panel");
+    fiberMat.color.set(css("--z")); M.panel.emissive = new THREE.Color(css("--line")).multiplyScalar(0.15);
+  }
+  applyTheme();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => requestAnimationFrame(applyTheme));
+  new MutationObserver(() => requestAnimationFrame(applyTheme)).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "class"] });
+
+  function resize() {
+    const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false);
+    camera.aspect = w / h; camera.position.set(0, 1.4, Math.max(13, 21 / camera.aspect)); camera.lookAt(0, -0.6, 0); camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(stage); resize();
+
+  const tags = [[$("tagA"), XA, -2.6], [$("tagB"), XB, -3.0], [$("tagE"), XE, -2.2]];
+  const v = new THREE.Vector3();
+  function placeTags() {
+    const w = stage.clientWidth, h = stage.clientHeight;
+    for (const [el, x, y] of tags) { v.set(x, y, 0).project(camera); el.style.left = (v.x + 1) / 2 * w + "px"; el.style.top = (1 - v.y) / 2 * h + "px"; }
+  }
+
+  /* round animation: travel -> (Eve) -> Bob -> done */
+  let cur = null, auto = false, last = performance.now(), t = 0;
+  const SPEED = 5.5, cap = s => { $("caption").innerHTML = s; };
+  const nm = (bit, s) => `bit ${bit} in the <span class="${s ? "x" : "z"}">${BAS[s]} basis</span>`;
+  function start() {
+    if (cur) return;
+    const r = makeRound(); cur = { r, phase: "go", x: XA + 0.6 };
+    fA.setBasis(r.s); fB.userData.bars.visible = false; fE.userData.bars.visible = false;
+    setPhoton(r.a, r.s, false); photon.visible = true; photon.position.set(cur.x, 0, 0);
+    cap(`Alice sends ${nm(r.a, r.s)}.`);
+    if (reduce) finish();
+  }
+  function finish() {
+    const r = cur.r; fB.setBasis(r.b); if (r.tap) fE.setBasis(r.eB);
+    setPhoton(r.r, r.b, r.tap); photon.position.x = XB - 0.6;
+    const k = r.s === r.b;
+    cap(`${r.tap ? `Eve measured in the ${BAS[r.eB]} basis and resent. ` : ""}Bob measured in the <span class="${r.b ? "x" : "z"}">${BAS[r.b]} basis</span> and got ${r.r}. ` +
+      (k ? (r.r === r.a ? "Bases match: the bit is kept, and it agrees." : '<span class="e">Bases match but the bits differ: an error.</span>') : "Bases differ: this round is dropped."));
+    record(r); render(); cur = { done: true, hold: reduce ? 0.6 : 1.1 };
+  }
+  function tick(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now; t += dt;
+    fE.visible = eveSt.visible = eveOn.checked; $("tagE").hidden = !eveOn.checked;
+    if (cur && cur.done) { cur.hold -= dt; if (cur.hold <= 0) { cur = null; if (auto) start(); } }
+    else if (cur) {
+      const r = cur.r;
+      if (cur.phase === "eve") {
+        cur.wait -= dt; if (cur.wait <= 0) { cur.phase = "go2"; setPhoton(r.eBit, r.eB, true); cap(`Eve measured ${r.eBit} in the ${BAS[r.eB]} basis and sends Bob a new photon with that.`); }
+      } else {
+        cur.x += SPEED * dt; photon.position.x = cur.x;
+        if (cur.phase === "go" && r.tap && cur.x >= XE) { cur.x = XE; photon.position.x = XE; cur.phase = "eve"; cur.wait = 0.7; fE.setBasis(r.eB); cap(`<span class="e">Eve grabs the photon</span> and measures it in the ${BAS[r.eB]} basis.`); }
+        if (cur.x >= XB - 0.6) finish();
+      }
+      arrow.rotation.x = Math.sin(t * 6) * 0.15;
+    }
+    if (!reduce) fiberMat.opacity = 0.3 + 0.06 * Math.sin(t * 2);
+    placeTags(); renderer.render(scene, camera); requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  $("btnOne").onclick = start;
+  $("btnAuto").onclick = e => { auto = !auto; e.currentTarget.setAttribute("aria-pressed", auto); e.currentTarget.textContent = auto ? "Stop" : "Keep sending"; if (auto) start(); };
+  $("btn200").onclick = () => { for (let i = 0; i < 200; i++) record(makeRound()); render(); cap(`Sent 200 photons at once, like the notebook's n_bits = 200. ${frac() ? `Eve intercepted about ${Math.round(frac() * 100)}% of them.` : "Nobody was on the line."}`); };
+  $("btnReset").onclick = () => { Object.assign(st, { sent: 0, kept: 0, err: 0, n: 0 }); rows.length = 0; render(); cap("Reset. Press “Send one photon” to start again."); };
+  eveOn.onchange = () => cap(eveOn.checked ? `<span class="e">Eve is now on the fiber</span>, intercepting ${eveFrac.value}% of photons. Reset, then send 200 to compare the error rate.` : "Eve is off the line.");
+})();
+</script>
+</body>
+</html>

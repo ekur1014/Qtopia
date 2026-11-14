@@ -3,3 +3,8 @@
 
 # Too large for GitHub (544 MB and 126 MB videos; one is a YouTube download): kept on our machines only
 Video Resources/
+
+# Built demo site (tools/build_site.sh) and Vercel link
+site/
+.vercel/
+.ipynb_checkpoints/
