@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EPB 9-Supernode Dual-Ring QKD Self-Healing Router</title>
+  <style>
+    :root {
+      --bg: #070a13;
+      --card-bg: rgba(15, 23, 42, 0.90);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --accent-cyan: #00f2fe;
+      --accent-blue: #38bdf8;
+      --secure-green: #10b981;
+      --warn-yellow: #f59e0b;
+      --danger-red: #ef4444;
+      --purple-ring: #c084fc;
+      --text: #f8fafc;
+      --text-dim: #94a3b8;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; width: 100vw; display: flex; flex-direction: column; }
+
+    /* Top Navigation Header */
+    header {
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(7, 10, 19, 0.95);
+      border-bottom: 1px solid var(--card-border);
+      z-index: 20;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .badge-epb {
+      background: linear-gradient(135deg, #0284c7, #00f2fe);
+      color: #000;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+    h1 { font-size: 16px; font-weight: 700; color: #fff; text-shadow: 0 0 16px rgba(0,242,254,0.4); }
+
+    .header-pills { display: flex; gap: 10px; }
+    .pill {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pill-green { border-color: var(--secure-green); color: var(--secure-green); }
+    .pill-purple { border-color: var(--purple-ring); color: var(--purple-ring); }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse 1.6s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+    /* Main Workspace: Left Canvas, Right Control HUD */
+    .workspace {
+      flex: 1;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #canvas-container {
+      flex: 1;
+      position: relative;
+      background: radial-gradient(circle at center, #0f172a 0%, #070a13 70%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas { display: block; cursor: crosshair; }
+
+    /* Right Sidebar HUD */
+    #sidebar {
+      width: 420px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border-left: 1px solid var(--card-border);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .hero-path {
+      font-family: var(--font-mono);
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      background: rgba(0, 242, 254, 0.08);
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 242, 254, 0.2);
+      margin-top: 4px;
+      word-break: break-all;
+    }
+
+    /* Grid Stats */
+    .stat-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 6px; color: var(--text-dim); }
+    .stat-val { font-weight: 700; color: #fff; font-family: var(--font-mono); }
+
+    /* Buttons and Controls */
+    .btn {
+      width: 100%;
+      padding: 9px 12px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-attack { background: rgba(239, 68, 68, 0.15); color: var(--danger-red); border: 1px solid var(--danger-red); }
+    .btn-attack:hover { background: var(--danger-red); color: #fff; }
+    .btn-clear { background: rgba(0, 242, 254, 0.15); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+    .btn-clear:hover { background: var(--accent-cyan); color: #000; }
+    .btn-pqc { background: linear-gradient(135deg, #0284c7, #00f2fe); color: #000; }
+
+    /* Node Selector Pills */
+    .node-selector { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+    .node-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .node-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+    .node-btn.active { background: var(--accent-cyan); color: #000; border-color: var(--accent-cyan); font-weight: 800; box-shadow: 0 0 10px rgba(0,242,254,0.4); }
+
+    /* Terminal Log */
+    .terminal-box {
+      background: #030712;
+      border: 1px solid rgba(0,242,254,0.2);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #38bdf8;
+      height: 140px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+
+    /* Floating Legend */
+    .canvas-legend {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 11px;
+      color: var(--text-dim);
+      pointer-events: none;
+      line-height: 1.6;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-line { width: 18px; height: 3px; border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="brand">
+      <div class="badge-epb">EPB DUAL-RING QKD</div>
+      <h1>9-Supernode Counter-Rotating Ring &amp; Dynamic Best-Path Router</h1>
+    </div>
+    <div class="header-pills">
+      <div class="pill pill-green">
+        <div class="dot"></div>
+        <span>SONET/SDH DUAL RING: SELF-HEALING ACTIVE</span>
+      </div>
+      <div class="pill pill-purple">
+        <span>FAILOVER LATENCY: &lt;12 ms (SUB-CYCLE)</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <!-- Visual Canvas Area -->
+    <div id="canvas-container">
+      <canvas id="ringCanvas"></canvas>
+      
+      <div class="canvas-legend">
+        <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">TOPOLOGY LEGEND (Ethan's Architecture)</div>
+        <div class="legend-item"><div class="legend-line" style="background: var(--accent-cyan);"></div> Outer Working Ring (Clockwise QKD)</div>
+        <div class="legend-item"><div class="legend-line" style="background: var(--purple-ring);"></div> Inner Protection Ring (Counter-Clockwise QKD)</div>
+        <div class="legend-item"><div class="legend-line" style="background: #10b981; height: 5px;"></div> Active Dynamically Routed Quantum Key Path</div>
+        <div class="legend-item"><div class="legend-line" style="background: var(--danger-red);"></div> Attacked / Tapped Fiber (QBER &ge; 11% Shor-Preskill Cutoff)</div>
+        <div style="margin-top: 4px; color: var(--accent-cyan); font-size: 10px;">Click any link to inject/remove optical fiber tap (Eve)</div>
+      </div>
+    </div>
+
+    <!-- Right Sidebar Controls -->
+    <div id="sidebar">
+      
+      <!-- Source Supernode Selector -->
+      <div class="card">
+        <div class="card-title">Source Supernode &rarr; Central Command (CC)</div>
+        <div style="font-size: 12px; color: var(--text-dim);">Select transmitting transmission supernode:</div>
+        <div class="node-selector">
+          <button class="node-btn active" onclick="setSource(1)">1</button>
+          <button class="node-btn" onclick="setSource(2)">2</button>
+          <button class="node-btn" onclick="setSource(3)">3</button>
+          <button class="node-btn" onclick="setSource(4)">4</button>
+          <button class="node-btn" onclick="setSource(5)">5</button>
+          <button class="node-btn" onclick="setSource(6)">6</button>
+          <button class="node-btn" onclick="setSource(7)">7</button>
+          <button class="node-btn" onclick="setSource(8)">8</button>
+          <button class="node-btn" onclick="setSource(9)">9</button>
+        </div>
+      </div>
+
+      <!-- Live Dynamic Best-Path Readout -->
+      <div class="card">
+        <div class="card-title">
+          <span>Active Dynamic Route</span>
+          <span id="route-badge" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.2); color: var(--secure-green);">OPTIMAL</span>
+        </div>
+        <div class="hero-path" id="route-path-text">[1] &rarr; [2] &rarr; [3] &rarr; [CC]</div>
+
+        <div style="margin-top: 12px;">
+          <div class="stat-row">
+            <span>Primary Gateway:</span>
+            <span class="stat-val" id="route-gw">Supernode 3 (East)</span>
+          </div>
+          <div class="stat-row">
+            <span>Hop Count:</span>
+            <span class="stat-val" id="route-hops">3 Hops</span>
+          </div>
+          <div class="stat-row">
+            <span>Total Physical Distance:</span>
+            <span class="stat-val" id="route-dist">23.0 km</span>
+          </div>
+          <div class="stat-row">
+            <span>Worst Link QBER:</span>
+            <span class="stat-val" id="route-qber" style="color: var(--secure-green);">1.8%</span>
+          </div>
+          <div class="stat-row">
+            <span>Failover Reroute Time:</span>
+            <span class="stat-val" style="color: var(--accent-cyan);">&lt; 12 ms (Sub-Cycle)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Preset Attack Scenarios -->
+      <div class="card">
+        <div class="card-title">Simulate Fiber Taps &amp; Failover</div>
+        <div style="font-size: 11px; color: var(--text-dim); margin-bottom: 6px;">Test automatic self-healing ring protection switching:</div>
+        
+        <button class="btn btn-attack" onclick="attackLink(1, 2)">Tap Link 1 &harr; 2 (Forces Counter-Clockwise Wrap)</button>
+        <button class="btn btn-attack" onclick="attackLink(3, 'CC')">Sever Gateway 3 &harr; CC (Failover to Gateway 7)</button>
+        <button class="btn btn-attack" onclick="partitionRing()">Ring Partition Attack (Both Directions Cut)</button>
+        <button class="btn btn-clear" onclick="clearAllAttacks()">Clear All Taps (Restore Baseline)</button>
+      </div>
+
+      <!-- Real-Time Event Log -->
+      <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="card-title">Self-Healing Event Terminal</div>
+        <div class="terminal-box" id="term-log">
+[SYSTEM INITIALIZED] EPB 9-Supernode Dual Ring Active.
+Counter-rotating rings established:
+  - Working Ring: Clockwise (Cyan)
+  - Protection Ring: Counter-Clockwise (Purple)
+Gateways to Central Command: Node 3 (East) &amp; Node 7 (West).
+All links QBER = 1.8% &lt; 8.0% alarm threshold.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // -------------------------------------------------------------
+    // TOPOLOGY & NETWORK GRAPH DEFINITION (9 SUPERNODES + CC)
+    // -------------------------------------------------------------
+    const canvas = document.getElementById('ringCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let currentSource = 1;
+    const targetNode = 'CC';
+
+    // 9 Supernodes in a circle around CC
+    const supernodes = [];
+    const numNodes = 9;
+    const ringRadius = 220;
+    const innerRingRadius = 180;
+
+    // Links between adjacent supernodes: 1-2, 2-3, 3-4, 4-5, 5-6, 6-7, 7-8, 8-9, 9-1
+    // And gateway links: 3-CC, 7-CC
+    const links = [];
+
+    for (let i = 1; i <= 9; i++) {
+      const next = i === 9 ? 1 : i + 1;
+      links.push({ u: i, v: next, dist: 8.5, qber: 0.018, eve: false });
+    }
+    // Radial ties to Central Command
+    links.push({ u: 3, v: 'CC', dist: 6.0, qber: 0.015, eve: false });
+    links.push({ u: 7, v: 'CC', dist: 6.0, qber: 0.015, eve: false });
+
+    // Leaf substations branching off supernodes (purely for realistic whiteboard visualization)
+    const leafNodes = [
+      { parent: 3, angleOffset: -0.15, dist: 70 },
+      { parent: 3, angleOffset: 0.0, dist: 80 },
+      { parent: 3, angleOffset: 0.15, dist: 70 },
+      { parent: 4, angleOffset: -0.1, dist: 70 },
+      { parent: 4, angleOffset: 0.1, dist: 70 },
+      { parent: 5, angleOffset: -0.1, dist: 70 },
+      { parent: 5, angleOffset: 0.1, dist: 70 }
+    ];
+
+    function resizeCanvas() {
+      const container = document.getElementById('canvas-container');
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function getNodePos(id) {
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      if (id === 'CC') return { x: cx, y: cy };
+
+      // Nodes 1 through 9 arranged clockwise, 1 at top (-PI/2)
+      const angle = -Math.PI / 2 + ((id - 1) * 2 * Math.PI / numNodes);
+      return {
+        x: cx + ringRadius * Math.cos(angle),
+        y: cy + ringRadius * Math.sin(angle),
+        angle: angle
+      };
+    }
+
+    // -------------------------------------------------------------
+    // DIJKSTRA BEST-PATH ROUTING WITH QBER PENALTY
+    // -------------------------------------------------------------
+    function computeBestPath(src, tgt) {
+      const allNodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 'CC'];
+      const dist = {};
+      const prev = {};
+      const unvisited = new Set(allNodes);
+
+      allNodes.forEach(n => {
+        dist[n] = Infinity;
+        prev[n] = null;
+      });
+      dist[src] = 0;
+
+      while (unvisited.size > 0) {
+        let curr = null;
+        let minDist = Infinity;
+        unvisited.forEach(n => {
+          if (dist[n] < minDist) {
+            minDist = dist[n];
+            curr = n;
+          }
+        });
+
+        if (curr === null || dist[curr] === Infinity || curr === tgt) break;
+        unvisited.delete(curr);
+
+        // Find neighbors
+        links.forEach(l => {
+          let neighbor = null;
+          if (l.u === curr) neighbor = l.v;
+          else if (l.v === curr) neighbor = l.u;
+
+          if (neighbor !== null && unvisited.has(neighbor)) {
+            // If link is severely tapped (QBER >= 11%), Shor-Preskill bound blocks quantum key generation
+            if (l.eve) return; // Cut/Blocked
+
+            const weight = l.dist * (1.0 + 10.0 * l.qber);
+            const alt = dist[curr] + weight;
+            if (alt < dist[neighbor]) {
+              dist[neighbor] = alt;
+              prev[neighbor] = curr;
+            }
+          }
+        });
+      }
+
+      // Reconstruct path
+      const path = [];
+      let step = tgt;
+      while (step !== null) {
+        path.unshift(step);
+        step = prev[step];
+      }
+
+      if (path.length <= 1 || path[0] !== src) {
+        return { success: false, path: [] };
+      }
+      return { success: true, path: path };
+    }
+
+    // -------------------------------------------------------------
+    // INTERACTION & ATTACK INJECTION
+    // -------------------------------------------------------------
+    function setSource(n) {
+      currentSource = n;
+      document.querySelectorAll('.node-btn').forEach((b, idx) => {
+        if (idx + 1 === n) b.classList.add('active');
+        else b.classList.remove('active');
+      });
+      log(`[SOURCE CHANGED] Supernode ${n} now originating SCADA telemetry to Central Command.`);
+      updateRoutingHUD();
+    }
+
+    function toggleLinkEve(u, v) {
+      const l = links.find(item => (item.u === u && item.v === v) || (item.u === v && item.v === u));
+      if (l) {
+        l.eve = !l.eve;
+        l.qber = l.eve ? 0.268 : 0.018;
+        if (l.eve) {
+          log(`[EAVESDROPPER INJECTED] Optical line tap on Link ${u} <-> ${v}! QBER jumped to 26.8% (Shor-Preskill hard cutoff exceeded). Quantum channel suspended!`);
+        } else {
+          log(`[LINE RESTORED] Tap removed on Link ${u} <-> ${v}. QBER restored to 1.8% baseline.`);
+        }
+        updateRoutingHUD();
+      }
+    }
+
+    function attackLink(u, v) {
+      const l = links.find(item => (item.u === u && item.v === v) || (item.u === v && item.v === u));
+      if (l) {
+        l.eve = true;
+        l.qber = 0.268;
+        log(`[ATTACK TRIGGERED] Eavesdropper tapping Link ${u} <-> ${v}! Activating counter-rotating protection ring.`);
+        updateRoutingHUD();
+      }
+    }
+
+    function partitionRing() {
+      // Cut links 1-2 and 1-9 to isolate node 1
+      const l1 = links.find(l => (l.u === 1 && l.v === 2) || (l.u === 2 && l.v === 1));
+      const l2 = links.find(l => (l.u === 1 && l.v === 9) || (l.u === 9 && l.v === 1));
+      if (l1) { l1.eve = true; l1.qber = 0.268; }
+      if (l2) { l2.eve = true; l2.qber = 0.268; }
+      log(`[CRITICAL RING PARTITION] Both clockwise and counter-clockwise rings severed! Initiating emergency failover to NIST ML-KEM-768 Post-Quantum Cryptography tunnel.`);
+      updateRoutingHUD();
+    }
+
+    function clearAllAttacks() {
+      links.forEach(l => {
+        l.eve = false;
+        l.qber = 0.018;
+      });
+      log(`[RESTORED] All optical links cleared. Dual-ring baseline restored.`);
+      updateRoutingHUD();
+    }
+
+    function log(msg) {
+      const box = document.getElementById('term-log');
+      const time = new Date().toLocaleTimeString();
+      box.innerHTML = `[${time}] ${msg}\n` + box.innerHTML;
+    }
+
+    // -------------------------------------------------------------
+    // HUD UPDATE
+    // -------------------------------------------------------------
+    function updateRoutingHUD() {
+      const res = computeBestPath(currentSource, targetNode);
+      const pathText = document.getElementById('route-path-text');
+      const badge = document.getElementById('route-badge');
+      const hopsText = document.getElementById('route-hops');
+      const distText = document.getElementById('route-dist');
+      const qberText = document.getElementById('route-qber');
+      const gwText = document.getElementById('route-gw');
+
+      if (res.success) {
+        pathText.innerText = res.path.map(n => `[${n}]`).join(' → ');
+        hopsText.innerText = (res.path.length - 1) + ' Hops';
+        
+        // Calculate metrics
+        let totalDist = 0;
+        let maxQber = 0;
+        for (let i = 0; i < res.path.length - 1; i++) {
+          const u = res.path[i];
+          const v = res.path[i+1];
+          const l = links.find(item => (item.u === u && item.v === v) || (item.u === v && item.v === u));
+          if (l) {
+            totalDist += l.dist;
+            maxQber = Math.max(maxQber, l.qber);
+          }
+        }
+        distText.innerText = totalDist.toFixed(1) + ' km';
+        qberText.innerText = (maxQber * 100).toFixed(1) + '%';
+        qberText.style.color = 'var(--secure-green)';
+
+        const gwNode = res.path[res.path.length - 2];
+        gwText.innerText = `Supernode ${gwNode} (${gwNode === 3 ? 'East Gateway' : 'West Gateway'})`;
+
+        badge.innerText = 'SELF-HEALED / OPTIMAL';
+        badge.style.background = 'rgba(16,185,129,0.2)';
+        badge.style.color = 'var(--secure-green)';
+      } else {
+        pathText.innerHTML = '<span style="color: var(--danger-red);">ALL QUANTUM PATHS SEVERED</span><br><span style="font-size: 11px; color: var(--accent-cyan);">→ FAILOVER: NIST ML-KEM-768 TUNNEL</span>';
+        badge.innerText = 'PQC EMERGENCY FAILOVER';
+        badge.style.background = 'rgba(239,68,68,0.2)';
+        badge.style.color = 'var(--danger-red)';
+        hopsText.innerText = 'N/A (Lattice Encrypted)';
+        distText.innerText = 'N/A';
+        qberText.innerText = '>25.0% (Tapped)';
+        qberText.style.color = 'var(--danger-red)';
+        gwText.innerText = 'Direct PQC Tunnel';
+      }
+    }
+
+    // -------------------------------------------------------------
+    // ANIMATION & CANVAS RENDERING
+    // -------------------------------------------------------------
+    let animOffset = 0;
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      const res = computeBestPath(currentSource, targetNode);
+      const activePathEdges = new Set();
+      if (res.success) {
+        for (let i = 0; i < res.path.length - 1; i++) {
+          activePathEdges.add(`${res.path[i]}-${res.path[i+1]}`);
+          activePathEdges.add(`${res.path[i+1]}-${res.path[i]}`);
+        }
+      }
+
+      // 1. Draw Dual Ring Guides (Faint Circles)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.arc(cx, cy, ringRadius + 10, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(cx, cy, ringRadius - 10, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // 2. Draw Leaf Substation Connections
+      leafNodes.forEach(leaf => {
+        const pPos = getNodePos(leaf.parent);
+        const leafAngle = pPos.angle + leaf.angleOffset;
+        const lx = cx + (ringRadius + leaf.dist) * Math.cos(leafAngle);
+        const ly = cy + (ringRadius + leaf.dist) * Math.sin(leafAngle);
+
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(pPos.x, pPos.y);
+        ctx.lineTo(lx, ly);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(148, 163, 184, 0.3)';
+        ctx.beginPath();
+        ctx.rect(lx - 6, ly - 6, 12, 12);
+        ctx.fill();
+        ctx.strokeRect(lx - 6, ly - 6, 12, 12);
+      });
+
+      // 3. Draw All Network Links (Working Outer & Protection Inner)
+      links.forEach(l => {
+        const p1 = getNodePos(l.u);
+        const p2 = getNodePos(l.v);
+        const isPath = activePathEdges.has(`${l.u}-${l.v}`);
+
+        ctx.lineWidth = isPath ? 5 : (l.eve ? 3 : 2);
+        
+        if (l.eve) {
+          ctx.strokeStyle = '#ef4444';
+        } else if (isPath) {
+          ctx.strokeStyle = '#10b981';
+        } else if (l.v === 'CC' || l.u === 'CC') {
+          ctx.strokeStyle = 'rgba(0, 242, 254, 0.4)';
+        } else {
+          ctx.strokeStyle = 'rgba(0, 242, 254, 0.25)';
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+
+        // If link is tapped, draw red X marker
+        if (l.eve) {
+          const mx = (p1.x + p2.x) / 2;
+          const my = (p1.y + p2.y) / 2;
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(mx - 8, my - 8); ctx.lineTo(mx + 8, my + 8);
+          ctx.moveTo(mx + 8, my - 8); ctx.lineTo(mx - 8, my + 8);
+          ctx.stroke();
+
+          ctx.fillStyle = '#ef4444';
+          ctx.font = 'bold 10px monospace';
+          ctx.fillText('EVE (QBER > 11%)', mx - 40, my - 12);
+        }
+      });
+
+      // 4. Animate Moving Photons along the Active Path
+      if (res.success) {
+        animOffset += 0.012;
+        if (animOffset > 1) animOffset = 0;
+
+        for (let i = 0; i < res.path.length - 1; i++) {
+          const p1 = getNodePos(res.path[i]);
+          const p2 = getNodePos(res.path[i+1]);
+
+          const px = p1.x + (p2.x - p1.x) * animOffset;
+          const py = p1.y + (p2.y - p1.y) * animOffset;
+
+          ctx.fillStyle = '#00f2fe';
+          ctx.shadowColor = '#00f2fe';
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.arc(px, py, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      // 5. Draw Central Command (CC) Box
+      const ccW = 120;
+      const ccH = 75;
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+      ctx.strokeStyle = 'var(--accent-cyan)';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = 'rgba(0, 242, 254, 0.4)';
+      ctx.shadowBlur = 16;
+      ctx.fillRect(cx - ccW/2, cy - ccH/2, ccW, ccH);
+      ctx.strokeRect(cx - ccW/2, cy - ccH/2, ccW, ccH);
+      ctx.shadowBlur = 0;
+
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 20px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('CC', cx, cy - 2);
+      ctx.fillStyle = 'var(--accent-cyan)';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.fillText('CENTRAL COMMAND', cx, cy + 18);
+
+      // 6. Draw 9 Supernodes
+      for (let i = 1; i <= 9; i++) {
+        const pos = getNodePos(i);
+        const isSrc = (i === currentSource);
+        const inPath = res.success && res.path.includes(i);
+
+        ctx.fillStyle = isSrc ? '#00f2fe' : (inPath ? '#10b981' : '#0f172a');
+        ctx.strokeStyle = isSrc ? '#fff' : (inPath ? '#10b981' : '#38bdf8');
+        ctx.lineWidth = isSrc ? 3 : 2;
+
+        if (isSrc || inPath) {
+          ctx.shadowColor = isSrc ? '#00f2fe' : '#10b981';
+          ctx.shadowBlur = 14;
+        }
+
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 22, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = isSrc ? '#000' : '#fff';
+        ctx.font = 'bold 14px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(i, pos.x, pos.y + 5);
+
+        ctx.fillStyle = 'var(--text-dim)';
+        ctx.font = '10px sans-serif';
+        const labelRadius = ringRadius + 36;
+        const lx = cx + labelRadius * Math.cos(pos.angle);
+        const ly = cy + labelRadius * Math.sin(pos.angle);
+        ctx.fillText(`SN-${i}`, lx, ly + 3);
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    // Canvas click detection on links
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      // Check if clicked near any link midpoint
+      links.forEach(l => {
+        const p1 = getNodePos(l.u);
+        const p2 = getNodePos(l.v);
+        const midX = (p1.x + p2.x) / 2;
+        const midY = (p1.y + p2.y) / 2;
+        const dist = Math.hypot(mx - midX, my - midY);
+        if (dist < 25) {
+          toggleLinkEve(l.u, l.v);
+        }
+      });
+
+      // Check if clicked any supernode to select it
+      for (let i = 1; i <= 9; i++) {
+        const pos = getNodePos(i);
+        if (Math.hypot(mx - pos.x, my - pos.y) < 25) {
+          setSource(i);
+        }
+      }
+    });
+
+    updateRoutingHUD();
+    render();
+  </script>
+</body>
+</html>
