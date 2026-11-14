@@ -26,6 +26,10 @@ A utility already sees its fiber links. A quantum-secured link adds a new signal
 
 10. **Risk-aware routing** (team idea: "route real traffic over the best possible path with a decision model"). Real traffic takes the path with the lowest cost, where each fiber costs its length × (1 + 4 × risk) and risk comes from its live evidence: 0 when clean, rising toward 0.5 as its error rate nears the warning line, 0.5 while measuring, 2 in warning, 4 above 11%. So traffic leaves a suspicious fiber before it ever raises an alarm, if a safer route exists. It is a weighted shortest-path decision, chosen because it is exact, fast (milliseconds on 300 buses) and explainable; a learned or quantum optimizer could replace the cost function later.
 
+11. **Teleportation view** (team lead's idea: "QBER below 11% means we're good on our entanglement; we'd be able to teleport between any node where the QBER is low enough"). Assumes the same fibers ran an entanglement-based protocol (BBM92), so a fiber's error rate describes the entangled pairs it can deliver. Below 11%, one-way entanglement distillation works (the same bound as BB84's key). Entanglement swapping joins pairs; with independent errors per hop, (1 − 2Q_end) = ∏(1 − 2Q_i), so the best route is a shortest path with weights −ln(1 − 2Q_i), and the end-to-end pair is usable when Q_end < 11%. Swapping nodes never hold the key, which is how such a link would remove the trusted-node problem (notebook 3's question). Teleportation still needs two classical bits per qubit.
+
+12. **QKD coverage switch**. The design puts QKD on the backbone only; the team's whiteboard also had QKD on sub-unit links. Both are available; any site with a healthy QKD chain to a control center gets QKD keys.
+
 ## Physics
 
 **Error rate with an eavesdropper.** Let p be the fiber's own error rate and f the share of photons Eve intercepts. On sifted rounds: if Eve guesses Alice's basis (probability 1/2), Bob sees only fiber noise, error p; if she guesses wrong, her resent photon is in the other basis and Bob's result is random, error 1/2. So

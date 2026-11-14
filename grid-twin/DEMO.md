@@ -7,7 +7,7 @@ A 60-second live demo for the Solution & Technology slide, plus setup and a back
 1. Start the page: `cd grid-twin && python3 -m http.server 8000`, open http://localhost:8000, and let the intro flight finish.
 2. **It needs internet**: Three.js and the fonts load from public CDNs. Test on the venue Wi-Fi. If it is unreliable, have the backup ready (below).
 3. Set the browser to full screen. Close other tabs so the animation stays smooth.
-4. Optional: open the browser console and keep these one-liners ready in case clicking a fiber is awkward on the projector:
+4. If clicking a fiber is awkward on the projector, use **Find a fiber or site** in the panel instead. The browser console also has one-liners:
    ```js
    gridTwin.tap("L5", 1)        // full tap on the North–West fiber
    gridTwin.tap("L11", 1)       // full tap on CC2–S6: S6's key reroutes through S1
@@ -25,6 +25,7 @@ A 60-second live demo for the Solution & Technology slide, plus setup and a back
 | 0:30 | Press **1**, click substation **S6** | "S6 still gets a quantum key, now relayed through S1. That gold ring is a trusted node: it holds the key for a moment, so it must be physically secured. That's the trusted-node problem." |
 | 0:40 | Remove the tap (click the fiber again with tool 2, or "Remove all taps"); set the tap slider to **5%** and tap another fiber | "A careful spy taps only 5%. Now the error rate stays inside normal noise: physics alone can't catch her quickly. That's why the threshold comes from each fiber's own baseline, and why privacy amplification matters." |
 | 0:55 | Press **3**, click a purple sub-unit link | "And if we quarantine a link, traffic reroutes. A site with no path left loses communications, but never power." |
+| Optional | Tick **Teleportation view**, select S6 | "If these fibers ran entanglement-based QKD, every fiber under 11% could supply entangled pairs. S6 can be reached by entanglement swapping through S1, and S1 never sees the key: no trusted node." |
 
 ## What to point at
 

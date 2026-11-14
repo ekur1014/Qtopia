@@ -41,6 +41,10 @@ Saturday 14 November 2026. Scope: everything this part of the team produced (not
 
 DeepSeek and GLM each reviewed `grid-twin/` independently with a 9-minute limit. Neither finished a full report: both were still reading when the limit hit. GLM found and reproduced problem 1 before stopping. DeepSeek produced no findings. Every other fix above came from our own checks.
 
+## Alignment with the team's ideas
+
+See `docs/ALIGNMENT_AUDIT.md`: a requirements matrix from every team source, a full usability walkthrough, and the QKD physics behind each feature.
+
 ## Conflicts with teammates' files (not changed by us)
 
 The team chose Grid Twin's design. These need the teammates' attention before submission:

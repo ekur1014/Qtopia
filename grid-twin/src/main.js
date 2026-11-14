@@ -6,6 +6,8 @@ import { createDetector } from "./detector.js";
 import { computeResponse, describeChanges, sitesStrandedWithout } from "./response.js";
 import { createScene } from "./scene.js";
 import { createUI } from "./ui.js";
+import { teleportRoute } from "./teleport.js";
+import { controlCenters } from "./network.js";
 
 const TICK_MS = 250;
 // Detected photons simulated per tick on a 10 km fiber; longer fibers detect fewer, so they collect
@@ -31,7 +33,14 @@ async function boot() {
   const entry = manifest.find((m) => m.id === wanted) ?? manifest[0];
   // Live quantum frameworks: available only when the page is served by sim/live_server.py.
   const engines = await fetch("api/engines").then((r) => (r.ok ? r.json() : null)).then((j) => j?.engines ?? {}).catch(() => ({}));
-  const net = buildNetwork(await fetchJson(entry.file));
+  const params = new URLSearchParams(location.search);
+  const coverage = params.get("qkd") === "all" ? "all" : "backbone";
+  const raw = await fetchJson(entry.file);
+  // QKD coverage: "backbone" is the design (QKD on control-center and major-substation fibers, ML-KEM elsewhere);
+  // "all" puts QKD on every fiber, as on the team's whiteboard sketch.
+  if (coverage === "all") for (const l of raw.links) l.kind = "qkd";
+  const net = buildNetwork(raw);
+  const centers = controlCenters(net);
 
   const sim = {
     tool: "inspect",
@@ -39,6 +48,7 @@ async function boot() {
     z: DEFAULT_Z,
     paused: false,
     autoDecoy: false,
+    teleportView: false,
     selected: null,
     links: new Map(),
   };
@@ -69,6 +79,7 @@ async function boot() {
     net,
     networks: manifest,
     currentNetwork: entry.id,
+    coverage,
     engines,
     handlers: {
       onNetwork: (id) => {
@@ -78,6 +89,9 @@ async function boot() {
       },
       onEveStrength: (f) => {
         sim.eveStrength = f;
+        // If the selected fiber is tapped, the slider adjusts that tap live (handy for the careful-spy demo).
+        const sel = sim.selected?.type === "link" ? sim.links.get(sim.selected.id) : null;
+        if (sel && sel.eve != null) sel.eve = f;
         setHint();
       },
       onZ: (z) => {
@@ -93,6 +107,21 @@ async function boot() {
         let any = false;
         for (const s of sim.links.values()) if (s.eve != null) ((s.eve = null), (any = true));
         if (any) ui.log({ level: "ok", text: "All taps removed. Error rates will settle back to baseline as the window refreshes." });
+        refresh();
+      },
+      onTeleportView: (on) => {
+        sim.teleportView = on;
+        ui.log({ level: "info", text: on ? "Teleportation view: fibers under 11% error could supply usable entanglement if run entanglement-based; select a substation to see its swapping route." : "Teleportation view off." });
+        refresh();
+      },
+      onCoverage: (mode) => {
+        const url = new URL(location.href);
+        if (mode === "all") url.searchParams.set("qkd", "all");
+        else url.searchParams.delete("qkd");
+        location.href = url.toString();
+      },
+      onJump: (type, id) => {
+        sim.selected = type ? { type, id } : null;
         refresh();
       },
       onAutoDecoy: (on) => {
@@ -298,7 +327,16 @@ async function boot() {
         history: s.history,
       });
     }
-    const view = { links, sites: response.sites, selected: sim.selected, paused: sim.paused };
+    // Teleportation view: each quantum fiber's current error rate, and the selected site's swapping route.
+    let teleport = null;
+    if (sim.teleportView) {
+      const linkQ = new Map();
+      for (const [id, s] of sim.links) linkQ.set(id, s.detector && !s.quarantined && s.last.n > 0 ? s.last.qhat : null);
+      const sel = sim.selected;
+      const route = sel && sel.type === "node" && net.nodes.get(sel.id).type !== "control" ? teleportRoute(net, centers, sel.id, linkQ) : null;
+      teleport = { linkQ, route };
+    }
+    const view = { links, sites: response.sites, selected: sim.selected, paused: sim.paused, teleport, coverage };
     scene.update(view);
     ui.render(view);
     lastView = view;
@@ -413,10 +451,13 @@ async function boot() {
 
   // Start -----------------------------------------------------------------------------------------
   const qkdCount = [...net.links.values()].filter((l) => l.kind === "qkd").length;
-  ui.log({ level: "info", text: `Network online. BB84 running on ${qkdCount} QKD fibers; sub-units and the remote site use ML-KEM.` });
+  ui.log({ level: "info", text: coverage === "all" ? `Network online. BB84 running on all ${qkdCount} fibers (QKD everywhere, as on the whiteboard).` : `Network online. BB84 running on ${qkdCount} QKD fibers; the other ${net.links.size - qkdCount} links use ML-KEM.` });
   refresh();
   setInterval(tick, TICK_MS);
-  requestAnimationFrame(() => loader.classList.add("is-done"));
+  // Hide the loader on the next frame, or after 400 ms if the tab is in the background (no frames run there).
+  const hideLoader = () => loader.classList.add("is-done");
+  requestAnimationFrame(hideLoader);
+  setTimeout(hideLoader, 400);
 }
 
 function freshReading(baseline) {

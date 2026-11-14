@@ -49,16 +49,15 @@ export function computeResponse(net, linkStates) {
 
     const dataPath = pathFromTree(dataTree, node.id);
 
-    // Major substations get an end-to-end QKD key when a chain of healthy QKD links reaches a control center.
-    // Everything else (sub-units, remote sites, or a substation whose QKD chain is broken) uses ML-KEM.
+    // A site gets an end-to-end QKD key when a chain of healthy QKD links reaches a control center; otherwise
+    // ML-KEM. In the backbone design only major substations have QKD fibers, so sub-units and the remote site
+    // use ML-KEM; with QKD on every fiber, they can get QKD keys too.
     let keySource = "pqc";
     let keyPath = null;
-    if (node.type === "substation") {
-      const qkdPath = pathFromTree(qkdTree, node.id);
-      if (qkdPath) {
-        keySource = "qkd";
-        keyPath = qkdPath;
-      }
+    const qkdPath = pathFromTree(qkdTree, node.id);
+    if (qkdPath) {
+      keySource = "qkd";
+      keyPath = qkdPath;
     }
     const relays = keyPath ? keyPath.nodes.slice(1, -1) : [];
     sites.set(node.id, {
@@ -94,7 +93,7 @@ export function describeChanges(net, before, after) {
     if (!was) continue;
     if (!was.islanded && now.islanded) events.push({ level: "bad", text: `${id}: no communication path left. Site runs on local protection; power stays on; crew dispatched.` });
     if (was.islanded && !now.islanded) events.push({ level: "ok", text: `${id}: communication restored.` });
-    if (!now.islanded && was.keySource !== now.keySource && net.nodes.get(id).type === "substation") {
+    if (!now.islanded && was.keySource !== now.keySource && (now.keySource === "qkd" || was.keySource === "qkd")) {
       if (now.keySource === "pqc") events.push({ level: "warn", text: `${id}: no healthy QKD chain to a control center. Keys now from ML-KEM.` });
       if (now.keySource === "qkd" && was.keySource === "pqc") events.push({ level: "ok", text: `${id}: QKD key chain available again.` });
     }

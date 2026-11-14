@@ -83,3 +83,10 @@ What was built, in order, and how each step was checked. Times are Saturday 14 N
 - **Risk-aware routing**: S6's real traffic left L11 as soon as L11 went to warning (CC1 → S1 → S6).
 - **Live frameworks** (`sim/engines.py`, `sim/live_server.py`): the same BB84 fiber in Qiskit Aer (one circuit per case, mid-circuit measurement), NVIDIA CUDA-Q 0.16 (ancilla measurement), and Quantinuum Guppy 1.2.1 on Selene 0.3.8 (the whole round, coin flips included, inside the emulator). Self-test: all three within statistical error of theory at f = 0, 0.4 and 1. From the page: L11 at a 40% tap gave Qiskit 13.52%, CUDA-Q 12.11%, Guppy 11.15% against 12.64% theory (±0.7%).
 - Tests: 21 passing.
+
+## Alignment audit (see docs/ALIGNMENT_AUDIT.md)
+
+- Checked Grid Twin against every team source (recordings, whiteboard, notebook page, chat, README Step 3, notebooks 1 and 3) and walked through every control.
+- Added: teleportation view (the lead's 11% / entanglement-swapping idea), QKD coverage switch (whiteboard version), "Find a fiber or site" picker, live tap slider, qBraid IonQ simulator engine (real job from the page, 12.17% vs 12.64% theory), Team notebook 1 engine (runs the team's own code; refuses clearly while its TODOs are open).
+- Fixed: loader stuck in background tabs, inspector button order, checkbox labels, sub-units' keys in every-fiber mode, refusal status code.
+- Tests: 24 passing.

@@ -26,7 +26,7 @@ const KEY_LABEL = {
 const pct = (x, d = 1) => `${(100 * x).toFixed(d)}%`;
 const pill = ([text, tone]) => `<span class="pill pill--${tone}">${text}</span>`;
 
-export function createUI({ panel, net, networks = [], currentNetwork, engines = {}, handlers }) {
+export function createUI({ panel, net, networks = [], currentNetwork, coverage = "backbone", engines = {}, handlers }) {
   const engineIds = Object.keys(engines);
   const startedAt = performance.now();
   const netOptions = networks
@@ -37,6 +37,17 @@ export function createUI({ panel, net, networks = [], currentNetwork, engines = 
       <h2>Network</h2>
       <select class="select" data-input="network" aria-label="Choose a network">${netOptions}</select>
       <div class="control__note">${net.meta?.note ?? ""}</div>
+      <label class="field" for="coverage">QKD coverage</label>
+      <select class="select" id="coverage" data-input="coverage" aria-label="Which fibers run QKD">
+        <option value="backbone"${coverage === "backbone" ? " selected" : ""}>Backbone only: control centers and major substations (our design)</option>
+        <option value="all"${coverage === "all" ? " selected" : ""}>Every fiber (the whiteboard sketch)</option>
+      </select>
+      <label class="field" for="jump">Find a fiber or site</label>
+      <select class="select" id="jump" data-input="jump" aria-label="Select a fiber or site">
+        <option value="">Choose…</option>
+        <optgroup label="Sites">${[...net.nodes.values()].map((n) => `<option value="node:${n.id}">${n.id} · ${n.name}</option>`).join("")}</optgroup>
+        <optgroup label="Fibers">${[...net.links.values()].map((l) => `<option value="link:${l.id}">${l.id} · ${l.a}–${l.b} · ${l.kind === "qkd" ? "QKD" : "ML-KEM"} · ${l.km} km</option>`).join("")}</optgroup>
+      </select>
     </section>
     <section class="section">
       <h2>Network now</h2>
@@ -53,7 +64,7 @@ export function createUI({ panel, net, networks = [], currentNetwork, engines = 
       <div class="control">
         <div class="control__row"><span>Share of photons intercepted</span><span class="control__val" data-v="eve">100%</span></div>
         <input type="range" min="2" max="100" step="1" value="100" data-input="eve" aria-label="Share of photons the eavesdropper intercepts" />
-        <div class="control__note">Applies to the next tap you place. A careful spy taps only a few percent to hide inside the fiber's normal noise.</div>
+        <div class="control__note">Sets the next tap you place, and changes the selected fiber's tap live if it has one. A careful spy taps only a few percent to hide inside the fiber's normal noise.</div>
       </div>
       <h2>Detection</h2>
       <div class="control">
@@ -61,7 +72,9 @@ export function createUI({ panel, net, networks = [], currentNetwork, engines = 
         <input type="range" min="2" max="6" step="0.5" value="4.5" data-input="z" aria-label="Alarm sensitivity in standard deviations" />
         <div class="control__note" data-v="znote"></div>
       </div>
-      <label class="check"><input type="checkbox" data-input="autodecoy" /> <span><b>Auto-decoy</b>: when a fiber raises an alarm, keep it running on fake traffic and reroute real traffic, to measure the tap instead of just cutting it off</span></label>
+      <label class="check" for="autodecoy"><input type="checkbox" id="autodecoy" data-input="autodecoy" aria-label="Auto-decoy suspicious fibers" /> <span><b>Auto-decoy</b>: when a fiber raises an alarm, keep it running on fake traffic and reroute real traffic, to measure the tap instead of just cutting it off</span></label>
+      <h2>Teleportation</h2>
+      <label class="check" for="teleport"><input type="checkbox" id="teleport" data-input="teleport" aria-label="Teleportation view" /> <span><b>Teleportation view</b>: show which fibers are under 11% error (usable entanglement if run entanglement-based) and each substation's entanglement-swapping route, which needs no trusted relays</span></label>
       <div class="btns">
         <button class="btn btn--danger" data-action="clear-eves">Remove all taps</button>
         <button class="btn btn--ok" data-action="restore-all">Restore all fibers</button>
@@ -113,6 +126,13 @@ export function createUI({ panel, net, networks = [], currentNetwork, engines = 
   showZ();
   $('[data-input="network"]').addEventListener("change", (e) => handlers.onNetwork(e.target.value));
   $('[data-input="autodecoy"]').addEventListener("change", (e) => handlers.onAutoDecoy(e.target.checked));
+  $('[data-input="teleport"]').addEventListener("change", (e) => handlers.onTeleportView(e.target.checked));
+  $('[data-input="coverage"]').addEventListener("change", (e) => handlers.onCoverage(e.target.value));
+  const jump = $('[data-input="jump"]');
+  jump.addEventListener("change", () => {
+    const [type, id] = jump.value.split(":");
+    handlers.onJump(type || null, id || null);
+  });
 
   panel.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-action]");
@@ -157,13 +177,13 @@ export function createUI({ panel, net, networks = [], currentNetwork, engines = 
       <canvas class="chart" data-chart></canvas>
       <div class="chart__legend"><span><i style="background:#e8eefc"></i>QBER</span><span><i style="background:#ffb547"></i>warning</span><span><i style="background:#ff4d6d"></i>11% abort</span><span><i style="background:#4b5571"></i>baseline</span></div>
       <div class="intel" data-f="intel"></div>
+      <div class="btns">${tapButton(link, s)}${decoyButton(link, s)}${quarantineButton(link, s)}</div>
       ${engineIds.length ? `<div class="frameworks">
         <div class="frameworks__title">Run this fiber as real quantum code</div>
         <div class="btns">${engineIds.map((e) => `<button class="btn" data-action="engine:${e}" data-id="${link.id}">${engines[e]}</button>`).join("")}<button class="btn btn--ok" data-action="engine:all" data-id="${link.id}">All</button></div>
         <div class="frameworks__table" data-f="frameworks"></div>
       </div>` : ""}
-      <p class="explain" data-f="explain"></p>
-      <div class="btns">${tapButton(link, s)}${decoyButton(link, s)}${quarantineButton(link, s)}</div>`;
+      <p class="explain" data-f="explain"></p>`;
   }
 
   function tapButton(link, s) {
@@ -230,7 +250,17 @@ export function createUI({ panel, net, networks = [], currentNetwork, engines = 
     f("explain").innerHTML = text;
   }
 
-  function buildNodeInspector(node, site) {
+  function teleportBlock(t) {
+    if (!t) return "";
+    const r = t.route;
+    if (!r) return `<div class="tele"><div class="tele__title">Teleportation route</div><p class="explain">No chain of quantum fibers under 11% error reaches a control center from here, so no usable entangled pair can be built right now.</p></div>`;
+    const hops = r.links.map((l, i) => `${l.id} ${pct(r.hopQbers[i], 1)}`).join(" · ");
+    return `<div class="tele"><div class="tele__title">Teleportation route</div>
+      <dl class="kv"><dt>Route</dt><dd>${r.nodes.join(" → ")}</dd><dt>Entanglement swaps</dt><dd>${r.swaps}</dd><dt>Hop error rates</dt><dd>${hops}</dd><dt>End-to-end error</dt><dd>${pill([pct(r.qber, 1), r.ok ? "ok" : "bad"])}</dd></dl>
+      <p class="explain">${r.ok ? "Usable: under 11%, so an entangled pair could be distilled and a qubit teleported, with two classical bits sent over the fiber." : "Each hop is under 11%, but errors add up across swaps: the end-to-end pair is over 11% and could not be distilled."} ${r.swaps ? `Swapping nodes (${r.nodes.slice(1, -1).join(", ")}) never hold the key, unlike trusted relays.` : ""} Assumes the fibers run an entanglement-based protocol with the error rates measured here.</p></div>`;
+  }
+
+  function buildNodeInspector(node, site, teleport) {
     const kind = TYPE_LABEL[node.type];
     const path = (p) => (p ? p.nodes.join(" → ") : "–");
     let explain;
@@ -239,7 +269,7 @@ export function createUI({ panel, net, networks = [], currentNetwork, engines = 
     else if (site.keySource === "qkd" && site.relays.length) explain = `Its QKD key is relayed through <b>${site.relays.join(", ")}</b>. Each relay is a trusted node: it briefly holds the key in the clear, so it must be physically secured. That is the trusted-node problem.`;
     else if (site.keySource === "qkd") explain = "Its QKD key comes over a single fiber straight from a control center: no relay sees it.";
     else if (node.type === "substation") explain = "No chain of healthy QKD fibers reaches a control center right now, so this substation uses ML-KEM keys. It stays connected.";
-    else explain = "Sub-units and remote sites use ML-KEM keys by design: QKD there would cost more than it protects.";
+    else explain = "This site has no QKD fiber, so it uses ML-KEM keys. In our design, sub-units and remote sites are on ML-KEM because QKD there would cost more than it protects.";
     return `
       <div class="inspector__title"><span class="inspector__id">${node.id}</span><span class="inspector__name">${node.name}</span></div>
       <div class="inspector__kind">${kind}</div>
@@ -248,7 +278,8 @@ export function createUI({ panel, net, networks = [], currentNetwork, engines = 
         <dt>Keys</dt><dd>${pill(KEY_LABEL[site.keySource] ?? KEY_LABEL.none)}</dd>
         ${node.type === "control" ? "" : `<dt>Key path</dt><dd>${site.keySource === "qkd" ? path(site.keyPath) : "end-to-end ML-KEM"}</dd><dt>Data path</dt><dd>${path(site.dataPath)}</dd>`}
       </dl>
-      <p class="explain">${explain}</p>`;
+      <p class="explain">${explain}</p>
+      ${node.type === "control" ? "" : teleportBlock(teleport)}`;
   }
 
   function drawChart(canvas, s) {
@@ -357,7 +388,7 @@ export function createUI({ panel, net, networks = [], currentNetwork, engines = 
     } else {
       const node = net.nodes.get(sel.id);
       const site = state.sites.get(sel.id);
-      const html = buildNodeInspector(node, site);
+      const html = buildNodeInspector(node, site, state.teleport);
       if (html !== inspector.innerHTML) inspector.innerHTML = html;
       inspectorKey = `node:${sel.id}`;
       chart = null;

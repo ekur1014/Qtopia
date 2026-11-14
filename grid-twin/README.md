@@ -25,7 +25,7 @@ To re-run any fiber as real quantum code from the page, serve it with the bridge
 python sim/live_server.py 8000
 ```
 
-A fiber's inspector then shows **Run this fiber as real quantum code**: Qiskit Aer, NVIDIA CUDA-Q and Quantinuum Guppy on the Selene emulator each run 4,000 photons with that fiber's current noise and tap, and the error rates appear next to the browser's live value and the theory. Example (L11, 40% tap, theory 12.64%): Qiskit 13.52%, CUDA-Q 12.11%, Guppy 11.15%, each on about 2,000 sifted bits (±0.7%).
+A fiber's inspector then shows **Run this fiber as real quantum code**: Qiskit Aer, NVIDIA CUDA-Q and Quantinuum Guppy on the Selene emulator each run 4,000 photons with that fiber's current noise and tap. Two more engines: **qBraid · IonQ simulator** runs the fiber as a real cloud job on qBraid's free IonQ simulator (needs `QBRAID_API_KEY` in the server's environment, for example `source ~/.qrypt.env` first; about 45 s with the queue), and **Team notebook 1** runs the team's own `encode()` and `measure()` from `1_bb84_eavesdropper.ipynb` (it reports that the notebook is unfinished until its TODOs are filled), and the error rates appear next to the browser's live value and the theory. Example (L11, 40% tap, theory 12.64%): Qiskit 13.52%, CUDA-Q 12.11%, Guppy 11.15%, each on about 2,000 sifted bits (±0.7%).
 
 ## What you can do
 
@@ -36,6 +36,9 @@ A fiber's inspector then shows **Run this fiber as real quantum code**: Qiskit A
 | **4 · Decoy** | Click a QKD fiber to switch it to decoy traffic: real traffic reroutes (only if every site has another route), the fiber keeps running on fake traffic, and the panel estimates how much the tap intercepts. **Auto-decoy** in the panel does this automatically when a fiber raises an alarm. |
 | **3 · Quarantine** | Click a fiber to take it out of service (click again to restore). Traffic reroutes; a site with no path left keeps its power on and runs on local protection. |
 | Alarm sensitivity | How many standard deviations above a fiber's own baseline counts as an alarm, with the false-alarm chance per check. |
+| Find a fiber or site | Picker in the panel: selects anything without clicking in 3D (keyboard and projector friendly). |
+| QKD coverage | **Backbone only** (our design) or **Every fiber** (the team's whiteboard sketch); also `?qkd=all`. |
+| Teleportation view | Fibers under 11% error light up as usable for entanglement; select a substation to see its entanglement-swapping route and end-to-end error. Swapping nodes are shown in blue: unlike trusted relays (gold), they never hold the key. |
 | Space / Esc / F | Pause and resume / clear the selection / frame the whole network. Drag to orbit, scroll to zoom. |
 | Browser console | `gridTwin.tap("L4", 0.1)`, `gridTwin.quarantine("P4")`, `gridTwin.select("node", "S6")`, `gridTwin.state()`: for scripted demos and tests. |
 

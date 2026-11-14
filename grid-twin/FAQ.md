@@ -35,6 +35,12 @@ Each fiber costs its length times (1 + 4 × risk), with risk from its live error
 **Does the visualization talk to real quantum code?**
 Yes, when served by `sim/live_server.py`: a fiber's current noise and tap can be re-run as 4,000 photons on Qiskit Aer, NVIDIA CUDA-Q and Quantinuum Guppy (Selene emulator), and the error rates appear next to the browser's and the theory.
 
+**What does the teleportation view show?**
+The team lead's idea: a fiber under 11% error could supply usable entangled pairs if run with an entanglement-based protocol. Select a substation and the view finds the entanglement-swapping route from a control center with the lowest end-to-end error (errors combine as (1 − 2Q_end) = ∏(1 − 2Q_i)). The swapping nodes never hold the key, unlike trusted relays. It still needs two ordinary bits per teleported qubit, so nothing is faster than the fiber.
+
+**Can the visualization run on qBraid?**
+Yes, with the live server: the **qBraid · IonQ simulator** button sends that fiber's photons as a real job to qBraid's free IonQ simulator and logs the job ID.
+
 **What is the trusted-node problem?**
 QKD keys only cross one fiber. To reach a far substation, the key is relayed through intermediate sites, and each relay holds the key in the clear for a moment. Every relay must be trusted and physically secured. Select a substation whose direct fiber is tapped to see its relays (gold rings).
 

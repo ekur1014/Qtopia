@@ -18,6 +18,7 @@ const COLORS = {
   photonHit: new THREE.Color("#ff3d62"),
   packet: new THREE.Color("#b5b8ff"),
   decoy: new THREE.Color("#ff5ec7"),
+  tele: new THREE.Color("#5ad7ff"),
 };
 const PHOTONS_PER_LINK = 7;
 const PACKETS_PER_LINK = 3;
@@ -382,6 +383,21 @@ export function createScene({ container, net, onPick, onHover }) {
         v.mat.opacity = 0.85;
       }
       v.pulse = s.quarantined ? 0 : s.decoy ? 3 : s.status === "warning" ? 1 : s.status === "abort" ? 2 : 0;
+      // Teleportation view: quantum fibers under 11% error are usable for entanglement, others are not.
+      if (view.teleport) {
+        const q = view.teleport.linkQ.get(id);
+        v.pulse = 0;
+        if (q == null) {
+          v.target.copy(COLORS.off);
+          v.mat.opacity = 0.3;
+        } else if (q < 0.11) {
+          v.target.copy(COLORS.tele);
+          v.mat.opacity = 0.95;
+        } else {
+          v.target.copy(COLORS.bad).multiplyScalar(0.7);
+          v.mat.opacity = 0.6;
+        }
+      }
     }
 
     const sel = view.selected;
@@ -392,8 +408,12 @@ export function createScene({ container, net, onPick, onHover }) {
       else targetGoal.copy(center);
     }
     const focusSite = sel && sel.type === "node" ? view.sites.get(sel.id) : null;
-    const relaySet = new Set(focusSite?.relays ?? []);
-    keyPath = focusSite?.keyPath ?? focusSite?.dataPath ?? null;
+    const teleRoute = view.teleport?.route ?? null;
+    // In the teleportation view the rings mark swapping nodes (blue: never hold the key); otherwise trusted relays (gold).
+    const relaySet = new Set(view.teleport ? (teleRoute ? teleRoute.nodes.slice(1, -1) : []) : (focusSite?.relays ?? []));
+    keyPath = view.teleport ? teleRoute : (focusSite?.keyPath ?? focusSite?.dataPath ?? null);
+    const ringColor = view.teleport ? COLORS.tele : COLORS.gold;
+    keyPackets.material.color.copy(ringColor).multiplyScalar(2.2);
     const pathLinks = new Set((keyPath?.links ?? []).map((l) => l.id));
     for (const [id, nv] of nodeViews) {
       const site = view.sites.get(id);
@@ -405,6 +425,7 @@ export function createScene({ container, net, onPick, onHover }) {
       else c = COLORS.pqc;
       if (c) nv.glowMat.color.copy(c).multiplyScalar(node.type === "subunit" ? 1.2 : 1.3);
       nv.relayRing.material.opacity = relaySet.has(id) ? 0.95 : 0;
+      nv.relayRing.material.color.copy(ringColor);
       const focus = (sel && sel.type === "node" && sel.id === id) || relaySet.has(id) || (sel && sel.type === "link" && (net.links.get(sel.id).a === id || net.links.get(sel.id).b === id));
       nv.el.classList.toggle("is-focus", !!focus);
     }

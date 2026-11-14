@@ -65,6 +65,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             with _lock:
                 result = engines.run(engine, p, f, rounds, seed)
             return self._json(200, result)
+        except RuntimeError as exc:  # an expected refusal, e.g. notebook 1 unfinished or no qBraid key
+            return self._json(422, {"error": str(exc)})
         except Exception as exc:  # report, do not crash the server
             traceback.print_exc()
             return self._json(500, {"error": f"{type(exc).__name__}: {exc}"})

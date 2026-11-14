@@ -216,3 +216,40 @@ test("Tap estimate recovers the true intercepted share within its error bar", ()
     assert.ok(Math.abs(est.f - f) < 4.5 * est.se + 1e-9, `p=${p} f=${f}: estimate ${est.f.toFixed(3)} ± ${est.se.toFixed(3)}`);
   }
 });
+
+import { composeQber, teleportRoute, TELEPORT_QBER_LIMIT } from "../src/teleport.js";
+
+test("Teleportation: swapping composes errors like XOR of independent flips", () => {
+  assert.equal(composeQber([]), 0);
+  assert.ok(Math.abs(composeQber([0.05]) - 0.05) < 1e-12);
+  assert.ok(Math.abs(composeQber([0.05, 0.05]) - 0.095) < 1e-12, "two 5% hops give 9.5%");
+  // Monte Carlo check of the formula: XOR of independent flips.
+  const rng = mulberry32(77);
+  let odd = 0;
+  const N = 200000;
+  for (let i = 0; i < N; i++) odd += ((rng() < 0.04) ^ (rng() < 0.06) ^ (rng() < 0.03)) ? 1 : 0;
+  assert.ok(Math.abs(odd / N - composeQber([0.04, 0.06, 0.03])) < 0.003);
+});
+
+test("Teleportation: routes avoid fibers above 11% and report whether the end-to-end pair is usable", () => {
+  const linkQ = new Map([...net.links.values()].map((l) => [l.id, l.kind === "qkd" ? 0.033 : null]));
+  const healthy = teleportRoute(net, controlCenters(net), "S6", linkQ);
+  assert.deepEqual(healthy.links.map((l) => l.id), ["L11"], "one hop from CC2");
+  assert.ok(healthy.ok);
+  linkQ.set("L11", 0.27); // tapped: above 11%, unusable
+  const around = teleportRoute(net, controlCenters(net), "S6", linkQ);
+  assert.ok(!around.links.some((l) => l.id === "L11"));
+  assert.equal(around.swaps, around.links.length - 1);
+  assert.ok(Math.abs(around.qber - composeQber(around.hopQbers)) < 1e-12);
+  assert.equal(teleportRoute(net, controlCenters(net), "U4", linkQ), null, "sub-unit links carry no quantum signal");
+  assert.ok(TELEPORT_QBER_LIMIT === 0.11);
+});
+
+test("QKD on every fiber (whiteboard mode): sub-units get QKD keys when their fiber is healthy", () => {
+  const allQkd = buildNetwork({ ...raw, links: raw.links.map((l) => ({ ...l, kind: "qkd" })) });
+  const st = new Map([...allQkd.links.keys()].map((id) => [id, { alarm: "ok", quarantined: false }]));
+  const r = computeResponse(allQkd, st);
+  assert.equal(r.sites.get("U4").keySource, "qkd");
+  st.set("P4", { alarm: "warning", quarantined: false });
+  assert.equal(computeResponse(allQkd, st).sites.get("U4").keySource, "pqc", "its only fiber in alarm: ML-KEM");
+});
