@@ -8,9 +8,27 @@ Every green fiber runs BB84 quantum key distribution. Tap any fiber with an eave
 
 It opens in a light theme (easier to read on a projector); **T** or the moon button switches to dark, and `?theme=dark` opens dark.
 
-## Run it
+## Open it (teammates: start here)
 
-The page uses ES modules, so it needs a local web server (opening `index.html` directly from disk will not work).
+**Fastest, nothing to install:** download [`grid_twin.html`](../grid_twin.html) from the top of the repo (on GitHub: open it, then the download button), and double-click it. It is the whole app in one file and needs no web server; it only needs internet for Three.js and the fonts.
+
+**From a clone, one command** (opens your browser; adds the live quantum-code buttons if Qiskit, CUDA-Q or Guppy are installed):
+
+```bash
+python3 grid-twin/start.py
+```
+
+**Shareable link:** https://claude.ai/artifact/RMHGPbTvUVXPvKpzXgE6pH (the owner has to share it from its Share menu before others can open it).
+
+**Changed something in `grid-twin/`?** Rebuild the single file so teammates get the new version:
+
+```bash
+node grid-twin/tools/build_standalone.mjs
+```
+
+## Run it by hand
+
+`index.html` uses ES modules, so it needs a local web server (opening `grid-twin/index.html` directly from disk will not work; `grid_twin.html` will).
 
 ```bash
 cd grid-twin

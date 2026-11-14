@@ -101,3 +101,10 @@ User request: the dark scene made stations hard to see; wanted a light mode, a r
 - **Measurement fix found while testing**: reporting the tap estimate 3 s after the alarm under-read a full tap (89%) because the detector window still held older, untapped photons. It now waits one full 4 s window: 95% ± 4% and 96% ± 4% on full taps, 100% ± 3% on a sub-unit fiber.
 - **Satellite**: an optional concept layer, off by default and labeled "concept, not simulated".
 - **Checked** in headless Chrome at 1440×900, 1024×768 and phone size (390×844), light and dark, city and IEEE 118-bus grids: the full incident cycle (tap → card → cleared after untap), decoy correctly refused when sub-unit U1 would be stranded (every-fiber mode), quarantine from the card (U1 loses comms, power stays energized). Tests: 24 passing.
+
+## Easy access for teammates
+
+- **`grid_twin.html`** at the top of the repo: the whole app in one file (CSS, all modules and all six networks inlined, 246 KB). Download and double-click: no server, no install. Built by `grid-twin/tools/build_standalone.mjs` (no dependencies: each module gets its own scope, imports become lookups); rebuild after any change in `grid-twin/`. Checked from `file://` in headless Chrome: city and 118-bus networks load, a full tap on L11 opens an incident and measures 100% ± 4%.
+- **`grid-twin/start.py`**: one command that serves the page and opens the browser; it starts the live quantum-framework bridge when the packages are installed (checked: Qiskit, CUDA-Q, Guppy and notebook 1 listed) and otherwise serves the page alone (checked with system Python).
+- `grid-twin/README.md` now opens with these three ways in. The root README is untouched.
+

@@ -15,6 +15,9 @@ const TICK_MS = 250;
 const DETECTED_PER_TICK_AT_10KM = 500;
 const HISTORY = 120; // ticks shown in the chart (30 s)
 const DEFAULT_Z = 4.5;
+// The standalone single-file build (tools/build_standalone.mjs) carries its data inline, so it opens with a
+// double-click and needs no web server.
+const EMBEDDED = globalThis.GRIDTWIN_DATA ?? null;
 // Ticks of evidence after an alarm before the tap estimate is reported: one full detector window (4 s), so the
 // estimate uses only photons sent after the alarm, all of them tapped, and is not diluted by older, clean ones.
 const MEASURE_TICKS = 16;
@@ -28,7 +31,7 @@ boot().catch((err) => {
   console.error(err);
   loader.classList.add("is-error");
   loader.querySelector("span").textContent =
-    location.protocol === "file:" ? "Open this page through a local web server (see README.md)" : `Could not start: ${err.message}`;
+    location.protocol === "file:" ? "Open grid_twin.html (the single-file copy at the top of the repo), or run python3 grid-twin/start.py" : `Could not start: ${err.message}`;
 });
 
 async function boot() {
@@ -37,7 +40,7 @@ async function boot() {
   const wanted = new URLSearchParams(location.search).get("net") ?? "city";
   const entry = manifest.find((m) => m.id === wanted) ?? manifest[0];
   // Live quantum frameworks: available only when the page is served by sim/live_server.py.
-  const engines = await fetch("api/engines").then((r) => (r.ok ? r.json() : null)).then((j) => j?.engines ?? {}).catch(() => ({}));
+  const engines = EMBEDDED ? {} : await fetch("api/engines").then((r) => (r.ok ? r.json() : null)).then((j) => j?.engines ?? {}).catch(() => ({}));
   const params = new URLSearchParams(location.search);
   const coverage = params.get("qkd") === "all" ? "all" : "backbone";
   const raw = await fetchJson(entry.file);
@@ -661,6 +664,7 @@ function freshReading(baseline) {
 }
 
 async function fetchJson(url) {
+  if (EMBEDDED && url in EMBEDDED) return structuredClone(EMBEDDED[url]);
   const r = await fetch(url);
   if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
   return r.json();
