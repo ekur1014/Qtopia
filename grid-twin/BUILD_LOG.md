@@ -90,3 +90,14 @@ What was built, in order, and how each step was checked. Times are Saturday 14 N
 - Added: teleportation view (the lead's 11% / entanglement-swapping idea), QKD coverage switch (whiteboard version), "Find a fiber or site" picker, live tap slider, qBraid IonQ simulator engine (real job from the page, 12.17% vs 12.64% theory), Team notebook 1 engine (runs the team's own code; refuses clearly while its TODOs are open).
 - Fixed: loader stuck in background tabs, inspector button order, checkbox labels, sub-units' keys in every-fiber mode, refusal status code.
 - Tests: 24 passing.
+
+## Light theme, viewer controls, automatic response
+
+User request: the dark scene made stations hard to see; wanted a light mode, a real 3D-viewer feel (focus, zoom in and out, center, cinematic orbit until interaction), a possible satellite, and the response to happen automatically when a tap is placed instead of separate Quarantine and Decoy tools.
+
+- **Light theme, now the default**: every scene color, light, fog, ground and grid comes from a theme table; light uses white buildings, saturated mid-tone fibers, no bloom and no tone mapping so colors print true; dark keeps the glow. The panel uses CSS tokens for both. **T**, the dock button or `?theme=` switch it; the choice is remembered in the browser.
+- **Viewer dock**: zoom in and out (eased), Fit (H), Focus (F: flies close and fades unrelated fibers and labels), Cinematic orbit (O: slow turn that stops on any drag, scroll or click and resumes after 20 s idle).
+- **Automatic response**: one incident per alarm, with six stages (detect, switch keys, reroute, decoy, measure, recommend) and timings. Quarantine and Decoy left the toolbar and became operator overrides in the inspector and on the card. Quarantine is still never automatic.
+- **Measurement fix found while testing**: reporting the tap estimate 3 s after the alarm under-read a full tap (89%) because the detector window still held older, untapped photons. It now waits one full 4 s window: 95% ± 4% and 96% ± 4% on full taps, 100% ± 3% on a sub-unit fiber.
+- **Satellite**: an optional concept layer, off by default and labeled "concept, not simulated".
+- **Checked** in headless Chrome at 1440×900, 1024×768 and phone size (390×844), light and dark, city and IEEE 118-bus grids: the full incident cycle (tap → card → cleared after untap), decoy correctly refused when sub-unit U1 would be stranded (every-fiber mode), quarantine from the card (U1 loses comms, power stays energized). Tests: 24 passing.

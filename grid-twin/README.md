@@ -4,7 +4,9 @@ Shareable copy (private until shared from its Share menu): https://claude.ai/art
 
 A 3D twin of a city utility's quantum-secured communication network, built for the Tennessee Quantum Hackathon (Secure the Grid track, Step 3).
 
-Every glowing fiber runs BB84 quantum key distribution. You can tap any fiber with an eavesdropper and watch its error rate (QBER) climb, the alarm fire, and the control center respond. The response cuts **communication paths**, never power.
+Every green fiber runs BB84 quantum key distribution. Tap any fiber with an eavesdropper and watch its error rate (QBER) climb, the alarm fire, and the network respond on its own: keys switch to ML-KEM, real traffic reroutes, the fiber switches to decoy traffic so the tap can be measured, and a crew inspection is recommended. Any cut is to **communication paths**, never power, and only an operator can quarantine a fiber.
+
+It opens in a light theme (easier to read on a projector); **T** or the moon button switches to dark, and `?theme=dark` opens dark.
 
 ## Run it
 
@@ -33,14 +35,16 @@ A fiber's inspector then shows **Run this fiber as real quantum code**: Qiskit A
 |---|---|
 | **1 · Inspect** | Click a fiber to see its live QBER, chart, warning line and secret-key fraction. Click a site to see where its keys come from and which trusted nodes relay them. |
 | **2 · Eavesdrop** | Click a fiber to tap it (click again to remove). The panel sets what share of photons the tap intercepts: 100% is loud, a few percent is a careful spy. |
-| **4 · Decoy** | Click a QKD fiber to switch it to decoy traffic: real traffic reroutes (only if every site has another route), the fiber keeps running on fake traffic, and the panel estimates how much the tap intercepts. **Auto-decoy** in the panel does this automatically when a fiber raises an alarm. |
-| **3 · Quarantine** | Click a fiber to take it out of service (click again to restore). Traffic reroutes; a site with no path left keeps its power on and runs on local protection. |
+| Automatic response (on by default) | When a fiber alarms, an **incident card** opens and the response runs by itself, stage by stage with timings: detected, keys switched to ML-KEM, real traffic rerouted, decoy traffic on the fiber (only if every site keeps another route), the tap measured (after one full 4 s window of fresh photons), and a crew inspection recommended. The card closes itself when the error rate returns to normal. Turning it off leaves detection, the key switch and rerouting (they are the policy) and skips decoy traffic. |
+| Operator overrides | In a fiber's inspector, or on the incident card: **Quarantine fiber** takes it out of service (a site with no path left keeps power and runs on local protection), **Restore fiber** brings it back on probation, **Decoy traffic** switches decoy mode by hand. Quarantine is never automatic, so an attacker cannot take a fiber down by tapping it. |
 | Alarm sensitivity | How many standard deviations above a fiber's own baseline counts as an alarm, with the false-alarm chance per check. |
 | Find a fiber or site | Picker in the panel: selects anything without clicking in 3D (keyboard and projector friendly). |
 | QKD coverage | **Backbone only** (our design) or **Every fiber** (the team's whiteboard sketch); also `?qkd=all`. |
+| Satellite (concept) | Off by default. Draws a satellite and its beams to the control centers, labeled *concept, not simulated*: for discussion only, since the team scoped satellites out. |
 | Teleportation view | Fibers under 11% error light up as usable for entanglement; select a substation to see its entanglement-swapping route and end-to-end error. Swapping nodes are shown in blue: unlike trusted relays (gold), they never hold the key. |
-| Space / Esc / F | Pause and resume / clear the selection / frame the whole network. Drag to orbit, scroll to zoom. |
-| Browser console | `gridTwin.tap("L4", 0.1)`, `gridTwin.quarantine("P4")`, `gridTwin.select("node", "S6")`, `gridTwin.state()`: for scripted demos and tests. |
+| View dock (bottom right of the 3D view) | **+** / **−** zoom; **Fit** (H) flies back to the whole network; **Focus** (F) flies close to the selection and fades everything unrelated; **Cinematic orbit** (O) turns the view slowly, stops the moment you drag, scroll or click, and resumes after 20 s idle; **Light/dark** (T). |
+| Space / Esc | Pause and resume / clear the selection. Drag to orbit, scroll to zoom. |
+| Browser console | `gridTwin.tap("L4", 0.1)`, `gridTwin.quarantine("P4")`, `gridTwin.select("node", "S6")`, `gridTwin.incidents()`, `gridTwin.focus()`, `gridTwin.theme("dark")`, `gridTwin.orbit(false)`, `gridTwin.state()`: for scripted demos and tests. |
 
 ## Networks
 

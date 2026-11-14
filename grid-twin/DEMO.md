@@ -5,9 +5,10 @@ A 60-second live demo for the Solution & Technology slide, plus setup and a back
 ## Before you present
 
 1. Start the page: `cd grid-twin && python3 -m http.server 8000`, open http://localhost:8000, and let the intro flight finish.
-2. **It needs internet**: Three.js and the fonts load from public CDNs. Test on the venue Wi-Fi. If it is unreliable, have the backup ready (below).
-3. Set the browser to full screen. Close other tabs so the animation stays smooth.
-4. If clicking a fiber is awkward on the projector, use **Find a fiber or site** in the panel instead. The browser console also has one-liners:
+2. The page opens in the light theme, the easiest to read on a projector. The cinematic orbit turns the view slowly until you touch anything; press **O** to stop it for good, **H** to fit the whole network, **F** to fly close to the selection.
+3. **It needs internet**: Three.js and the fonts load from public CDNs. Test on the venue Wi-Fi. If it is unreliable, have the backup ready (below).
+4. Set the browser to full screen. Close other tabs so the animation stays smooth.
+5. If clicking a fiber is awkward on the projector, use **Find a fiber or site** in the panel instead. The browser console also has one-liners:
    ```js
    gridTwin.tap("L5", 1)        // full tap on the North–West fiber
    gridTwin.tap("L11", 1)       // full tap on CC2–S6: S6's key reroutes through S1
@@ -20,11 +21,12 @@ A 60-second live demo for the Solution & Technology slide, plus setup and a back
 | Time | Do | Say |
 |---|---|---|
 | 0:00 | Page at rest, nothing selected | "This is a city utility's communication network. Green fibers run quantum key distribution, BB84, live. Purple links use post-quantum cryptography." |
-| 0:10 | Press **2** (Eavesdrop), click the CC2–S6 fiber (L11) | "I'm tapping this fiber: an eavesdropper measures every photon." |
-| 0:15 | Point at the fiber turning amber, then red; point at the event log | "The error rate jumps from 3.3%, its normal noise, to about 27%. Within seconds it's flagged. Notice the fiber stays up: it just stops trusting quantum keys and switches to ML-KEM, so an attacker can't use our alarm to cut communications." |
+| 0:10 | Press **2** (Eavesdrop), click the CC2–S6 fiber (L11). Then do nothing | "I'm tapping this fiber: an eavesdropper measures every photon. Now watch: nobody touches anything." |
+| 0:15 | Point at the incident card filling in, stage by stage | "Within about a second it's detected. Keys switch to ML-KEM, so the fiber stays up: an attacker can't use our alarm to cut communications. Real traffic reroutes, and the fiber switches to decoy traffic: the spy keeps tapping and gets only fake data." |
+| 0:22 | Point at **Measured** and **Recommended** | "Four seconds later the network has measured her: close to 100% of photons intercepted, an intercept-resend signature. It recommends a crew inspection. Quarantine stays a human decision." |
 | 0:30 | Press **1**, click substation **S6** | "S6 still gets a quantum key, now relayed through S1. That gold ring is a trusted node: it holds the key for a moment, so it must be physically secured. That's the trusted-node problem." |
 | 0:40 | Remove the tap (click the fiber again with tool 2, or "Remove all taps"); set the tap slider to **5%** and tap another fiber | "A careful spy taps only 5%. Now the error rate stays inside normal noise: physics alone can't catch her quickly. That's why the threshold comes from each fiber's own baseline, and why privacy amplification matters." |
-| 0:55 | Press **3**, click a purple sub-unit link | "And if we quarantine a link, traffic reroutes. A site with no path left loses communications, but never power." |
+| 0:55 | On the incident card, click **Quarantine fiber** | "If the operator does quarantine, traffic reroutes. A site with no path left loses communications, but never power." |
 | Optional | Tick **Teleportation view**, select S6 | "If these fibers ran entanglement-based QKD, every fiber under 11% could supply entangled pairs. S6 can be reached by entanglement swapping through S1, and S1 never sees the key: no trusted node." |
 
 ## What to point at

@@ -54,6 +54,7 @@ the single-photon case of Eq. (8) in Lo, Ma and Chen (PRL 94, 230504, 2005), usi
 |---|---|---|
 | Healthy QKD fiber | supplies QKD keys | |
 | Fiber in warning or abort | keeps carrying traffic, keys from ML-KEM | a substation whose QKD chain used it reroutes its QKD key through other healthy QKD fibers (trusted relays), or falls back to ML-KEM if none is left |
+| Same, with automatic response on (default) | switches to decoy traffic if every site keeps another route; the tap is measured over the next full window; a crew inspection is recommended | real traffic already avoids it (risk-weighted routing); the incident closes itself when the error rate returns to normal |
 | Operator quarantines a fiber | out of service | traffic reroutes over any remaining link; a site with no path left is cut off from comms, keeps power, runs on local protection, crew dispatched |
 | Tap on a post-quantum link | nothing detects it | ML-KEM keeps the traffic unreadable to the tapper |
 
@@ -66,3 +67,16 @@ Paths are shortest by fiber length (Dijkstra), from either control center.
 - Key *rates* are not shown, only the secret-key fraction: rates depend on hardware we do not have.
 - QKD still needs authenticated classical channels, which come from classical or post-quantum cryptography.
 - The response is classical graph logic. A QAOA version of "which links to isolate" is possible (UTC's original Problem 2, the TVA QAOA primer) but would not beat this at this size.
+
+## Automatic response (src/main.js, incidents)
+
+Placing a tap needs no further clicks: the network runs the whole response itself, and an incident card shows each stage with its time.
+
+1. **Detect**: the fiber's error rate is significantly above its own baseline (or above 11%).
+2. **Switch keys**: QKD keys from the fiber are no longer trusted; its traffic uses ML-KEM. The fiber stays up.
+3. **Reroute**: real traffic follows the risk-weighted routes; the card names any site that has no other path.
+4. **Decoy**: the fiber carries only fake traffic, if no site would be stranded; otherwise this stage says why it was skipped.
+5. **Measure**: after one full detector window (16 ticks, 4 s) of photons sent after the alarm, the tap estimate f̂ is reported. Waiting a full window keeps older, untapped photons out of the estimate (a 3 s wait under-read a full tap as 89%; the full window reads 95 to 100%).
+6. **Recommend**: send a crew to inspect the fiber; quarantine is the operator's call.
+
+What stays manual, on purpose: **quarantine**. If a tap could take a fiber out of service automatically, an attacker could cut communications at will by tapping. The operator can quarantine from the card or the inspector, and restore later (the fiber restarts on probation).

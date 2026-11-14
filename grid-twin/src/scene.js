@@ -7,25 +7,33 @@ import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 
-const COLORS = {
-  ok: new THREE.Color("#3ef0c6"),
-  warn: new THREE.Color("#ffb547"),
-  bad: new THREE.Color("#ff4d6d"),
-  pqc: new THREE.Color("#8a8dff"),
-  off: new THREE.Color("#2b3244"),
-  gold: new THREE.Color("#ffd76a"),
-  photon: new THREE.Color("#e9fbff"),
-  photonHit: new THREE.Color("#ff3d62"),
-  packet: new THREE.Color("#b5b8ff"),
-  decoy: new THREE.Color("#ff5ec7"),
-  tele: new THREE.Color("#5ad7ff"),
+// Two looks. Dark glows (bloom on, colors above 1 for emissive parts); light reads like a printed map
+// (no bloom, no tone mapping, saturated mid-tone colors on white buildings) and is the default.
+const THEMES = {
+  dark: {
+    bg: "#04060b", fog: 0.55, ground: ["#0f1729", "#070b15", "#04060b"], grid: ["#253559", "#141d35"], gridOpacity: 0.32,
+    metal: { color: "#151c2c", metalness: 0.65, roughness: 0.38 }, hemi: ["#9fb6ff", "#06080f", 0.6], key: 1.2,
+    bloom: 0.6, glow: true, beacon: new THREE.Color(2.0, 2.2, 2.4), selBoost: 1.5, pulseLo: 0.9, pulseAmp: 0.55, toneMapping: THREE.ACESFilmicToneMapping,
+    colors: { ok: "#3ef0c6", warn: "#ffb547", bad: "#ff4d6d", pqc: "#8a8dff", off: "#2b3244", gold: "#ffd76a", photon: "#e9fbff", photonHit: "#ff3d62", packet: "#b5b8ff", decoy: "#ff5ec7", tele: "#5ad7ff", sat: "#cfe0ff" },
+  },
+  light: {
+    bg: "#eef2f7", fog: 0.28, ground: ["#ffffff", "#f5f7fb", "#eef2f7"], grid: ["#b3bed0", "#d3dae6"], gridOpacity: 0.6,
+    metal: { color: "#eef1f6", metalness: 0.12, roughness: 0.6 }, hemi: ["#ffffff", "#9aa6ba", 1.15], key: 1.6,
+    bloom: 0, glow: false, beacon: new THREE.Color("#0f1a2e"), selBoost: 0.68, pulseLo: 0.72, pulseAmp: 0.34, toneMapping: THREE.NoToneMapping,
+    colors: { ok: "#07a27e", warn: "#e08600", bad: "#e0314f", pqc: "#5a5fe6", off: "#c3cad6", gold: "#c99500", photon: "#1d4ed8", photonHit: "#e0314f", packet: "#5a5fe6", decoy: "#d23c97", tele: "#0e95cf", sat: "#334155" },
+  },
 };
+const COLORS = Object.fromEntries(Object.entries(THEMES.dark.colors).map(([k, v]) => [k, new THREE.Color(v)]));
 const PHOTONS_PER_LINK = 7;
 const PACKETS_PER_LINK = 3;
 const KEY_PACKETS = 28; // gold packets that trace the selected site's key path
 
-export function createScene({ container, net, onPick, onHover }) {
+export function createScene({ container, net, onPick, onHover, theme = "light", onInteract = () => {} }) {
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let T = THEMES[theme] ?? THEMES.light;
+  for (const [k, v] of Object.entries(T.colors)) COLORS[k].set(v);
+  // Emissive color: pushed above 1 in the dark theme so bloom picks it up; plain in the light theme.
+  const glow = (c, k) => c.clone().multiplyScalar(T.glow ? k : 1);
   const nodeCount = net.nodes.size;
   const crowded = nodeCount > 40; // big grids: fewer labels, smaller photons per link
 
@@ -40,7 +48,7 @@ export function createScene({ container, net, onPick, onHover }) {
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setSize(container.clientWidth, container.clientHeight);
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMapping = T.toneMapping;
   renderer.toneMappingExposure = 1.0;
   container.appendChild(renderer.domElement);
 
@@ -50,8 +58,8 @@ export function createScene({ container, net, onPick, onHover }) {
   container.appendChild(labelRenderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color("#04060b");
-  scene.fog = new THREE.FogExp2("#04060b", 0.55 / span);
+  scene.background = new THREE.Color(T.bg);
+  scene.fog = new THREE.FogExp2(T.bg, T.fog / span);
 
   const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, span * 12);
 
@@ -115,45 +123,59 @@ export function createScene({ container, net, onPick, onHover }) {
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
   // Restrained bloom: only things brighter than the threshold (photons, beacons, taps) glow; fibers stay crisp.
-  const bloom = new UnrealBloomPass(new THREE.Vector2(container.clientWidth, container.clientHeight), 0.6, 0.45, 0.32);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(container.clientWidth, container.clientHeight), T.bloom || 0.6, 0.45, 0.32);
+  bloom.enabled = T.bloom > 0;
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
 
   // Lights and ground ---------------------------------------------------------------------------
-  scene.add(new THREE.HemisphereLight("#9fb6ff", "#06080f", 0.6));
-  const key = new THREE.DirectionalLight("#cfe0ff", 1.2);
+  const hemi = new THREE.HemisphereLight(T.hemi[0], T.hemi[1], T.hemi[2]);
+  scene.add(hemi);
+  const key = new THREE.DirectionalLight("#cfe0ff", T.key);
   key.position.set(-span * 0.5, span, span * 0.7);
   scene.add(key);
 
-  const groundTex = (() => {
-    const c = document.createElement("canvas");
-    c.width = c.height = 512;
-    const g = c.getContext("2d");
+  const groundCanvas = document.createElement("canvas");
+  groundCanvas.width = groundCanvas.height = 512;
+  const groundTex = new THREE.CanvasTexture(groundCanvas);
+  groundTex.colorSpace = THREE.SRGBColorSpace;
+  function paintGround() {
+    const g = groundCanvas.getContext("2d");
     const grad = g.createRadialGradient(256, 256, 10, 256, 256, 256);
-    grad.addColorStop(0, "#0f1729");
-    grad.addColorStop(0.6, "#070b15");
-    grad.addColorStop(1, "#04060b");
+    grad.addColorStop(0, T.ground[0]);
+    grad.addColorStop(0.6, T.ground[1]);
+    grad.addColorStop(1, T.ground[2]);
     g.fillStyle = grad;
     g.fillRect(0, 0, 512, 512);
-    const tex = new THREE.CanvasTexture(c);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  })();
+    groundTex.needsUpdate = true;
+  }
+  paintGround();
   const ground = new THREE.Mesh(new THREE.CircleGeometry(span * 1.9, 96), new THREE.MeshBasicMaterial({ map: groundTex }));
   ground.rotation.x = -Math.PI / 2;
   ground.position.set(center.x, -0.02, center.z);
   scene.add(ground);
 
-  const grid = new THREE.GridHelper(span * 3.2, 64, "#253559", "#141d35");
-  grid.position.set(center.x, 0, center.z);
-  grid.material.transparent = true;
-  grid.material.opacity = 0.32;
-  scene.add(grid);
+  let grid = null;
+  function buildGrid() {
+    if (grid) {
+      scene.remove(grid);
+      grid.geometry.dispose();
+      grid.material.dispose();
+    }
+    grid = new THREE.GridHelper(span * 3.2, 64, T.grid[0], T.grid[1]);
+    grid.position.set(center.x, 0, center.z);
+    grid.material.transparent = true;
+    grid.material.opacity = T.gridOpacity;
+    scene.add(grid);
+  }
+  buildGrid();
 
   // Nodes ---------------------------------------------------------------------------------------
   const pickables = [];
   const nodeViews = new Map();
-  const darkMetal = new THREE.MeshStandardMaterial({ color: "#151c2c", metalness: 0.65, roughness: 0.38 });
+  const darkMetal = new THREE.MeshStandardMaterial(T.metal);
+  const controlGlows = []; // control-center beacons: not recolored by state, so the theme sets them
+  const halos = [];
 
   for (const node of net.nodes.values()) {
     const group = new THREE.Group();
@@ -169,10 +191,13 @@ export function createScene({ container, net, onPick, onHover }) {
       base.position.y = 0.4 * S;
       const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.42 * S, 0.55 * S, height, 6), darkMetal);
       pillar.position.y = height / 2 + 0.4 * S;
-      glowMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(2.0, 2.2, 2.4), toneMapped: false });
+      glowMat = new THREE.MeshBasicMaterial({ color: T.beacon.clone(), toneMapped: false });
+      controlGlows.push(glowMat);
       const beacon = new THREE.Mesh(new THREE.OctahedronGeometry(0.7 * S, 0), glowMat);
       beacon.position.y = height + 1.3 * S;
-      const halo = new THREE.Mesh(new THREE.TorusGeometry(1.6 * S, 0.06 * S, 8, 64), new THREE.MeshBasicMaterial({ color: COLORS.ok, toneMapped: false }));
+      const haloMat = new THREE.MeshBasicMaterial({ color: COLORS.ok.clone(), toneMapped: false });
+      halos.push(haloMat);
+      const halo = new THREE.Mesh(new THREE.TorusGeometry(1.6 * S, 0.06 * S, 8, 64), haloMat);
       halo.rotation.x = Math.PI / 2;
       halo.position.y = height + 1.3 * S;
       body.add(base, pillar, beacon, halo);
@@ -182,7 +207,7 @@ export function createScene({ container, net, onPick, onHover }) {
       height = 2.2 * S;
       const shell = new THREE.Mesh(new THREE.CylinderGeometry(r, r * 1.1, height, 6), darkMetal);
       shell.position.y = height / 2;
-      glowMat = new THREE.MeshBasicMaterial({ color: COLORS.ok.clone().multiplyScalar(1.3), toneMapped: false });
+      glowMat = new THREE.MeshBasicMaterial({ color: glow(COLORS.ok, 1.3), toneMapped: false });
       const crown = new THREE.Mesh(new THREE.TorusGeometry(r * 0.98, 0.09 * S, 6, 6), glowMat);
       crown.rotation.x = Math.PI / 2;
       crown.rotation.z = Math.PI / 6;
@@ -194,7 +219,7 @@ export function createScene({ container, net, onPick, onHover }) {
       height = 1.0 * S;
       const shell = new THREE.Mesh(new THREE.BoxGeometry(1.05 * S, height, 1.05 * S), darkMetal);
       shell.position.y = height / 2;
-      glowMat = new THREE.MeshBasicMaterial({ color: COLORS.pqc.clone().multiplyScalar(1.2), toneMapped: false });
+      glowMat = new THREE.MeshBasicMaterial({ color: glow(COLORS.pqc, 1.2), toneMapped: false });
       const cap = new THREE.Mesh(new THREE.BoxGeometry(1.1 * S, 0.08 * S, 1.1 * S), glowMat);
       cap.position.y = height + 0.04;
       body.add(shell, cap);
@@ -226,6 +251,9 @@ export function createScene({ container, net, onPick, onHover }) {
 
   // Links ---------------------------------------------------------------------------------------
   const linkViews = new Map();
+  const linkBase = (isQkd) => (isQkd ? COLORS.ok.clone().multiplyScalar(T.glow ? 0.85 : 1) : COLORS.pqc.clone().multiplyScalar(T.glow ? 0.8 : 1));
+  const eveMat = new THREE.MeshBasicMaterial({ color: glow(COLORS.bad, 2.0), toneMapped: false }); // shared by every tap marker
+  const eveLineMat = new THREE.MeshBasicMaterial({ color: COLORS.bad.clone(), toneMapped: false, transparent: true, opacity: 0.7 });
   for (const link of net.links.values()) {
     const a = net.nodes.get(link.a);
     const b = net.nodes.get(link.b);
@@ -236,7 +264,7 @@ export function createScene({ container, net, onPick, onHover }) {
     const curve = new THREE.QuadraticBezierCurve3(pa, mid, pb);
 
     const isQkd = link.kind === "qkd";
-    const base = isQkd ? COLORS.ok.clone().multiplyScalar(0.85) : COLORS.pqc.clone().multiplyScalar(0.8);
+    const base = linkBase(isQkd);
     const mat = new THREE.MeshBasicMaterial({ color: base, transparent: true, opacity: isQkd ? 0.85 : 0.5 });
     const tube = new THREE.Mesh(new THREE.TubeGeometry(curve, 64, (isQkd ? 0.13 : 0.075) * S, 8, false), mat);
     scene.add(tube);
@@ -249,10 +277,9 @@ export function createScene({ container, net, onPick, onHover }) {
     // Eavesdropper marker: a red crystal hovering over the fiber with a tap line down to it.
     const evePoint = curve.getPoint(0.5);
     const eve = new THREE.Group();
-    const eveMat = new THREE.MeshBasicMaterial({ color: COLORS.bad.clone().multiplyScalar(2.0), toneMapped: false });
     const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(0.7 * S, 0), eveMat);
     crystal.position.y = 2.8 * S;
-    const tap = new THREE.Mesh(new THREE.CylinderGeometry(0.03 * S, 0.03 * S, 2.8 * S, 6), new THREE.MeshBasicMaterial({ color: COLORS.bad, toneMapped: false, transparent: true, opacity: 0.7 }));
+    const tap = new THREE.Mesh(new THREE.CylinderGeometry(0.03 * S, 0.03 * S, 2.8 * S, 6), eveLineMat);
     tap.position.y = 1.4 * S;
     const ring = new THREE.Mesh(new THREE.TorusGeometry(0.55 * S, 0.045 * S, 8, 40), eveMat);
     ring.rotation.x = Math.PI / 2;
@@ -270,7 +297,7 @@ export function createScene({ container, net, onPick, onHover }) {
   const photonsPer = crowded ? 4 : PHOTONS_PER_LINK;
   const photons = new THREE.InstancedMesh(new THREE.SphereGeometry(0.24 * S, 12, 12), new THREE.MeshBasicMaterial({ color: "#ffffff", toneMapped: false }), Math.max(1, qkdLinks.length * photonsPer));
   const packets = new THREE.InstancedMesh(new THREE.BoxGeometry(0.3 * S, 0.3 * S, 0.3 * S), new THREE.MeshBasicMaterial({ color: "#ffffff", toneMapped: false }), Math.max(1, pqcLinks.length * PACKETS_PER_LINK));
-  const keyPackets = new THREE.InstancedMesh(new THREE.OctahedronGeometry(0.32 * S, 0), new THREE.MeshBasicMaterial({ color: COLORS.gold.clone().multiplyScalar(2.2), toneMapped: false }), KEY_PACKETS);
+  const keyPackets = new THREE.InstancedMesh(new THREE.OctahedronGeometry(0.32 * S, 0), new THREE.MeshBasicMaterial({ color: glow(COLORS.gold, 2.2), toneMapped: false }), KEY_PACKETS);
   for (const m of [photons, packets, keyPackets]) m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   scene.add(photons, packets, keyPackets);
   const tmp = new THREE.Object3D();
@@ -279,7 +306,7 @@ export function createScene({ container, net, onPick, onHover }) {
   // Shockwaves: an expanding ring where a fiber's alarm fires.
   const shockwaves = [];
   function shockwave(at, color) {
-    const mat = new THREE.MeshBasicMaterial({ color: color.clone().multiplyScalar(1.8), toneMapped: false, transparent: true, opacity: 0.9, depthWrite: false });
+    const mat = new THREE.MeshBasicMaterial({ color: glow(color, 1.8), toneMapped: false, transparent: true, opacity: 0.9, depthWrite: false });
     const mesh = new THREE.Mesh(new THREE.TorusGeometry(1, 0.05, 8, 96), mat);
     mesh.rotation.x = Math.PI / 2;
     mesh.position.set(at.x, 0.15, at.z);
@@ -335,16 +362,59 @@ export function createScene({ container, net, onPick, onHover }) {
   }
   window.addEventListener("resize", resize);
 
-  // Camera glide: when something is selected, the orbit target eases toward it.
+  // Camera ----------------------------------------------------------------------------------------
+  // Glide: when something is selected, the orbit target eases toward it and the camera keeps its angle.
+  // Fly: a timed move of both camera and target (Fit, Focus). Dolly: an eased zoom (+ and − buttons).
+  // Cinematic orbit: a slow turn around the target that stops on any interaction and resumes when idle.
   const targetGoal = center.clone();
-  function focusOn(sel) {
-    if (!sel) return;
+  let fly = null;
+  let dollyGoal = null;
+  let focusMode = false;
+  let orbitOn = !reduceMotion;
+  let lastInteract = -Infinity;
+  const ORBIT_IDLE_S = 20;
+  controls.autoRotateSpeed = 0.9; // about 67 s per turn
+
+  function pointOf(sel) {
     if (sel.type === "node") {
       const n = net.nodes.get(sel.id);
-      targetGoal.set(n.pos[0], 0, n.pos[1]);
-    } else {
-      targetGoal.copy(linkViews.get(sel.id).mid).setY(0);
+      return new THREE.Vector3(n.pos[0], 0, n.pos[1]);
     }
+    return linkViews.get(sel.id).mid.clone().setY(0);
+  }
+  function focusOn(sel) {
+    if (sel) targetGoal.copy(pointOf(sel));
+  }
+  function flyTo(pos, target, seconds = 1.1) {
+    dollyGoal = null;
+    fly = { fromPos: camera.position.clone(), toPos: pos, fromTarget: controls.target.clone(), toTarget: target, t: 0, dur: reduceMotion ? 0.001 : seconds };
+    targetGoal.copy(target);
+  }
+  function noteInteraction() {
+    lastInteract = clock.elapsedTime;
+    controls.autoRotate = false;
+    onInteract();
+  }
+  controls.addEventListener("start", () => {
+    fly = null;
+    dollyGoal = null;
+    noteInteraction();
+  });
+  // Close-up on the selection: a site and its neighbours, or a whole fiber with both ends in view.
+  function closeUp(sel) {
+    const p = pointOf(sel);
+    let dist = 48 * S;
+    if (sel.type === "link") {
+      const l = net.links.get(sel.id);
+      const a = net.nodes.get(l.a);
+      const b = net.nodes.get(l.b);
+      dist = Math.max(dist, 1.7 * Math.hypot(a.pos[0] - b.pos[0], a.pos[1] - b.pos[1]));
+    }
+    const dir = camera.position.clone().sub(controls.target);
+    dir.y = 0;
+    if (dir.lengthSq() < 1e-6) dir.set(-0.2, 0, 1);
+    dir.normalize().multiplyScalar(Math.cos(0.85)).setY(Math.sin(0.85)); // about 49 degrees above the ground
+    flyTo(p.clone().addScaledVector(dir, Math.min(dist, controls.maxDistance)), p);
   }
 
   // State from the simulation -----------------------------------------------------------------
@@ -394,7 +464,7 @@ export function createScene({ container, net, onPick, onHover }) {
           v.target.copy(COLORS.tele);
           v.mat.opacity = 0.95;
         } else {
-          v.target.copy(COLORS.bad).multiplyScalar(0.7);
+          v.target.copy(COLORS.bad).multiplyScalar(T.glow ? 0.7 : 1);
           v.mat.opacity = 0.6;
         }
       }
@@ -404,8 +474,12 @@ export function createScene({ container, net, onPick, onHover }) {
     const selKey = sel ? `${sel.type}:${sel.id}` : null;
     if (selKey !== lastSelKey) {
       lastSelKey = selKey;
-      if (sel) focusOn(sel);
-      else targetGoal.copy(center);
+      if (sel && focusMode) closeUp(sel);
+      else if (sel) focusOn(sel);
+      else {
+        focusMode = false;
+        if (!fly) targetGoal.copy(center);
+      }
     }
     const focusSite = sel && sel.type === "node" ? view.sites.get(sel.id) : null;
     const teleRoute = view.teleport?.route ?? null;
@@ -413,7 +487,7 @@ export function createScene({ container, net, onPick, onHover }) {
     const relaySet = new Set(view.teleport ? (teleRoute ? teleRoute.nodes.slice(1, -1) : []) : (focusSite?.relays ?? []));
     keyPath = view.teleport ? teleRoute : (focusSite?.keyPath ?? focusSite?.dataPath ?? null);
     const ringColor = view.teleport ? COLORS.tele : COLORS.gold;
-    keyPackets.material.color.copy(ringColor).multiplyScalar(2.2);
+    keyPackets.material.color.copy(glow(ringColor, 2.2));
     const pathLinks = new Set((keyPath?.links ?? []).map((l) => l.id));
     for (const [id, nv] of nodeViews) {
       const site = view.sites.get(id);
@@ -423,13 +497,104 @@ export function createScene({ container, net, onPick, onHover }) {
       else if (node.type === "control") c = null;
       else if (site.keySource === "qkd") c = COLORS.ok;
       else c = COLORS.pqc;
-      if (c) nv.glowMat.color.copy(c).multiplyScalar(node.type === "subunit" ? 1.2 : 1.3);
+      if (c) nv.glowMat.color.copy(glow(c, node.type === "subunit" ? 1.2 : 1.3));
       nv.relayRing.material.opacity = relaySet.has(id) ? 0.95 : 0;
       nv.relayRing.material.color.copy(ringColor);
-      const focus = (sel && sel.type === "node" && sel.id === id) || relaySet.has(id) || (sel && sel.type === "link" && (net.links.get(sel.id).a === id || net.links.get(sel.id).b === id));
+      const focus = (sel && sel.type === "node" && sel.id === id) || relaySet.has(id) || (keyPath?.nodes ?? []).includes(id) || (sel && sel.type === "link" && (net.links.get(sel.id).a === id || net.links.get(sel.id).b === id));
       nv.el.classList.toggle("is-focus", !!focus);
+      nv.el.classList.toggle("is-dim", focusMode && !!sel && !focus);
     }
-    for (const [id, v] of linkViews) v.selected = (sel && sel.type === "link" && sel.id === id) || pathLinks.has(id);
+    for (const [id, v] of linkViews) {
+      v.selected = (sel && sel.type === "link" && sel.id === id) || pathLinks.has(id);
+      // Focus mode: everything not on the selection or its path fades back.
+      const related = v.selected || (sel && sel.type === "node" && (v.link.a === sel.id || v.link.b === sel.id));
+      if (focusMode && sel && !related) v.mat.opacity *= 0.16;
+    }
+  }
+
+  // Satellite concept layer (off by default) ----------------------------------------------------------
+  // A drawing only: nothing about it is simulated. It shows where a satellite QKD link to the control
+  // centers would sit, for discussion; the team scoped satellites out of the build.
+  const satRadius = span * 0.3;
+  const satHeight = span * 0.3;
+  const centersList = [...net.nodes.values()].filter((n) => n.type === "control");
+  const sat = new THREE.Group();
+  const satBodyMat = new THREE.MeshStandardMaterial({ color: "#d4dae5", metalness: 0.55, roughness: 0.32 });
+  const satPanelMat = new THREE.MeshStandardMaterial({ color: "#1f3f9a", metalness: 0.3, roughness: 0.45, emissive: "#0b1d4d", emissiveIntensity: 0.35 });
+  const satBody = new THREE.Mesh(new THREE.BoxGeometry(1.6 * S, 1.2 * S, 1.2 * S), satBodyMat);
+  const wingL = new THREE.Mesh(new THREE.BoxGeometry(3.4 * S, 0.06 * S, 1.3 * S), satPanelMat);
+  wingL.position.x = -2.6 * S;
+  const wingR = wingL.clone();
+  wingR.position.x = 2.6 * S;
+  const dish = new THREE.Mesh(new THREE.ConeGeometry(0.55 * S, 0.6 * S, 18, 1, true), satBodyMat);
+  dish.position.y = -0.85 * S;
+  sat.add(satBody, wingL, wingR, dish);
+  const satEl = document.createElement("div");
+  satEl.className = "label label--sat";
+  satEl.innerHTML = `SAT<span class="label__name">concept, not simulated</span>`;
+  const satLabel = new CSS2DObject(satEl);
+  satLabel.position.set(0, 2.2 * S, 0);
+  sat.add(satLabel);
+  const ringPts = Array.from({ length: 129 }, (_, i) => {
+    const a = (i / 128) * Math.PI * 2;
+    return new THREE.Vector3(center.x + Math.cos(a) * satRadius, satHeight, center.z + Math.sin(a) * satRadius);
+  });
+  const satRingMat = new THREE.LineDashedMaterial({ color: COLORS.sat.clone(), dashSize: span * 0.02, gapSize: span * 0.015, transparent: true, opacity: 0.45 });
+  const satRing = new THREE.Line(new THREE.BufferGeometry().setFromPoints(ringPts), satRingMat);
+  satRing.computeLineDistances();
+  const beamGeo = new THREE.BufferGeometry();
+  beamGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(centersList.length * 6), 3));
+  const beamMat = new THREE.LineBasicMaterial({ color: glow(COLORS.tele, 1.6), transparent: true, opacity: 0.7, toneMapped: false });
+  const beams = new THREE.LineSegments(beamGeo, beamMat);
+  beams.frustumCulled = false;
+  const satLayer = new THREE.Group();
+  satLayer.add(sat, satRing, beams);
+  satLayer.visible = false;
+  scene.add(satLayer);
+  function setSatellite(on) {
+    satLayer.visible = !!on;
+  }
+  function moveSatellite(t) {
+    const a = t * 0.06;
+    sat.position.set(center.x + Math.cos(a) * satRadius, satHeight, center.z + Math.sin(a) * satRadius);
+    sat.lookAt(center.x, 0, center.z);
+    const arr = beamGeo.attributes.position.array;
+    centersList.forEach((n, i) => {
+      arr.set([sat.position.x, sat.position.y - 0.9 * S, sat.position.z, n.pos[0], 7.7 * S, n.pos[1]], i * 6);
+    });
+    beamGeo.attributes.position.needsUpdate = true;
+    beamMat.opacity = 0.45 + 0.3 * (0.5 + 0.5 * Math.sin(t * 2.4));
+  }
+
+  // Theme -----------------------------------------------------------------------------------------
+  function setTheme(name) {
+    const next = THEMES[name];
+    if (!next || next === T) return;
+    T = next;
+    for (const [k, v] of Object.entries(T.colors)) COLORS[k].set(v);
+    renderer.toneMapping = T.toneMapping;
+    scene.background.set(T.bg);
+    scene.fog.color.set(T.bg);
+    scene.fog.density = T.fog / span;
+    bloom.enabled = T.bloom > 0;
+    if (T.bloom) bloom.strength = T.bloom;
+    hemi.color.set(T.hemi[0]);
+    hemi.groundColor.set(T.hemi[1]);
+    hemi.intensity = T.hemi[2];
+    key.intensity = T.key;
+    paintGround();
+    buildGrid();
+    darkMetal.color.set(T.metal.color);
+    darkMetal.metalness = T.metal.metalness;
+    darkMetal.roughness = T.metal.roughness;
+    for (const m of controlGlows) m.color.copy(T.beacon);
+    for (const m of halos) m.color.copy(COLORS.ok);
+    eveMat.color.copy(glow(COLORS.bad, 2.0));
+    eveLineMat.color.copy(COLORS.bad);
+    satRingMat.color.copy(COLORS.sat);
+    beamMat.color.copy(glow(COLORS.tele, 1.6));
+    for (const v of linkViews.values()) v.base.copy(linkBase(v.isQkd));
+    if (view) update(view);
   }
 
   // Animation loop --------------------------------------------------------------------------
@@ -448,13 +613,31 @@ export function createScene({ container, net, onPick, onHover }) {
       const e = 1 - Math.pow(1 - intro.t, 3); // ease-out cubic
       camera.position.lerpVectors(startPos, restPos, e);
       camera.lookAt(center);
-      if (intro.t === 1) controls.enabled = true;
+      if (intro.t === 1) {
+        controls.enabled = true;
+        lastInteract = time - ORBIT_IDLE_S + 2; // the cinematic orbit starts two seconds after the intro
+      }
+    } else if (fly) {
+      fly.t = Math.min(1, fly.t + dt / fly.dur);
+      const e = fly.t < 0.5 ? 4 * fly.t ** 3 : 1 - Math.pow(-2 * fly.t + 2, 3) / 2; // ease-in-out cubic
+      controls.target.lerpVectors(fly.fromTarget, fly.toTarget, e);
+      camera.position.lerpVectors(fly.fromPos, fly.toPos, e);
+      if (fly.t === 1) fly = null;
+      controls.update();
     } else {
       // Glide the orbit target toward the selection; the camera moves with it so the view angle is kept.
       const step = targetGoal.clone().sub(controls.target).multiplyScalar(reduceMotion ? 1 : 0.06);
       controls.target.add(step);
       camera.position.add(step);
-      controls.update();
+      if (dollyGoal != null) {
+        const off = camera.position.clone().sub(controls.target);
+        const d = off.length();
+        const nd = d + (dollyGoal - d) * 0.14;
+        camera.position.copy(controls.target).addScaledVector(off.normalize(), nd);
+        if (Math.abs(nd - dollyGoal) < 0.02 * S) dollyGoal = null;
+      }
+      controls.autoRotate = orbitOn && !paused && time - lastInteract > ORBIT_IDLE_S;
+      controls.update(dt);
     }
 
     for (const v of linkViews.values()) {
@@ -464,9 +647,9 @@ export function createScene({ container, net, onPick, onHover }) {
       v.mat.color.copy(v.current);
       if (v.pulse) {
         const speed = v.pulse === 2 ? 9 : v.pulse === 3 ? 2 : 4;
-        v.mat.color.multiplyScalar(0.9 + 0.55 * (0.5 + 0.5 * Math.sin(time * speed)));
+        v.mat.color.multiplyScalar(T.pulseLo + T.pulseAmp * (0.5 + 0.5 * Math.sin(time * speed)));
       }
-      if (v.selected) v.mat.color.multiplyScalar(1.5);
+      if (v.selected) v.mat.color.multiplyScalar(T.selBoost);
       if (v.eve.visible) {
         v.crystal.rotation.y += dt * 1.6;
         v.crystal.position.y = 2.8 * S + Math.sin(time * 2.2) * 0.2 * S;
@@ -489,7 +672,7 @@ export function createScene({ container, net, onPick, onHover }) {
         tmp.updateMatrix();
         photons.setMatrixAt(i, tmp.matrix);
         const tapped = s && s.eve != null && t > 0.5 && fract(k * 0.618034 + 0.17) < s.eve;
-        tmpColor.copy(tapped ? COLORS.photonHit : COLORS.photon).multiplyScalar(tapped ? 2.2 : 1.6);
+        tmpColor.copy(tapped ? COLORS.photonHit : COLORS.photon).multiplyScalar(T.glow ? (tapped ? 2.2 : 1.6) : 1);
         photons.setColorAt(i, tmpColor);
         i++;
       }
@@ -511,7 +694,7 @@ export function createScene({ container, net, onPick, onHover }) {
         }
         tmp.updateMatrix();
         packets.setMatrixAt(j, tmp.matrix);
-        packets.setColorAt(j, tmpColor.copy(COLORS.packet).multiplyScalar(1.1));
+        packets.setColorAt(j, tmpColor.copy(COLORS.packet).multiplyScalar(T.glow ? 1.1 : 1));
         j++;
       }
     }
@@ -548,6 +731,8 @@ export function createScene({ container, net, onPick, onHover }) {
       nv.body.scale.setScalar(1 + 0.14 * nv.hover);
     }
 
+    if (satLayer.visible) moveSatellite(flow);
+
     for (let k = shockwaves.length - 1; k >= 0; k--) {
       const w = shockwaves[k];
       w.age += dt;
@@ -582,12 +767,41 @@ export function createScene({ container, net, onPick, onHover }) {
       applyViewOffset();
       camera.updateProjectionMatrix();
     },
-    /** Fly back to the framed overview (the F key). */
+    /** Fly back to the framed overview of the whole network (Fit, the H key). */
     frameAll() {
-      targetGoal.copy(center);
-      const offset = restPos.clone().sub(center);
-      camera.position.copy(controls.target).add(offset);
+      focusMode = false;
+      flyTo(restPos.clone(), center.clone());
+      if (view) update(view);
     },
+    /** Focus mode: fly close to the selection and fade everything unrelated (the F key). */
+    focus(sel) {
+      if (!sel) return false;
+      focusMode = true;
+      closeUp(sel);
+      if (view) update(view);
+      return true;
+    },
+    get focusMode() {
+      return focusMode;
+    },
+    /** Zoom by a factor of the current distance (below 1 zooms in). */
+    zoom(factor) {
+      fly = null;
+      const d = (dollyGoal ?? camera.position.distanceTo(controls.target)) * factor;
+      dollyGoal = THREE.MathUtils.clamp(d, controls.minDistance, controls.maxDistance);
+      noteInteraction();
+    },
+    /** Cinematic orbit: turns slowly while nobody is interacting. */
+    setOrbit(on) {
+      orbitOn = on;
+      lastInteract = on ? clock.elapsedTime - ORBIT_IDLE_S : clock.elapsedTime;
+    },
+    get orbit() {
+      return orbitOn;
+    },
+    noteInteraction,
+    setTheme,
+    setSatellite,
   };
 
   function endHeight(node) {

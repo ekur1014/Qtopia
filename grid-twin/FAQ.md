@@ -52,3 +52,9 @@ Attacks beyond intercept-resend (for example photon-number splitting or detector
 
 **Where is the quantum advantage?**
 The eavesdropping alarm is the part only physics can give: a classical link can be copied without a trace. The response logic is ordinary graph search, and we say so.
+
+**Does the operator have to do anything when a tap is found?**
+No. Detection, the switch to ML-KEM, rerouting, decoy traffic, the tap measurement and the inspection recommendation all run on their own; the incident card shows each step and its time. The one thing left to a person is quarantine, because an automatic quarantine would let an attacker cut communications just by tapping.
+
+**Is there a satellite?**
+Only as a drawing. The team scoped satellites out, so the build models fiber only. The **Satellite (concept)** layer shows where a satellite QKD link to the control centers would sit, labeled "concept, not simulated", for the discussion slide.

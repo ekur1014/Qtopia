@@ -12,7 +12,7 @@ From the team's notebook page (`Idea/tech-ideas-notebook.jpg`) and Saturday's ch
 | CUDA-Q (NVIDIA) | **Done** | BB84 as a CUDA-Q kernel (CUDA-Q 0.16, CPU simulator, no GPU needed) | `grid-twin/sim/engines.py` |
 | Guppy (Quantinuum) | **Done** | BB84 written in Guppy and run on Quantinuum's open-source Selene emulator, coin flips included | `grid-twin/sim/engines.py` |
 | Import the network from a data set; more and bigger nodes | **Done** | IEEE 14/30/57/118/300-bus public test grids, selectable in the page | `grid-twin/tools/import_ieee.mjs` |
-| Decoy traffic instead of cutting a line | **Done** | Decoy mode and auto-decoy, with an estimate of the tap's strength | `grid-twin/src/response.js`, `DESIGN.md` §9 |
+| Decoy traffic instead of cutting a line | **Done** | Runs automatically as part of the incident response, with an estimate of the tap's strength | `grid-twin/src/main.js`, `DESIGN.md` (Automatic response) |
 | Route real traffic with a decision model | **Done** (weighted shortest path) | Real traffic avoids suspicious fibers before they alarm | `DESIGN.md` §10 |
 | Next.js + Vercel | Not done; optional | A public URL and a React app structure | see below |
 | TanStack | Not needed | Data fetching and tables for a React app | see below |

@@ -16,10 +16,10 @@ Saturday 14 November 2026. Sources checked: the four team recordings and their t
 | 8 | When a QKD link breaks, central command decides what to cut: "this part, or this part, or everything" | Lead, first recording | Response policy: alarmed fibers switch to ML-KEM and stay up; real traffic reroutes by risk; quarantine by operator; sites with no path keep power and run on local protection | Met. "Cut" means communication paths only, as decided |
 | 9 | PQC over the existing fiber, QKD only where it is worth it (trusted-node problem) | Late-night recording | Backbone-only QKD design; trusted relays drawn as gold rings | Met |
 | 10 | Whiteboard: QKD also on substation-to-sub-unit links | Whiteboard photo | **New QKD coverage switch**: "Backbone only" (design) or "Every fiber" (whiteboard); in the latter, sub-units get QKD keys | Met; the team picks which to present |
-| 11 | Satellites | First recordings | Out of scope, as the lead decided | Deliberately not built |
+| 11 | Satellites | First recordings | Out of scope, as the lead decided. An optional drawing (off by default, labeled "concept, not simulated") exists for discussion | Not simulated |
 | 12 | Three.js, artifact, real-time code runs, CUDA-Q, Guppy | Notebook page | All built (see TECH_OPTIONS.md) | Met |
 | 13 | Data set import, more and bigger nodes, less glow | Chat | IEEE 14 to 300-bus grids; visual pass | Met |
-| 14 | Decoy traffic instead of cutting a line | Chat | Decoy mode and auto-decoy, with an estimate of the tap | Met |
+| 14 | Decoy traffic instead of cutting a line | Chat | Decoy traffic runs automatically when a fiber alarms (if no site would be stranded), with an estimate of the tap | Met |
 | 15 | Route real traffic with a decision model | Chat | Risk-weighted shortest path | Met; the named tools ("jev or laya") are unidentified |
 | 16 | Build and run one link on qBraid | Track README, Step 3 Part 3 | **New qBraid engine**: a fiber's photons run as a real job on qBraid's free IonQ simulator from the page | Met (job IDs are logged) |
 | 17 | Address distance limits, number of substations, trusted nodes, **timing synchronization** | Track README, Step 3 Part 1 | Distance (fiber baseline and photon loss), sites and trusted nodes are shown. Timing synchronization is not modeled | Partly: timing sync belongs in the write-up |
@@ -60,3 +60,13 @@ Live engine results for one fiber (p = 3.3%, tap 40%, theory 12.64%): Qiskit Aer
 3. Decide the 2D monitor's fate, and fix its "IonQ Forte Verified" label if kept (that run was on a simulator).
 4. Fix `WRITEUP.md` (Step 2 numbers, Step 3 design), and add a sentence on timing synchronization (Step 3 Part 1).
 5. Pick which coverage to present: backbone only (our design) or every fiber (the whiteboard).
+
+## 5. Follow-up: user feedback on Saturday afternoon
+
+| Asked for | Done |
+|---|---|
+| Light mode (stations hard to see on dark) | Light theme is the default; dark one key away |
+| Focus mode, zoom in and out, center, like a real 3D viewer | View dock and keys: + − Fit (H) Focus (F) |
+| Cinematic orbit until interaction | Orbit (O), stops on interaction, resumes after 20 s idle |
+| Satellite? | Optional concept drawing only (see row 11) |
+| The response should happen automatically when a tap is placed, not through separate Quarantine and Decoy tools | Automatic response with an incident card; quarantine and decoy became operator overrides |

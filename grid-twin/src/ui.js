@@ -26,7 +26,7 @@ const KEY_LABEL = {
 const pct = (x, d = 1) => `${(100 * x).toFixed(d)}%`;
 const pill = ([text, tone]) => `<span class="pill pill--${tone}">${text}</span>`;
 
-export function createUI({ panel, net, networks = [], currentNetwork, coverage = "backbone", engines = {}, handlers }) {
+export function createUI({ panel, incidentsEl = null, net, networks = [], currentNetwork, coverage = "backbone", engines = {}, handlers }) {
   const engineIds = Object.keys(engines);
   const startedAt = performance.now();
   const netOptions = networks
@@ -72,9 +72,10 @@ export function createUI({ panel, net, networks = [], currentNetwork, coverage =
         <input type="range" min="2" max="6" step="0.5" value="4.5" data-input="z" aria-label="Alarm sensitivity in standard deviations" />
         <div class="control__note" data-v="znote"></div>
       </div>
-      <label class="check" for="autodecoy"><input type="checkbox" id="autodecoy" data-input="autodecoy" aria-label="Auto-decoy suspicious fibers" /> <span><b>Auto-decoy</b>: when a fiber raises an alarm, keep it running on fake traffic and reroute real traffic, to measure the tap instead of just cutting it off</span></label>
-      <h2>Teleportation</h2>
+      <label class="check" for="autoresponse"><input type="checkbox" id="autoresponse" data-input="autoresponse" checked aria-label="Automatic response" /> <span><b>Automatic response</b>: when a fiber alarms, the network acts on its own: keys switch to ML-KEM, real traffic reroutes, the fiber switches to decoy traffic to measure the tap, and a crew inspection is recommended. Quarantine stays the operator's decision.</span></label>
+      <h2>Layers</h2>
       <label class="check" for="teleport"><input type="checkbox" id="teleport" data-input="teleport" aria-label="Teleportation view" /> <span><b>Teleportation view</b>: show which fibers are under 11% error (usable entanglement if run entanglement-based) and each substation's entanglement-swapping route, which needs no trusted relays</span></label>
+      <label class="check" for="satellite"><input type="checkbox" id="satellite" data-input="satellite" aria-label="Satellite concept" /> <span><b>Satellite (concept)</b>: draw where a satellite QKD link to the control centers would sit. A drawing for discussion only: not simulated, and out of the project's scope.</span></label>
       <div class="btns">
         <button class="btn btn--danger" data-action="clear-eves">Remove all taps</button>
         <button class="btn btn--ok" data-action="restore-all">Restore all fibers</button>
@@ -125,7 +126,8 @@ export function createUI({ panel, net, networks = [], currentNetwork, coverage =
   fill(eveInput);
   showZ();
   $('[data-input="network"]').addEventListener("change", (e) => handlers.onNetwork(e.target.value));
-  $('[data-input="autodecoy"]').addEventListener("change", (e) => handlers.onAutoDecoy(e.target.checked));
+  $('[data-input="autoresponse"]').addEventListener("change", (e) => handlers.onAutoResponse(e.target.checked));
+  $('[data-input="satellite"]').addEventListener("change", (e) => handlers.onSatellite(e.target.checked));
   $('[data-input="teleport"]').addEventListener("change", (e) => handlers.onTeleportView(e.target.checked));
   $('[data-input="coverage"]').addEventListener("change", (e) => handlers.onCoverage(e.target.value));
   const jump = $('[data-input="jump"]');
@@ -159,7 +161,8 @@ export function createUI({ panel, net, networks = [], currentNetwork, coverage =
           <dt>If it were QKD: baseline error</dt><dd>${pct(s.baseline)}</dd>
         </dl>
         <p class="explain">This link carries no quantum signal, so <b>physics cannot detect a tap here</b>. Its traffic stays secret because it is encrypted with keys from ML-KEM (FIPS 203), a post-quantum algorithm. ${link.km > 60 ? "At this length QKD would lose most photons, which is why it uses post-quantum cryptography instead." : "Short, numerous links to sub-units are where post-quantum cryptography is cheapest."}</p>
-        <div class="btns">${tapButton(link, s)}${quarantineButton(link, s)}</div>`;
+        <div class="btns">${tapButton(link, s)}</div>
+        <div class="overrides"><div class="overrides__title">Operator override</div><div class="btns">${quarantineButton(link, s)}</div></div>`;
     }
     return `${head}
       <dl class="kv">
@@ -175,9 +178,10 @@ export function createUI({ panel, net, networks = [], currentNetwork, coverage =
       <div class="control__row"><span style="font-size:12.5px;color:var(--ink-dim)">Secret key left after privacy amplification</span><span class="control__val" data-f="sf"></span></div>
       <div class="keybar"><div class="keybar__fill" data-f="sfbar"></div></div>
       <canvas class="chart" data-chart></canvas>
-      <div class="chart__legend"><span><i style="background:#e8eefc"></i>QBER</span><span><i style="background:#ffb547"></i>warning</span><span><i style="background:#ff4d6d"></i>11% abort</span><span><i style="background:#4b5571"></i>baseline</span></div>
+      <div class="chart__legend"><span><i style="background:var(--ink)"></i>QBER</span><span><i style="background:var(--warn)"></i>warning</span><span><i style="background:var(--bad)"></i>11% abort</span><span><i style="background:var(--ink-faint)"></i>baseline</span></div>
       <div class="intel" data-f="intel"></div>
-      <div class="btns">${tapButton(link, s)}${decoyButton(link, s)}${quarantineButton(link, s)}</div>
+      <div class="btns">${tapButton(link, s)}</div>
+      <div class="overrides"><div class="overrides__title">Operator overrides</div><div class="btns">${decoyButton(link, s)}${quarantineButton(link, s)}</div></div>
       ${engineIds.length ? `<div class="frameworks">
         <div class="frameworks__title">Run this fiber as real quantum code</div>
         <div class="btns">${engineIds.map((e) => `<button class="btn" data-action="engine:${e}" data-id="${link.id}">${engines[e]}</button>`).join("")}<button class="btn btn--ok" data-action="engine:all" data-id="${link.id}">All</button></div>
@@ -291,6 +295,9 @@ export function createUI({ panel, net, networks = [], currentNetwork, coverage =
       canvas.height = Math.round(h * dpr);
     }
     const g = canvas.getContext("2d");
+    const css = getComputedStyle(document.documentElement);
+    const tok = (n) => css.getPropertyValue(n).trim();
+    const ink = tok("--ink");
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     g.clearRect(0, 0, w, h);
     const hist = s.history;
@@ -306,17 +313,18 @@ export function createUI({ panel, net, networks = [], currentNetwork, coverage =
       g.lineTo(w, y(q));
       g.stroke();
     };
-    line(s.baseline, "rgba(120,135,170,.55)", [3, 4]);
-    line(ABORT_QBER, "rgba(255,77,109,.8)", [4, 3]);
+    line(s.baseline, tok("--ink-faint"), [3, 4]);
+    line(ABORT_QBER, tok("--bad"), [4, 3]);
     g.setLineDash([]);
     if (hist.length > 1) {
-      g.strokeStyle = "rgba(255,181,71,.85)";
+      g.strokeStyle = tok("--warn");
       g.beginPath();
       hist.forEach((p, i) => (i ? g.lineTo(x(i), y(p.threshold)) : g.moveTo(x(i), y(p.threshold))));
       g.stroke();
       const grad = g.createLinearGradient(0, 0, 0, h);
-      grad.addColorStop(0, "rgba(232,238,252,.28)");
-      grad.addColorStop(1, "rgba(232,238,252,0)");
+      g.globalAlpha = 0.22;
+      grad.addColorStop(0, ink);
+      grad.addColorStop(1, "transparent");
       g.fillStyle = grad;
       g.beginPath();
       g.moveTo(x(0), h);
@@ -324,13 +332,14 @@ export function createUI({ panel, net, networks = [], currentNetwork, coverage =
       g.lineTo(x(hist.length - 1), h);
       g.closePath();
       g.fill();
-      g.strokeStyle = "#e8eefc";
+      g.globalAlpha = 1;
+      g.strokeStyle = ink;
       g.lineWidth = 1.6;
       g.beginPath();
       hist.forEach((p, i) => (i ? g.lineTo(x(i), y(p.qhat)) : g.moveTo(x(i), y(p.qhat))));
       g.stroke();
     }
-    g.fillStyle = "rgba(139,150,179,.8)";
+    g.fillStyle = tok("--ink-dim");
     g.font = "10px JetBrains Mono, monospace";
     g.fillText(pct(top, 0), 4, 12);
   }
@@ -366,7 +375,7 @@ export function createUI({ panel, net, networks = [], currentNetwork, coverage =
     const sel = state.selected;
     if (!sel) {
       if (inspectorKey !== "none") {
-        inspector.innerHTML = `<p class="inspector__empty">Click a fiber to see its live error rate, or a site to see where its keys come from. Drag to orbit, scroll to zoom. Keys <b>1</b>, <b>2</b>, <b>3</b> switch tools; <b>Esc</b> clears the selection.</p>`;
+        inspector.innerHTML = `<p class="inspector__empty">Click a fiber to see its live error rate, or a site to see where its keys come from. Drag to orbit, scroll or <b>+</b>/<b>−</b> to zoom. <b>1</b> inspect, <b>2</b> eavesdrop; <b>F</b> focus on the selection, <b>H</b> fit the network, <b>O</b> cinematic orbit, <b>T</b> light or dark; <b>Esc</b> clears the selection.</p>`;
         inspectorKey = "none";
         chart = null;
       }
@@ -395,6 +404,42 @@ export function createUI({ panel, net, networks = [], currentNetwork, coverage =
     }
   }
 
+  // Incidents: one card per alarm, showing the automatic response stage by stage. Re-rendered only when
+  // something in it changes, so a click on a card is never lost to a refresh.
+  const INCIDENT_STATE = { active: "Responding", contained: "Contained", closed: "Resolved" };
+  let incidentSig = "";
+  const latestStage = (stages) => stages.filter((st) => st.state !== "pending").at(-1);
+  function renderIncidents(list) {
+    if (!incidentsEl) return;
+    const shown = list.slice(0, 4);
+    const sig = JSON.stringify(shown.map((i) => [i.n, i.state, i.stages.map((st) => [st.state, st.html])]));
+    if (sig === incidentSig) return;
+    incidentSig = sig;
+    incidentsEl.innerHTML = shown
+      .map((i) => {
+        const btns =
+          i.state === "active"
+            ? `<button class="btn btn--warn" data-iaction="quarantine" data-n="${i.n}">Quarantine fiber</button>`
+            : i.state === "contained"
+              ? `<button class="btn btn--ok" data-iaction="restore" data-n="${i.n}">Restore fiber</button><button class="btn" data-iaction="dismiss" data-n="${i.n}">Dismiss</button>`
+              : `<button class="btn" data-iaction="dismiss" data-n="${i.n}">Dismiss</button>`;
+        return `<article class="incident incident--${i.state}" data-link="${i.link}" title="Select ${i.link}">
+          <div class="incident__head"><div class="incident__title"><span>#${i.n}</span>${i.link} · ${i.a}–${i.b}</div><div class="incident__state">${INCIDENT_STATE[i.state]}</div></div>
+          <ol class="stages">${(i.state === "active" ? i.stages : i.stages.slice(-1))
+            .map((st, k, arr) => `<li class="stage stage--${st.state}${st === latestStage(arr) ? " stage--latest" : ""}"><i class="stage__dot"></i><span>${st.html}</span><time>${st.at != null ? `+${(st.at - i.openedAt).toFixed(1)} s` : ""}</time></li>`)
+            .join("")}</ol>
+          <div class="btns">${btns}</div>
+        </article>`;
+      })
+      .join("");
+  }
+  incidentsEl?.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-iaction]");
+    if (btn) return handlers.onIncident(btn.dataset.iaction, Number(btn.dataset.n));
+    const card = e.target.closest("[data-link]");
+    if (card) handlers.onJump("link", card.dataset.link);
+  });
+
   function log({ level = "info", text }) {
     const li = document.createElement("li");
     const secs = Math.floor((performance.now() - startedAt) / 1000);
@@ -405,5 +450,5 @@ export function createUI({ panel, net, networks = [], currentNetwork, coverage =
     while (logEl.children.length > 80) logEl.lastChild.remove();
   }
 
-  return { render, log };
+  return { render, log, renderIncidents };
 }
