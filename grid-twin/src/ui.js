@@ -45,7 +45,8 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     <section class="section">
       <h2>Network</h2>
       <select class="select" data-input="network" aria-label="Choose a network">${netOptions}</select>
-      <div class="control__note">${net.meta?.note ?? ""}${net.meta?.design_detail ? ` ${net.meta.design_detail}` : ""}${net.meta?.real ? ` <a href="https://openinframap.org/#11.68/35.0463/-85.2892/A,B,L,P" target="_blank" rel="noopener">Open the same area on OpenInfraMap</a>.` : ""}</div>
+      <div class="control__note q-adv">${net.meta?.note ?? ""}${net.meta?.design_detail ? ` ${net.meta.design_detail}` : ""}${net.meta?.real ? ` <a href="https://openinframap.org/#11.68/35.0463/-85.2892/A,B,L,P" target="_blank" rel="noopener">Open the same area on OpenInfraMap</a>.` : ""}</div>
+      <div class="q-adv">
       <label class="field" for="coverage">QKD coverage</label>
       <select class="select" id="coverage" data-input="coverage" aria-label="Which fibers run QKD">
         <option value="backbone"${coverage === "backbone" ? " selected" : ""}>Backbone only: control centers and major substations (our design)</option>
@@ -57,6 +58,13 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
         <optgroup label="Sites">${[...net.nodes.values()].map((n) => `<option value="node:${n.id}">${n.id} · ${n.name}</option>`).join("")}</optgroup>
         <optgroup label="Fibers">${[...net.links.values()].map((l) => `<option value="link:${l.id}">${l.id} · ${l.a}–${l.b} · ${l.kind === "qkd" ? "QKD" : "ML-KEM"} · ${l.km} km</option>`).join("")}</optgroup>
       </select>
+      </div>
+    </section>
+    <section class="section try">
+      <h2>Try it</h2>
+      <p class="try__text"><b>Green fibers</b> carry keys sent as single photons (QKD). Choose <b>Eavesdrop</b> at the bottom of the screen and click a green fiber, or let us do it:</p>
+      <button class="btn btn--try q-btn" data-action="demo">Tap a fiber for me</button>
+      <p class="try__after">Then watch the incident card: the network notices the spy in about a second and protects itself, with no one at the controls.</p>
     </section>
     <section class="section">
       <h2>Network now</h2>
@@ -67,6 +75,10 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
         <div class="stat stat--bad"><div class="stat__v" data-s="islanded">–</div><div class="stat__l">Sites cut off (power still on)</div></div>
       </div>
     </section>
+    <section class="section">
+      <h2>Selected</h2>
+      <div data-inspector></div>
+    </section>
 
     <section class="section">
       <h2>Eavesdropper</h2>
@@ -75,29 +87,25 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
         <input type="range" min="2" max="100" step="1" value="100" data-input="eve" aria-label="Share of photons the eavesdropper intercepts" />
         <div class="control__note">Applies to new taps, and to the selected fiber's tap. A careful spy taps only a few percent to hide in the fiber's normal noise.</div>
       </div>
-      <h2>Detection</h2>
-      <div class="control">
+      <h2 class="q-adv">Detection</h2>
+      <div class="control q-adv">
         <div class="control__row"><span>Alarm sensitivity</span><span class="control__val" data-v="z">4.5 σ</span></div>
         <input type="range" min="2" max="6" step="0.5" value="4.5" data-input="z" aria-label="Alarm sensitivity in standard deviations" />
         <div class="control__note" data-v="znote"></div>
       </div>
       <label class="check" for="autoresponse"><input type="checkbox" id="autoresponse" data-input="autoresponse" checked aria-label="Automatic response" /> <span><b>Automatic response.</b> When a fiber alarms, the network switches its keys to ML-KEM, reroutes data, measures the tap and calls a crew, on its own. Only you can take a fiber offline.</span></label>
-      <h2>Layers</h2>
-      <label class="check" for="teleport"><input type="checkbox" id="teleport" data-input="teleport" aria-label="Teleportation view" /> <span><b>Teleportation view (future).</b> Shows which fibers are clean enough (under 11% errors) for teleportation, and the path each site would use. Relay sites on that path never see the key.</span></label>
-      <label class="check" for="satellite"><input type="checkbox" id="satellite" data-input="satellite" aria-label="Satellite concept" /> <span><b>Satellite (concept)</b>: draw where a satellite QKD link to the control centers would sit. A drawing for discussion only, not simulated. <b>Likely to be removed</b> unless we find a quantum application only a satellite can serve; the mentors placed it on the roadmap, for statewide distances.</span></label>
+      <h2 class="q-adv">Layers</h2>
+      <label class="check q-adv" for="teleport"><input type="checkbox" id="teleport" data-input="teleport" aria-label="Teleportation view" /> <span><b>Teleportation view (future).</b> Shows which fibers are clean enough (under 11% errors) for teleportation, and the path each site would use. Relay sites on that path never see the key.</span></label>
+      <label class="check q-adv" for="satellite"><input type="checkbox" id="satellite" data-input="satellite" aria-label="Satellite concept" /> <span><b>Satellite (concept)</b>: draw where a satellite QKD link to the control centers would sit. A drawing for discussion only, not simulated. <b>Likely to be removed</b> unless we find a quantum application only a satellite can serve; the mentors placed it on the roadmap, for statewide distances.</span></label>
       <div class="btns">
         <button class="btn btn--danger" data-action="clear-eves">Remove all taps</button>
         <button class="btn btn--ok" data-action="restore-all">Restore all fibers</button>
-        <button class="btn" data-action="pause">Pause</button>
+        <button class="btn q-adv" data-action="pause">Pause</button>
       </div>
     </section>
 
-    <section class="section">
-      <h2>Inspector</h2>
-      <div data-inspector></div>
-    </section>
 
-    <section class="section">
+    <section class="section q-adv">
       <h2>Event log</h2>
       <ul class="log" data-log></ul>
     </section>
@@ -152,6 +160,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     if (action === "pause") handlers.onPause();
     else if (action === "clear-eves") handlers.onClearEves();
     else if (action === "restore-all") handlers.onRestoreAll();
+    else if (action === "demo") handlers.onDemo();
     else handlers.onAction(action, btn.dataset.id);
   });
 
@@ -160,7 +169,8 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     const a = net.nodes.get(link.a);
     const b = net.nodes.get(link.b);
     const head = `
-      <div class="inspector__title"><span class="inspector__id">${link.id}</span><span class="inspector__name">${a.name} ↔ ${b.name}</span></div>
+      <div class="inspector__title"><span class="inspector__id">${link.id}</span><span class="inspector__name">${a.short ?? a.name} ↔ ${b.short ?? b.name}</span></div>
+      <div class="inspector__full q-adv">${a.name} ↔ ${b.name}</div>
       <div class="inspector__kind">${link.kind === "qkd" ? "QKD fiber" : "Post-quantum link"} · ${link.km} km</div>`;
     if (link.kind !== "qkd") {
       return `${head}
@@ -177,21 +187,21 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
       <dl class="kv">
         <dt>Status</dt><dd data-f="status"></dd>
         <dt>Error rate (QBER) now</dt><dd data-f="qhat"></dd>
-        <dt>Baseline for this fiber</dt><dd>${pct(s.baseline, 2)}</dd>
-        <dt>Warning line</dt><dd data-f="threshold"></dd>
-        <dt>Abort line</dt><dd>${pct(ABORT_QBER, 0)}</dd>
-        <dt>Sifted bits in window</dt><dd data-f="n"></dd>
+        <dt class="q-adv">Baseline for this fiber</dt><dd class="q-adv">${pct(s.baseline, 2)}</dd>
+        <dt class="q-adv">Warning line</dt><dd class="q-adv" data-f="threshold"></dd>
+        <dt class="q-adv">Abort line</dt><dd class="q-adv">${pct(ABORT_QBER, 0)}</dd>
+        <dt class="q-adv">Sifted bits in window</dt><dd class="q-adv" data-f="n"></dd>
         <dt>Key source</dt><dd data-f="key"></dd>
         <dt>Tap</dt><dd data-f="eve"></dd>
       </dl>
       <div class="control__row"><span style="font-size:12.5px;color:var(--ink-dim)">Secret key left after privacy amplification</span><span class="control__val" data-f="sf"></span></div>
       <div class="keybar"><div class="keybar__fill" data-f="sfbar"></div></div>
       <canvas class="chart" data-chart></canvas>
-      <div class="chart__legend"><span><i style="background:var(--ink)"></i>QBER</span><span><i style="background:var(--warn)"></i>warning</span><span><i style="background:var(--bad)"></i>11% abort</span><span><i style="background:var(--ink-faint)"></i>baseline</span></div>
+      <div class="chart__legend q-adv"><span><i style="background:var(--ink)"></i>QBER</span><span><i style="background:var(--warn)"></i>warning</span><span><i style="background:var(--bad)"></i>11% abort</span><span><i style="background:var(--ink-faint)"></i>baseline</span></div>
       <div class="intel" data-f="intel"></div>
       <div class="btns">${tapButton(link, s)}</div>
       <div class="overrides"><div class="overrides__title">Operator overrides</div><div class="btns">${decoyButton(link, s)}${quarantineButton(link, s)}</div></div>
-      ${engineIds.length ? `<div class="frameworks">
+      ${engineIds.length ? `<div class="frameworks q-adv">
         <div class="frameworks__title">Re-run this fiber on quantum simulators</div>
         <div class="btns">${engineIds.map((e) => `<button class="btn" data-action="engine:${e}" data-id="${link.id}">${engines[e]}</button>`).join("")}<button class="btn btn--ok" data-action="engine:all" data-id="${link.id}">All</button></div>
         <div class="frameworks__table" data-f="frameworks"></div>
@@ -285,7 +295,8 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     else if (node.type === "substation") explain = "No chain of healthy QKD fibers reaches a control center right now, so this substation uses ML-KEM keys. It stays connected.";
     else explain = "This site has no QKD fiber, so it uses ML-KEM keys. In our design, sub-units and remote sites are on ML-KEM because QKD there would cost more than it protects.";
     return `
-      <div class="inspector__title"><span class="inspector__id">${node.id}</span><span class="inspector__name">${node.name}</span></div>
+      <div class="inspector__title"><span class="inspector__id">${node.id}</span><span class="inspector__name">${node.short ?? node.name}</span></div>
+      ${node.short ? `<div class="inspector__full q-adv">${node.name}</div>` : ""}
       <div class="inspector__kind">${kind}</div>
       <dl class="kv">
         <dt>Power</dt><dd><span class="pill pill--ok">Energized</span></dd>
@@ -386,7 +397,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     if (!sel) {
       if (inspectorKey !== "none") {
         inspector.innerHTML = `<p class="inspector__empty">Click a fiber to see its error rate, or a site to see where its keys come from.</p>
-          <dl class="keys"><dt>Drag / scroll</dt><dd>orbit / zoom</dd><dt>1 · 2</dt><dd>inspect · eavesdrop</dd><dt>F · H</dt><dd>focus · fit</dd><dt>O · T</dt><dd>orbit · light/dark</dd><dt>Space · Esc</dt><dd>pause · clear</dd></dl>`;
+          <dl class="keys q-adv"><dt>Drag / scroll</dt><dd>orbit / zoom</dd><dt>1 · 2</dt><dd>inspect · eavesdrop</dd><dt>F · H</dt><dd>focus · fit</dd><dt>O · T</dt><dd>orbit · light/dark</dd><dt>Space · Esc</dt><dd>pause · clear</dd></dl>`;
         inspectorKey = "none";
         chart = null;
       }

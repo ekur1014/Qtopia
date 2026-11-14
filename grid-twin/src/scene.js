@@ -14,13 +14,13 @@ const THEMES = {
     bg: "#04060b", fog: 0.55, ground: ["#0f1729", "#070b15", "#04060b"], grid: ["#253559", "#141d35"], gridOpacity: 0.32,
     metal: { color: "#151c2c", metalness: 0.65, roughness: 0.38 }, hemi: ["#9fb6ff", "#06080f", 0.6], key: 1.2,
     bloom: 0.6, glow: true, beacon: new THREE.Color(2.0, 2.2, 2.4), selBoost: 1.5, pulseLo: 0.9, pulseAmp: 0.55, toneMapping: THREE.ACESFilmicToneMapping,
-    colors: { ok: "#3ef0c6", warn: "#ffb547", bad: "#ff4d6d", pqc: "#8a8dff", off: "#2b3244", gold: "#ffd76a", photon: "#e9fbff", photonHit: "#ff3d62", packet: "#b5b8ff", decoy: "#ff5ec7", tele: "#5ad7ff", sat: "#cfe0ff" },
+    colors: { ok: "#3ef0c6", warn: "#ffb547", bad: "#ff4d6d", pqc: "#6aa1ff", off: "#2b3244", gold: "#ffd76a", photon: "#e9fbff", photonHit: "#ff3d62", packet: "#a9c8ff", decoy: "#ff5ec7", tele: "#5ad7ff", sat: "#cfe0ff" },
   },
   light: {
     bg: "#eef2f7", fog: 0.28, ground: ["#ffffff", "#f5f7fb", "#eef2f7"], grid: ["#b3bed0", "#d3dae6"], gridOpacity: 0.6,
     metal: { color: "#eef1f6", metalness: 0.12, roughness: 0.6 }, hemi: ["#ffffff", "#9aa6ba", 1.15], key: 1.6,
     bloom: 0, glow: false, beacon: new THREE.Color("#0f1a2e"), selBoost: 0.68, pulseLo: 0.72, pulseAmp: 0.34, toneMapping: THREE.NoToneMapping,
-    colors: { ok: "#07a27e", warn: "#e08600", bad: "#e0314f", pqc: "#5a5fe6", off: "#c3cad6", gold: "#c99500", photon: "#1d4ed8", photonHit: "#e0314f", packet: "#5a5fe6", decoy: "#d23c97", tele: "#0e95cf", sat: "#334155" },
+    colors: { ok: "#07a27e", warn: "#e08600", bad: "#e0314f", pqc: "#2d6cdf", off: "#c3cad6", gold: "#c99500", photon: "#1d4ed8", photonHit: "#e0314f", packet: "#2d6cdf", decoy: "#d23c97", tele: "#0e95cf", sat: "#334155" },
   },
 };
 const COLORS = Object.fromEntries(Object.entries(THEMES.dark.colors).map(([k, v]) => [k, new THREE.Color(v)]));

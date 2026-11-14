@@ -186,6 +186,22 @@ async function boot() {
         else if (action === "dismiss" && inc.state !== "active") incidents.splice(incidents.indexOf(inc), 1);
         refresh();
       },
+      // "Tap a fiber for me": a full tap on the network's demo fiber, so a first-time visitor sees the response at once.
+      onDemo: () => {
+        const preferred = { chattanooga: "L6", dualring: "R3", tennessee500: "L11", city: "L11" }[entry.id];
+        const id = preferred && net.links.get(preferred)?.kind === "qkd" ? preferred : [...net.links.values()].find((l) => l.kind === "qkd")?.id;
+        if (!id) return;
+        const s = sim.links.get(id);
+        if (s.eve == null) {
+          const keep = sim.eveStrength;
+          sim.eveStrength = 1;
+          placeEve(id);
+          sim.eveStrength = keep;
+        }
+        sim.selected = { type: "link", id };
+        scene.setOrbit(false);
+        refresh();
+      },
       onRestoreAll: () => {
         for (const [id, s] of sim.links) if (s.quarantined) restore(id);
         refresh();

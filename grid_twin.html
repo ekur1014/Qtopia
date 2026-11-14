@@ -21,7 +21,7 @@
   --ok: #3ef0c6;
   --warn: #ffb547;
   --bad: #ff4d6d;
-  --pqc: #8a8dff;
+  --pqc: #6aa1ff;
   --off: #3a4256;
   --gold: #ffd76a;
   --surface: rgba(255, 255, 255, 0.03);
@@ -57,7 +57,7 @@
   --ok: #0b9a7b;
   --warn: #c77700;
   --bad: #d22f4b;
-  --pqc: #5257e0;
+  --pqc: #2d6cdf;
   --off: #b3bccb;
   --gold: #b88600;
   --decoy: #c8358f;
@@ -348,6 +348,16 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border: 0; bo
 .keys dt { font-family: var(--mono); font-size: 11px; color: var(--ink); }
 .keys dd { margin: 0; }
 
+/* Try it: the first thing in the panel */
+.try { padding-top: 14px; }
+.try__text, .try__after { margin: 0 0 12px; font-size: 13.5px; line-height: 1.55; color: var(--ink-dim); }
+.try__text b { color: var(--ok); font-weight: 600; }
+.try__after { margin: 12px 0 0; font-size: 12.5px; }
+.btn--try { width: 100%; padding: 12px 16px; border: 0; border-radius: 12px; background: var(--ink); color: var(--bg); font-size: 14px; font-weight: 600; }
+.btn--try:hover { background: var(--ink); opacity: .92; }
+
+
+.inspector__full { font-size: 11.5px; color: var(--ink-faint); margin: -2px 0 8px; line-height: 1.45; }
 
 </style>
   <style>
@@ -368,15 +378,21 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border: 0; bo
   --q-ok: #07a27e;
   --q-warn: #c77700;
   --q-bad: #d22f4b;
-  --q-pqc: #5257e0;
+  --q-pqc: #2d6cdf;
   --q-gold: #b88600;
-  --q-tele: #1189bd;
+  --q-tele: #0b8fb3;
   --q-decoy: #c8358f;
   --q-off: #b3bccb;
   --q-shadow: 0 10px 30px rgba(15, 26, 46, 0.08);
   --q-font: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --q-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --q-bar-h: 46px;
+  --q-bar-h: 50px;
+  /* Motion tokens (tasteskill motion.md): hover in/out, press, entrance; ease-out only, no overshoot */
+  --q-m-in: 150ms;
+  --q-m-out: 120ms;
+  --q-m-press: 90ms;
+  --q-ease: cubic-bezier(.2, .8, .2, 1);
+  --q-ease-enter: cubic-bezier(.22, 1, .36, 1);
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
@@ -393,7 +409,7 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border: 0; bo
   --q-ok: #3ef0c6;
   --q-warn: #ffb547;
   --q-bad: #ff4d6d;
-  --q-pqc: #8a8dff;
+  --q-pqc: #6aa1ff;
   --q-gold: #ffd76a;
   --q-tele: #5ad7ff;
   --q-decoy: #ff5ec7;
@@ -407,13 +423,21 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border: 0; bo
 .qbar__mark { font-family: var(--q-mono); font-size: 11px; letter-spacing: 0.38em; color: var(--q-ok); }
 .qbar__name { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
 .qbar__nav { display: flex; gap: 2px; margin-left: auto; }
+.qbar__step { font-family: var(--q-mono); font-size: 10px; opacity: .55; margin-right: 5px; }
+.qbar__link[aria-current="page"] .qbar__step { opacity: .8; }
+/* Simple / Detailed: one switch for the whole site */
+.qbar__mode { display: flex; padding: 3px; border-radius: 999px; border: 1px solid var(--q-line); background: var(--q-tint); }
+.qbar__mode button { border: 0; background: transparent; color: var(--q-ink-dim); font: 500 12px var(--q-font); padding: 5px 11px; border-radius: 999px; cursor: pointer; transition: background var(--q-m-in) var(--q-ease), color var(--q-m-in) var(--q-ease); }
+.qbar__mode button[aria-pressed="true"] { background: var(--q-surface); color: var(--q-ink); box-shadow: 0 1px 3px rgba(15, 26, 46, .12); }
+.qbar__mode button:focus-visible, .qbar__theme:focus-visible, .qbar__link:focus-visible { outline: 2px solid var(--q-ok); outline-offset: 2px; }
 .qbar__link { padding: 7px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--q-ink-dim); text-decoration: none; white-space: nowrap; transition: background .2s ease, color .2s ease; }
 .qbar__link:hover { color: var(--q-ink); background: var(--q-tint-2); }
 .qbar__link[aria-current="page"] { color: var(--q-surface); background: var(--q-ink); }
 .qbar__theme { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--q-line); border-radius: 999px; background: transparent; color: var(--q-ink-dim); cursor: pointer; }
 .qbar__theme:hover { color: var(--q-ink); background: var(--q-tint-2); }
 .qbar__theme svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-@media (max-width: 760px) { .qbar__name { display: none; } .qbar__link { padding: 7px 9px; font-size: 12px; } }
+@media (max-width: 1100px) { .qbar__name { display: none; } }
+@media (max-width: 860px) { .qbar__link { padding: 7px 8px; font-size: 12px; } .qbar__step { display: none; } }
 
 /* Shared pieces the pages use */
 .q-pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-family: var(--q-mono); font-size: 11px; font-weight: 600; letter-spacing: .04em; }
@@ -426,6 +450,30 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border: 0; bo
 .q-note { font-size: 12px; line-height: 1.5; color: var(--q-ink-dim); }
 .q-label { font-family: var(--q-mono); font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--q-ink-faint); }
 
+/* Simple mode hides what only a detail-minded reader needs. Mark it with class="q-adv". */
+:root[data-mode="simple"] .q-adv { display: none !important; }
+:root[data-mode="detailed"] .q-simple-only { display: none !important; }
+
+/* Hover and press layer (tasteskill motion.md): cards lift 2px, buttons step 1px and press, links draw. */
+.q-card { transition: transform var(--q-m-in) var(--q-ease), border-color var(--q-m-in) var(--q-ease), box-shadow var(--q-m-in) var(--q-ease); }
+a.q-card:hover, .q-card--link:hover { transform: translateY(-2px); }
+.q-btn, button.q-btn, a.q-btn { transition: transform var(--q-m-in) var(--q-ease), background var(--q-m-in) var(--q-ease), color var(--q-m-in) var(--q-ease); }
+.q-btn:hover { transform: translateY(-1px); }
+.q-btn:active { transform: translateY(1px) scale(.985); transition-duration: var(--q-m-press); }
+.q-link { background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0 1px; text-decoration: none; transition: background-size var(--q-m-in) var(--q-ease); }
+.q-link:hover { background-size: 100% 1px; }
+
+/* Hero entrance: once on load the h1 rises, then what follows it fades up 12px (about 1.1 s in all). */
+.q-enter-ready [data-enter] h1 { opacity: 0; transform: translateY(28px); }
+.q-enter-ready [data-enter] .q-enter-item { opacity: 0; transform: translateY(12px); }
+.q-entered [data-enter] h1, .q-entered [data-enter] .q-enter-item { opacity: 1; transform: none; transition: opacity 520ms var(--q-ease-enter), transform 700ms var(--q-ease-enter); }
+
+@media (prefers-reduced-motion: reduce) {
+  .q-card, .q-btn, .q-link { transition-property: color, background-color, border-color; }
+  a.q-card:hover, .q-card--link:hover, .q-btn:hover, .q-btn:active { transform: none; }
+  .q-enter-ready [data-enter] h1, .q-enter-ready [data-enter] .q-enter-item { opacity: 1; transform: none; }
+}
+
 </style>
   <script data-page="grid" data-root="./">
 // The Qrypt top bar: the same navigation on every page, plus the shared light/dark switch.
@@ -436,13 +484,14 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border: 0; bo
   var me = document.currentScript;
   var page = me && me.dataset.page;
   var root = (me && me.dataset.root) || "./";
+  // Simple to complex: the hypothetical dual ring first, then the real map, then the full live grid, then the physics.
   var PAGES = [
     { id: "home", label: "Home", href: "index.html" },
-    { id: "grid", label: "Live grid", href: "grid-twin/index.html" },
-    { id: "ring", label: "Dual ring", href: "dual_ring_quantum_routing.html" },
-    { id: "map", label: "Real map", href: "chattanooga_quantum_map.html" },
-    { id: "photon", label: "Photon line", href: "bb84_visualizer.html" },
-    { id: "lab", label: "Quantum lab", href: "threejs_quantum_grid.html" },
+    { id: "ring", label: "Dual ring", href: "dual_ring_quantum_routing.html", step: 1 },
+    { id: "map", label: "Real map", href: "chattanooga_quantum_map.html", step: 2 },
+    { id: "grid", label: "Live grid", href: "grid-twin/index.html", step: 3 },
+    { id: "photon", label: "Photon line", href: "bb84_visualizer.html", step: 4 },
+    { id: "lab", label: "Quantum lab", href: "threejs_quantum_grid.html", step: 5 },
   ];
 
   function readTheme() {
@@ -472,28 +521,63 @@ input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border: 0; bo
   var SUN = '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
 
   applyTheme(readTheme(), false); // before first paint
+  document.documentElement.dataset.mode = readMode();
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) document.documentElement.classList.add("q-enter-ready");
+  setTimeout(function () { document.documentElement.classList.add("q-entered"); }, 1600); // never leave words hidden
 
   function build() {
     var bar = document.createElement("header");
     bar.className = "qbar";
     bar.setAttribute("role", "banner");
     var links = PAGES.map(function (p) {
-      return '<a class="qbar__link" href="' + root + p.href + '"' + (p.id === page ? ' aria-current="page"' : "") + ">" + p.label + "</a>";
+      return '<a class="qbar__link" href="' + root + p.href + '"' + (p.id === page ? ' aria-current="page"' : "") + ">" + (p.step ? '<span class="qbar__step">' + p.step + "</span>" : "") + p.label + "</a>";
     }).join("");
     bar.innerHTML =
       '<a class="qbar__brand" href="' + root + 'index.html"><span class="qbar__mark">QRYPT</span><span class="qbar__name">Tennessee Quantum Grid</span></a>' +
       '<nav class="qbar__nav" aria-label="Project pages">' + links + "</nav>" +
+      '<div class="qbar__mode" role="group" aria-label="How much detail"><button type="button" data-mode="simple">Simple</button><button type="button" data-mode="detailed">Detailed</button></div>' +
       '<button class="qbar__theme" type="button" aria-label="Switch light or dark"></button>';
     document.body.prepend(bar);
     bar.querySelector(".qbar__theme").addEventListener("click", function () {
       applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark", true);
     });
     applyTheme(document.documentElement.dataset.theme, false);
+    bar.querySelectorAll(".qbar__mode button").forEach(function (b) {
+      b.addEventListener("click", function () { applyMode(b.dataset.mode, true); });
+    });
+    applyMode(document.documentElement.dataset.mode, false);
+    enter();
+  }
+
+  // Simple / Detailed, shared by every page (key "qrypt-mode"), announced as "qrypt:mode".
+  function readMode() {
+    var m = new URLSearchParams(location.search).get("mode");
+    if (m === "simple" || m === "detailed") return m;
+    try { m = localStorage.getItem("qrypt-mode"); } catch (e) { m = null; }
+    return m === "detailed" ? "detailed" : "simple";
+  }
+  function applyMode(m, announce) {
+    document.documentElement.dataset.mode = m;
+    try { localStorage.setItem("qrypt-mode", m); } catch (e) {}
+    document.querySelectorAll(".qbar__mode button").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.mode === m)); });
+    if (announce) window.dispatchEvent(new CustomEvent("qrypt:mode", { detail: m }));
+  }
+
+  // The hero's entrance, once per load: the h1 rises, then each .q-enter-item fades up, 60 ms apart.
+  function enter() {
+    var hero = document.querySelector("[data-enter]");
+    if (!hero || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    hero.querySelectorAll(".q-enter-item").forEach(function (el, i) { el.style.transitionDelay = 300 + i * 60 + "ms"; });
+    requestAnimationFrame(function () { requestAnimationFrame(function () { document.documentElement.classList.add("q-entered"); }); });
   }
   if (document.body) build();
   else document.addEventListener("DOMContentLoaded", build);
 
-  window.qrypt = { setTheme: function (t) { applyTheme(t, true); } };
+  window.qrypt = {
+    setTheme: function (t) { applyTheme(t, true); },
+    setMode: function (m) { applyMode(m, true); },
+    get mode() { return document.documentElement.dataset.mode; },
+  };
 })();
 </script>
   <script type="importmap">
@@ -1089,13 +1173,13 @@ const THEMES = {
     bg: "#04060b", fog: 0.55, ground: ["#0f1729", "#070b15", "#04060b"], grid: ["#253559", "#141d35"], gridOpacity: 0.32,
     metal: { color: "#151c2c", metalness: 0.65, roughness: 0.38 }, hemi: ["#9fb6ff", "#06080f", 0.6], key: 1.2,
     bloom: 0.6, glow: true, beacon: new THREE.Color(2.0, 2.2, 2.4), selBoost: 1.5, pulseLo: 0.9, pulseAmp: 0.55, toneMapping: THREE.ACESFilmicToneMapping,
-    colors: { ok: "#3ef0c6", warn: "#ffb547", bad: "#ff4d6d", pqc: "#8a8dff", off: "#2b3244", gold: "#ffd76a", photon: "#e9fbff", photonHit: "#ff3d62", packet: "#b5b8ff", decoy: "#ff5ec7", tele: "#5ad7ff", sat: "#cfe0ff" },
+    colors: { ok: "#3ef0c6", warn: "#ffb547", bad: "#ff4d6d", pqc: "#6aa1ff", off: "#2b3244", gold: "#ffd76a", photon: "#e9fbff", photonHit: "#ff3d62", packet: "#a9c8ff", decoy: "#ff5ec7", tele: "#5ad7ff", sat: "#cfe0ff" },
   },
   light: {
     bg: "#eef2f7", fog: 0.28, ground: ["#ffffff", "#f5f7fb", "#eef2f7"], grid: ["#b3bed0", "#d3dae6"], gridOpacity: 0.6,
     metal: { color: "#eef1f6", metalness: 0.12, roughness: 0.6 }, hemi: ["#ffffff", "#9aa6ba", 1.15], key: 1.6,
     bloom: 0, glow: false, beacon: new THREE.Color("#0f1a2e"), selBoost: 0.68, pulseLo: 0.72, pulseAmp: 0.34, toneMapping: THREE.NoToneMapping,
-    colors: { ok: "#07a27e", warn: "#e08600", bad: "#e0314f", pqc: "#5a5fe6", off: "#c3cad6", gold: "#c99500", photon: "#1d4ed8", photonHit: "#e0314f", packet: "#5a5fe6", decoy: "#d23c97", tele: "#0e95cf", sat: "#334155" },
+    colors: { ok: "#07a27e", warn: "#e08600", bad: "#e0314f", pqc: "#2d6cdf", off: "#c3cad6", gold: "#c99500", photon: "#1d4ed8", photonHit: "#e0314f", packet: "#2d6cdf", decoy: "#d23c97", tele: "#0e95cf", sat: "#334155" },
   },
 };
 const COLORS = Object.fromEntries(Object.entries(THEMES.dark.colors).map(([k, v]) => [k, new THREE.Color(v)]));
@@ -1963,7 +2047,8 @@ function createUI({ panel, incidentsEl = null, net, networks = [], currentNetwor
     <section class="section">
       <h2>Network</h2>
       <select class="select" data-input="network" aria-label="Choose a network">${netOptions}</select>
-      <div class="control__note">${net.meta?.note ?? ""}${net.meta?.design_detail ? ` ${net.meta.design_detail}` : ""}${net.meta?.real ? ` <a href="https://openinframap.org/#11.68/35.0463/-85.2892/A,B,L,P" target="_blank" rel="noopener">Open the same area on OpenInfraMap</a>.` : ""}</div>
+      <div class="control__note q-adv">${net.meta?.note ?? ""}${net.meta?.design_detail ? ` ${net.meta.design_detail}` : ""}${net.meta?.real ? ` <a href="https://openinframap.org/#11.68/35.0463/-85.2892/A,B,L,P" target="_blank" rel="noopener">Open the same area on OpenInfraMap</a>.` : ""}</div>
+      <div class="q-adv">
       <label class="field" for="coverage">QKD coverage</label>
       <select class="select" id="coverage" data-input="coverage" aria-label="Which fibers run QKD">
         <option value="backbone"${coverage === "backbone" ? " selected" : ""}>Backbone only: control centers and major substations (our design)</option>
@@ -1975,6 +2060,13 @@ function createUI({ panel, incidentsEl = null, net, networks = [], currentNetwor
         <optgroup label="Sites">${[...net.nodes.values()].map((n) => `<option value="node:${n.id}">${n.id} · ${n.name}</option>`).join("")}</optgroup>
         <optgroup label="Fibers">${[...net.links.values()].map((l) => `<option value="link:${l.id}">${l.id} · ${l.a}–${l.b} · ${l.kind === "qkd" ? "QKD" : "ML-KEM"} · ${l.km} km</option>`).join("")}</optgroup>
       </select>
+      </div>
+    </section>
+    <section class="section try">
+      <h2>Try it</h2>
+      <p class="try__text"><b>Green fibers</b> carry keys sent as single photons (QKD). Choose <b>Eavesdrop</b> at the bottom of the screen and click a green fiber, or let us do it:</p>
+      <button class="btn btn--try q-btn" data-action="demo">Tap a fiber for me</button>
+      <p class="try__after">Then watch the incident card: the network notices the spy in about a second and protects itself, with no one at the controls.</p>
     </section>
     <section class="section">
       <h2>Network now</h2>
@@ -1985,6 +2077,10 @@ function createUI({ panel, incidentsEl = null, net, networks = [], currentNetwor
         <div class="stat stat--bad"><div class="stat__v" data-s="islanded">–</div><div class="stat__l">Sites cut off (power still on)</div></div>
       </div>
     </section>
+    <section class="section">
+      <h2>Selected</h2>
+      <div data-inspector></div>
+    </section>
 
     <section class="section">
       <h2>Eavesdropper</h2>
@@ -1993,29 +2089,25 @@ function createUI({ panel, incidentsEl = null, net, networks = [], currentNetwor
         <input type="range" min="2" max="100" step="1" value="100" data-input="eve" aria-label="Share of photons the eavesdropper intercepts" />
         <div class="control__note">Applies to new taps, and to the selected fiber's tap. A careful spy taps only a few percent to hide in the fiber's normal noise.</div>
       </div>
-      <h2>Detection</h2>
-      <div class="control">
+      <h2 class="q-adv">Detection</h2>
+      <div class="control q-adv">
         <div class="control__row"><span>Alarm sensitivity</span><span class="control__val" data-v="z">4.5 σ</span></div>
         <input type="range" min="2" max="6" step="0.5" value="4.5" data-input="z" aria-label="Alarm sensitivity in standard deviations" />
         <div class="control__note" data-v="znote"></div>
       </div>
       <label class="check" for="autoresponse"><input type="checkbox" id="autoresponse" data-input="autoresponse" checked aria-label="Automatic response" /> <span><b>Automatic response.</b> When a fiber alarms, the network switches its keys to ML-KEM, reroutes data, measures the tap and calls a crew, on its own. Only you can take a fiber offline.</span></label>
-      <h2>Layers</h2>
-      <label class="check" for="teleport"><input type="checkbox" id="teleport" data-input="teleport" aria-label="Teleportation view" /> <span><b>Teleportation view (future).</b> Shows which fibers are clean enough (under 11% errors) for teleportation, and the path each site would use. Relay sites on that path never see the key.</span></label>
-      <label class="check" for="satellite"><input type="checkbox" id="satellite" data-input="satellite" aria-label="Satellite concept" /> <span><b>Satellite (concept)</b>: draw where a satellite QKD link to the control centers would sit. A drawing for discussion only, not simulated. <b>Likely to be removed</b> unless we find a quantum application only a satellite can serve; the mentors placed it on the roadmap, for statewide distances.</span></label>
+      <h2 class="q-adv">Layers</h2>
+      <label class="check q-adv" for="teleport"><input type="checkbox" id="teleport" data-input="teleport" aria-label="Teleportation view" /> <span><b>Teleportation view (future).</b> Shows which fibers are clean enough (under 11% errors) for teleportation, and the path each site would use. Relay sites on that path never see the key.</span></label>
+      <label class="check q-adv" for="satellite"><input type="checkbox" id="satellite" data-input="satellite" aria-label="Satellite concept" /> <span><b>Satellite (concept)</b>: draw where a satellite QKD link to the control centers would sit. A drawing for discussion only, not simulated. <b>Likely to be removed</b> unless we find a quantum application only a satellite can serve; the mentors placed it on the roadmap, for statewide distances.</span></label>
       <div class="btns">
         <button class="btn btn--danger" data-action="clear-eves">Remove all taps</button>
         <button class="btn btn--ok" data-action="restore-all">Restore all fibers</button>
-        <button class="btn" data-action="pause">Pause</button>
+        <button class="btn q-adv" data-action="pause">Pause</button>
       </div>
     </section>
 
-    <section class="section">
-      <h2>Inspector</h2>
-      <div data-inspector></div>
-    </section>
 
-    <section class="section">
+    <section class="section q-adv">
       <h2>Event log</h2>
       <ul class="log" data-log></ul>
     </section>
@@ -2070,6 +2162,7 @@ function createUI({ panel, incidentsEl = null, net, networks = [], currentNetwor
     if (action === "pause") handlers.onPause();
     else if (action === "clear-eves") handlers.onClearEves();
     else if (action === "restore-all") handlers.onRestoreAll();
+    else if (action === "demo") handlers.onDemo();
     else handlers.onAction(action, btn.dataset.id);
   });
 
@@ -2078,7 +2171,8 @@ function createUI({ panel, incidentsEl = null, net, networks = [], currentNetwor
     const a = net.nodes.get(link.a);
     const b = net.nodes.get(link.b);
     const head = `
-      <div class="inspector__title"><span class="inspector__id">${link.id}</span><span class="inspector__name">${a.name} ↔ ${b.name}</span></div>
+      <div class="inspector__title"><span class="inspector__id">${link.id}</span><span class="inspector__name">${a.short ?? a.name} ↔ ${b.short ?? b.name}</span></div>
+      <div class="inspector__full q-adv">${a.name} ↔ ${b.name}</div>
       <div class="inspector__kind">${link.kind === "qkd" ? "QKD fiber" : "Post-quantum link"} · ${link.km} km</div>`;
     if (link.kind !== "qkd") {
       return `${head}
@@ -2095,21 +2189,21 @@ function createUI({ panel, incidentsEl = null, net, networks = [], currentNetwor
       <dl class="kv">
         <dt>Status</dt><dd data-f="status"></dd>
         <dt>Error rate (QBER) now</dt><dd data-f="qhat"></dd>
-        <dt>Baseline for this fiber</dt><dd>${pct(s.baseline, 2)}</dd>
-        <dt>Warning line</dt><dd data-f="threshold"></dd>
-        <dt>Abort line</dt><dd>${pct(ABORT_QBER, 0)}</dd>
-        <dt>Sifted bits in window</dt><dd data-f="n"></dd>
+        <dt class="q-adv">Baseline for this fiber</dt><dd class="q-adv">${pct(s.baseline, 2)}</dd>
+        <dt class="q-adv">Warning line</dt><dd class="q-adv" data-f="threshold"></dd>
+        <dt class="q-adv">Abort line</dt><dd class="q-adv">${pct(ABORT_QBER, 0)}</dd>
+        <dt class="q-adv">Sifted bits in window</dt><dd class="q-adv" data-f="n"></dd>
         <dt>Key source</dt><dd data-f="key"></dd>
         <dt>Tap</dt><dd data-f="eve"></dd>
       </dl>
       <div class="control__row"><span style="font-size:12.5px;color:var(--ink-dim)">Secret key left after privacy amplification</span><span class="control__val" data-f="sf"></span></div>
       <div class="keybar"><div class="keybar__fill" data-f="sfbar"></div></div>
       <canvas class="chart" data-chart></canvas>
-      <div class="chart__legend"><span><i style="background:var(--ink)"></i>QBER</span><span><i style="background:var(--warn)"></i>warning</span><span><i style="background:var(--bad)"></i>11% abort</span><span><i style="background:var(--ink-faint)"></i>baseline</span></div>
+      <div class="chart__legend q-adv"><span><i style="background:var(--ink)"></i>QBER</span><span><i style="background:var(--warn)"></i>warning</span><span><i style="background:var(--bad)"></i>11% abort</span><span><i style="background:var(--ink-faint)"></i>baseline</span></div>
       <div class="intel" data-f="intel"></div>
       <div class="btns">${tapButton(link, s)}</div>
       <div class="overrides"><div class="overrides__title">Operator overrides</div><div class="btns">${decoyButton(link, s)}${quarantineButton(link, s)}</div></div>
-      ${engineIds.length ? `<div class="frameworks">
+      ${engineIds.length ? `<div class="frameworks q-adv">
         <div class="frameworks__title">Re-run this fiber on quantum simulators</div>
         <div class="btns">${engineIds.map((e) => `<button class="btn" data-action="engine:${e}" data-id="${link.id}">${engines[e]}</button>`).join("")}<button class="btn btn--ok" data-action="engine:all" data-id="${link.id}">All</button></div>
         <div class="frameworks__table" data-f="frameworks"></div>
@@ -2203,7 +2297,8 @@ function createUI({ panel, incidentsEl = null, net, networks = [], currentNetwor
     else if (node.type === "substation") explain = "No chain of healthy QKD fibers reaches a control center right now, so this substation uses ML-KEM keys. It stays connected.";
     else explain = "This site has no QKD fiber, so it uses ML-KEM keys. In our design, sub-units and remote sites are on ML-KEM because QKD there would cost more than it protects.";
     return `
-      <div class="inspector__title"><span class="inspector__id">${node.id}</span><span class="inspector__name">${node.name}</span></div>
+      <div class="inspector__title"><span class="inspector__id">${node.id}</span><span class="inspector__name">${node.short ?? node.name}</span></div>
+      ${node.short ? `<div class="inspector__full q-adv">${node.name}</div>` : ""}
       <div class="inspector__kind">${kind}</div>
       <dl class="kv">
         <dt>Power</dt><dd><span class="pill pill--ok">Energized</span></dd>
@@ -2304,7 +2399,7 @@ function createUI({ panel, incidentsEl = null, net, networks = [], currentNetwor
     if (!sel) {
       if (inspectorKey !== "none") {
         inspector.innerHTML = `<p class="inspector__empty">Click a fiber to see its error rate, or a site to see where its keys come from.</p>
-          <dl class="keys"><dt>Drag / scroll</dt><dd>orbit / zoom</dd><dt>1 · 2</dt><dd>inspect · eavesdrop</dd><dt>F · H</dt><dd>focus · fit</dd><dt>O · T</dt><dd>orbit · light/dark</dd><dt>Space · Esc</dt><dd>pause · clear</dd></dl>`;
+          <dl class="keys q-adv"><dt>Drag / scroll</dt><dd>orbit / zoom</dd><dt>1 · 2</dt><dd>inspect · eavesdrop</dd><dt>F · H</dt><dd>focus · fit</dd><dt>O · T</dt><dd>orbit · light/dark</dd><dt>Space · Esc</dt><dd>pause · clear</dd></dl>`;
         inspectorKey = "none";
         chart = null;
       }
@@ -2572,6 +2667,22 @@ async function boot() {
         if (action === "quarantine") quarantine(inc.link);
         else if (action === "restore") restore(inc.link);
         else if (action === "dismiss" && inc.state !== "active") incidents.splice(incidents.indexOf(inc), 1);
+        refresh();
+      },
+      // "Tap a fiber for me": a full tap on the network's demo fiber, so a first-time visitor sees the response at once.
+      onDemo: () => {
+        const preferred = { chattanooga: "L6", dualring: "R3", tennessee500: "L11", city: "L11" }[entry.id];
+        const id = preferred && net.links.get(preferred)?.kind === "qkd" ? preferred : [...net.links.values()].find((l) => l.kind === "qkd")?.id;
+        if (!id) return;
+        const s = sim.links.get(id);
+        if (s.eve == null) {
+          const keep = sim.eveStrength;
+          sim.eveStrength = 1;
+          placeEve(id);
+          sim.eveStrength = keep;
+        }
+        sim.selected = { type: "link", id };
+        scene.setOrbit(false);
         refresh();
       },
       onRestoreAll: () => {
