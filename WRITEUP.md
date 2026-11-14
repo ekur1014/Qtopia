@@ -93,14 +93,16 @@ In accordance with **NIST IR 8547** (Transition Plans for Post-Quantum Cryptogra
 
 ## Step 3: Design the Secure Grid Backbone (Capstone)
 
-### Part 1: Grid Architecture (Chattanooga Metro Scenario)
-* **Topology:** 2 Redundant Master Control Centers (Downtown Primary & Disaster Recovery Backup) connected to 8 Distribution Substations across 65 km of metropolitan fiber.
-* **Hybrid Strategy:**
-  * **Core Backbone (Control Center to Control Center, 12 km):** Deployed with **Point-to-Point QKD (Co-propagated with C-band telecom on dedicated dark fiber)** combined with **ML-KEM-1024 hybrid key encapsulation** and One-Time Pad (OTP) / AES-256 for highest-value inter-control-center telemetry.
-  * **Substation Links (Control Center to Substations, 15–40 km):** Deployed with **Post-Quantum Cryptography (ML-KEM-768 for TLS 1.3 / MACsec and ML-DSA-65 for DNP3-Secure command authentication)** over existing utility optical transport.
+### Part 1: Grid Architecture (9-Supernode Dual-Ring Backbone & Metro Scenario)
+* **Topology:** Central Command (CC) surrounded by **9 Bulk Transmission Supernodes arranged in a counter-rotating dual ring** (SONET/SDH Automatic Protection Switching model). Radial quantum gateway links connect Central Command directly to Supernode 3 (East Gateway) and Supernode 7 (West Gateway). Each supernode aggregates multiple downstream distribution substations and feeders.
+* **Hybrid Strategy & Dual-Ring Self-Healing:**
+  * **Core Transmission Dual Ring (Supernodes 1–9, ~76 km total perimeter):** Deployed with **Point-to-Point QKD on counter-rotating optical fiber pairs** (Working Ring clockwise, Protection Ring counter-clockwise). If an optical line tap is detected on any link (QBER $\ge 11.0\%$), the QBER-weighted routing engine (`dual_ring_router.py`) executes sub-cycle ($<12\text{ ms}$) Automatic Protection Switching (APS), instantaneously reversing key flow through the counter-clockwise ring to reach Central Command.
+  * **Ring Partition Fallback:** If simultaneous taps or physical cuts sever both directions, the isolated supernode automatically initiates an encrypted tunnel using **NIST FIPS 203 (ML-KEM-768)** post-quantum lattice cryptography, guaranteeing zero grid blackout.
+  * **Substation Feeders (Edge Leaves):** Deployed with **Post-Quantum Cryptography (ML-KEM-768 for TLS 1.3 / MACsec and ML-DSA-65 for DNP3-Secure command authentication)** over existing utility optical transport.
 * **Addressing Key Engineering Constraints:**
-  * *Distance Limits & Trusted Nodes:* QKD fiber links suffer exponential photon attenuation (~0.2 dB/km at 1550 nm), capping unamplified links at 70–100 km. Intermediate substations act as physically secured, NERC CIP-005 compliant "Trusted Nodes".
+  * *Distance Limits & Trusted Nodes:* QKD fiber links suffer exponential photon attenuation (~0.2 dB/km at 1550 nm), capping unamplified links at 70–100 km. Intermediate supernodes act as physically secured, NERC CIP-005 compliant "Trusted Nodes". For state-wide long-haul ties across TVA, Free-Space Optics (LEO Quantum Satellites) provide repeaterless entanglement distribution.
   * *Timing Synchronization:* QKD photon detectors require sub-nanosecond pulse gating. We synchronize nodes using dedicated GPS-disciplined IEEE 1588 Precision Time Protocol (PTP / IEEE C37.238 power profile).
+* **Interactive Digital Twin Deliverable:** Built standalone visual simulator (`dual_ring_quantum_routing.html`) demonstrating live self-healing ring rerouting and tap detection.
 
 ### Part 2: Prototype Link Demonstration (Quantum Teleportation Link)
 * **Circuit Verification:** Built and simulated 3-qubit deferred-measurement quantum teleportation circuit in `3_secure_grid_link.ipynb`.
