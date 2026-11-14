@@ -67,8 +67,8 @@
         <h1 id="stage-title">Teleportation over Chattanooga's fibers</h1>
         <p id="stage-text">Left: the state Alice sends. Right: the state Bob ends up with after the entangled pair has crossed real fibers. Noise from the fibers shrinks Bob's arrow.</p>
       </div>
-      <div class="sphere-label" style="left:30%"><b>Alice</b>input state</div>
-      <div class="sphere-label" style="left:70%"><b>Bob</b>after teleportation</div>
+      <div class="sphere-label" id="lab-left" style="left:30%"><b>Alice</b>input state</div>
+      <div class="sphere-label" id="lab-right" style="left:70%"><b>Bob</b>after teleportation</div>
     </div>
 
     <aside>
@@ -97,7 +97,7 @@
           <span class="q-label">Result · Bob measures in the Z basis</span>
           <div class="bars"><div class="bar"><i id="t0"></i><span id="t0l">|0⟩</span></div><div class="bar"><i id="t1" style="background:var(--q-pqc)"></i><span id="t1l">|1⟩</span></div></div>
           <dl id="tele-dl"></dl>
-          <p class="note">Computed here: a 3-qubit state-vector simulation, with each fiber's measured-style error rate applied to Bob's half of the pair as bit and phase flips. Errors compose along the route as (1 − 2Q) = Π(1 − 2Qᵢ); a pair is usable under 11%. Notebook 3 in this repo has the same circuit in Qiskit.</p>
+          <p class="note">Computed here: a 3-qubit state-vector simulation. Each fiber adds independent bit and phase flips at its error rate (our modelling choice: BB84 measures those two rates, not how they correlate); a spy who intercepts and resends adds a bit flip or a phase flip, never both. The hops combine exactly as Pauli channels. 11% is the key-distribution threshold; for teleportation itself the benchmark is beating 2/3 average fidelity, the best a classical channel can do. Notebook 3 in this repo has the same circuit in Qiskit.</p>
         </div>
       </section>
 
@@ -216,9 +216,14 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
     var STAGE = {
       tele: ["Teleportation over Chattanooga's fibers", "Left: the state Alice sends. Right: the state Bob ends up with after the entangled pair has crossed real fibers. Noise from the fibers shrinks Bob's arrow."],
       bb84: ["What a spy does to a photon", "Left: Alice's photon. Right: Bob's photon on average. Each time the spy guesses the wrong basis she scrambles it, so the arrow shrinks and Bob's results turn into coin flips."],
-      grover: ["Grover's search, amplitude by amplitude", "The arrow tilts toward the right key with each Grover step: about √N steps instead of N."],
+      grover: ["Grover's search on the Bloch sphere", "Top: the right key. Bottom: every other key. Left: the start, almost all wrong. Right: after about √N Grover steps, almost all right."],
       engines: ["Real quantum code", "The same physics runs in Qiskit, CUDA-Q, Guppy and on qBraid's cloud simulators."],
       next: ["Roadmap", "What we would build next, and what we deliberately did not."],
+    };
+    var SPHERES = {
+      tele: ["Alice", "input state", "Bob", "after teleportation"],
+      bb84: ["Alice", "photon sent", "Bob", "photon received, on average"],
+      grover: ["Start", "every key equally likely", "After Grover", "almost all on the right key"],
     };
     document.querySelectorAll(".tab").forEach(function (t) {
       t.addEventListener("click", function () {
@@ -226,6 +231,9 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
         document.querySelectorAll(".panel").forEach(function (p) { p.classList.toggle("is-on", p.id === "tab-" + t.dataset.tab); });
         document.getElementById("stage-title").textContent = STAGE[t.dataset.tab][0];
         document.getElementById("stage-text").textContent = STAGE[t.dataset.tab][1];
+        var L = SPHERES[t.dataset.tab] || SPHERES.tele;
+        document.getElementById("lab-left").innerHTML = "<b>" + L[0] + "</b>" + L[1];
+        document.getElementById("lab-right").innerHTML = "<b>" + L[2] + "</b>" + L[3];
         if (t.dataset.tab === "bb84") runBB84();
         if (t.dataset.tab === "grover") runGrover();
         if (t.dataset.tab === "tele") runTele();
@@ -345,6 +353,17 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
       hub = net.nodes.filter(function (n) { return n.type === "control"; })[0];
     }
     // Best entanglement route: minimise -ln(1 - 2Q) over QKD fibers (as grid-twin/src/teleport.js).
+    // Pauli channels as probabilities of [I, X, Z, Y] (index = x | z << 1, so composing Paulis is XOR).
+    // Fiber noise on a hop: independent bit and phase flips, each with the fiber's error rate p (our modelling
+    // choice: BB84 measures the two error rates, not how they correlate). A spy who intercepts and resends a share f
+    // adds a bit flip or a phase flip with probability f/4 each, never both. Both give a Z-basis error of
+    // p + f(1/4 - p/2), the same as the live grid.
+    function compose(a, b) { var o = [0, 0, 0, 0]; for (var i = 0; i < 4; i++) for (var j = 0; j < 4; j++) o[i ^ j] += a[i] * b[j]; return o; }
+    function hopChannel(p, f) {
+      var fiber = [(1 - p) * (1 - p), p * (1 - p), p * (1 - p), p * p];
+      var spy = [1 - f / 2, f / 4, f / 4, 0];
+      return compose(fiber, spy);
+    }
     function route(target, spy) {
       var dist = {}, prev = {}, done = {};
       Object.keys(nodes).forEach(function (k) { dist[k] = Infinity; });
@@ -364,8 +383,9 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
       var hops = [], cur = target;
       while (cur !== hub.id) { hops.unshift(prev[cur].link); cur = prev[cur].node; }
       var qs = hops.map(function (l, i) { var p = baselineQber(l.km); return i === 0 ? expectedQber(p, spy) : p; });
-      var prod = qs.reduce(function (m, q) { return m * (1 - 2 * q); }, 1);
-      return { hops: hops, qs: qs, q: (1 - prod) / 2 };
+      // Exact end-to-end channel: compose each hop's Pauli probabilities [I, X, Z, Y].
+      var ch = hops.reduce(function (acc, l, i) { return compose(acc, hopChannel(baselineQber(l.km), i === 0 ? spy : 0)); }, [1, 0, 0, 0]);
+      return { hops: hops, qs: qs, ch: ch, q: ch[1] + ch[3], qx: ch[2] + ch[3] };
     }
     var nodeName = function (n) { return n.short || n.id; };
     if (net) {
@@ -389,13 +409,15 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
     spyEl.addEventListener("input", function () { document.getElementById("spyv").textContent = spyEl.value + "%"; runTele(); });
     document.getElementById("run-tele").addEventListener("click", runTele);
 
-    function teleportOnce(q) {
+    function teleportOnce(ch) {
       // qubit 0: Alice's state; 1: Alice's half of the pair; 2: Bob's half.
       var a = zero(3);
       apply1(a, 0, RY(teleState.theta)); apply1(a, 0, RZ(teleState.phi));
       apply1(a, 1, H); cx(a, 1, 2);                      // entangled pair
-      if (Math.random() < q) apply1(a, 2, X);             // the route's bit-flip errors
-      if (Math.random() < q) apply1(a, 2, Z);             // and phase-flip errors (BB84 measures both)
+      var u = Math.random(), e = 0;                        // draw the route's Pauli error: I, X, Z or Y
+      while (e < 3 && u > ch[e]) { u -= ch[e]; e++; }
+      if (e & 1) apply1(a, 2, X);
+      if (e & 2) apply1(a, 2, Z);
       cx(a, 0, 1); apply1(a, 0, H);                      // Alice's Bell measurement
       var m0 = measure(a, 0), m1 = measure(a, 1);         // the two classical bits Bob receives
       if (m1) apply1(a, 2, X);
@@ -408,7 +430,7 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
       var r = route(routeTo, spy);
       if (!r) return;
       var shots = 1024, ones = 0;
-      for (var i = 0; i < shots; i++) ones += teleportOnce(r.q);
+      for (var i = 0; i < shots; i++) ones += teleportOnce(r.ch);
       var p1 = ones / shots, ideal1 = Math.pow(Math.sin(teleState.theta / 2), 2);
       document.getElementById("t0").style.height = (100 * (1 - p1)) + "%";
       document.getElementById("t1").style.height = (100 * p1) + "%";
@@ -416,17 +438,21 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
       document.getElementById("t1l").textContent = "|1⟩ " + ones;
       // Bloch vectors: Alice's input; Bob's after independent bit and phase flips with probability Q.
       var v = [Math.sin(teleState.theta) * Math.cos(teleState.phi), Math.sin(teleState.theta) * Math.sin(teleState.phi), Math.cos(teleState.theta)];
-      var k = 1 - 2 * r.q;
+      var c = r.ch; // [I, X, Z, Y]
       setVec(alice, v);
-      setVec(bob, [v[0] * k, v[1] * k * k, v[2] * k]);
-      var fid = 1 - r.q * (1 - r.q) * (2 - v[0] * v[0] - v[2] * v[2]) - r.q * r.q * (1 - v[1] * v[1]);
+      setVec(bob, [v[0] * (c[0] + c[1] - c[2] - c[3]), v[1] * (c[0] - c[1] - c[2] + c[3]), v[2] * (c[0] - c[1] + c[2] - c[3])]);
+      var fid = c[0] + c[1] * v[0] * v[0] + c[3] * v[1] * v[1] + c[2] * v[2] * v[2];
+      var avgFid = c[0] + (c[1] + c[2] + c[3]) / 3;
+      var worst = Math.max(r.q, r.qx);
       var seq = [hub.id]; r.hops.forEach(function (l) { var last = seq[seq.length - 1]; seq.push(l.a === last ? l.b : l.a); });
       document.getElementById("tele-dl").innerHTML =
         "<dt>Route</dt><dd>" + seq.map(function (id) { return nodeName(nodes[id]); }).join(" → ") + "</dd>" +
         "<dt>Hops (fiber, km, error)</dt><dd>" + r.hops.map(function (l, i) { return l.id + " " + l.km + " km " + pct(r.qs[i]); }).join(" · ") + "</dd>" +
-        "<dt>End-to-end pair error</dt><dd><span class=\"q-pill q-pill--" + (r.q < 0.11 ? "ok" : "bad") + "\">" + pct(r.q, 2) + (r.q < 0.11 ? " · usable" : " · not usable") + "</span></dd>" +
+        "<dt>End-to-end pair error (Z · X basis)</dt><dd>" + pct(r.q, 2) + " · " + pct(r.qx, 2) + "</dd>" +
+        "<dt>Good enough for a key (under 11%)</dt><dd><span class=\"q-pill q-pill--" + (worst < 0.11 ? "ok" : "bad") + "\">" + (worst < 0.11 ? "yes" : "no") + "</span></dd>" +
         "<dt>Bob's |1⟩ rate: measured · ideal</dt><dd>" + pct(p1) + " · " + pct(ideal1) + "</dd>" +
-        "<dt>Teleportation fidelity (exact)</dt><dd>" + pct(fid, 1) + "</dd>" +
+        "<dt>Fidelity for this state</dt><dd>" + pct(fid, 1) + "</dd>" +
+        "<dt>Average fidelity vs 2/3 classical limit</dt><dd><span class=\"q-pill q-pill--" + (avgFid > 2 / 3 ? "ok" : "bad") + "\">" + pct(avgFid, 1) + (avgFid > 2 / 3 ? " · beats it" : " · does not") + "</span></dd>" +
         "<dt>Classical bits sent per qubit</dt><dd>2</dd>";
       document.getElementById("open-route").href = "grid-twin/index.html?net=chattanooga&select=node:" + routeTo;
     }
@@ -455,9 +481,9 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
         "<dt>Secret key left</dt><dd>" + pct(Math.max(0, 1 - 2 * h2(q)), 0) + "</dd>" +
         "<dt>Verdict</dt><dd><span class=\"q-pill q-pill--" + (q > 0.11 ? "bad" : q - p > 0.014 ? "warn" : "ok") + "\">" + (q > 0.11 ? "above 11%: no key" : q - p > 0.014 ? "spy detected" : "normal noise") + "</span></dd>";
       // Spheres: Alice's photon |0> and Bob's photon on average. A spy who guesses the wrong basis (half the time)
-      // leaves a random X-basis state, so the average Bloch vector shrinks to length 1 - f/2.
+      // leaves a random X-basis state, and the fiber flips the bit with probability p: length (1 - f/2)(1 - 2p).
       setVec(alice, [0, 0, 1]);
-      setVec(bob, [0, 0, 1 - f / 2]);
+      setVec(bob, [0, 0, (1 - f / 2) * (1 - 2 * p)]);
     }
 
     // ---------------------------------------------------------------- Grover, exact
@@ -475,11 +501,14 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
       document.getElementById("g-dl").innerHTML =
         "<dt>Qubits</dt><dd>" + Math.log2(gN) + "</dd>" +
         "<dt>Grover steps (about π/4 · √N)</dt><dd>" + k + "</dd>" +
-        "<dt>Classical tries on average</dt><dd>" + (gN / 2) + "</dd>" +
+        "<dt>Classical tries on average</dt><dd>about " + (gN / 2) + "</dd>" +
         "<dt>Success probability, exact</dt><dd>" + pct(p, 1) + "</dd>" +
         "<dt>Random guess</dt><dd>" + pct(1 / gN, gN > 100 ? 2 : 1) + "</dd>";
-      setVec(alice, [1, 0, 0].map(function (x, i) { return i === 0 ? Math.cos(th) : i === 2 ? Math.sin(th) : 0; }));
-      setVec(bob, [Math.cos((2 * k + 1) * th), 0, Math.sin((2 * k + 1) * th)]);
+      // Bloch picture of the two-dimensional Grover plane: the target key at the top, "every other key" at the bottom.
+      // A state with amplitude sin(a) on the target sits at polar angle pi - 2a: (sin 2a, 0, -cos 2a).
+      var bloch = function (a) { return [Math.sin(2 * a), 0, -Math.cos(2 * a)]; };
+      setVec(alice, bloch(th));
+      setVec(bob, bloch((2 * k + 1) * th));
     }
 
     resize();

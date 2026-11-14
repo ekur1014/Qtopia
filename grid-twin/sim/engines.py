@@ -222,11 +222,13 @@ def run_guppy(p: float, f: float, rounds: int, seed: int) -> dict:
     return {"sifted": sifted, "errors": errors}
 
 
-# --- qBraid cloud: IonQ's free simulator --------------------------------------------------------------------
-# One circuit, run as a real qBraid job. Each BB84 round uses 4 qubits: the photon, a qubit that records Eve's
-# measurement, a coin that decides whether Eve taps this shot (probability f) and a coin that decides whether the
-# fiber flips it (probability p). Coins make every shot an independent sample. Six sifted rounds, with Eve's basis
-# matching Alice's in exactly half of them, fit in 24 of the simulator's 29 qubits; 200 shots give 1,200 samples.
+# --- qBraid cloud simulators ----------------------------------------------------------------------------------
+# One circuit per run, sent as a real qBraid job. Each BB84 round uses 4 qubits: the photon, a qubit that records
+# Eve's measurement, a coin that decides whether Eve taps (probability f) and a coin that decides whether the fiber
+# flips the bit (probability p). Eve's basis matches Alice's in exactly half the rounds. Rounds per circuit and shots
+# are set per device in QBRAID_DEVICES below. On the QIR and GPU simulators every shot is a random sample. IonQ's
+# free simulator instead returns exact probabilities (times the shot count), so its result is the expected error
+# rate itself, with no sampling spread to quote.
 QBRAID_DEVICE = "ionq:ionq:sim:simulator"
 
 

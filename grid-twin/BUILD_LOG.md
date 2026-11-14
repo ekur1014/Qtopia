@@ -200,3 +200,18 @@ All within 1.3σ. The qBraid QIR job at 40% is `qbraid:qbraid:sim:qir-sv-a7ae-qj
 The teammates own the pitch deck entirely, so it is no longer part of this site:
 - It is gone from the shared top bar, the home page and the README.
 - `presentation_deck.html` stays in the repo as the teammates' file. The Vercel build still publishes it at its original `/deck.html`, unlinked.
+
+## Second opinion from Opus (qBraid AI gateway)
+
+A read-only review by claude-opus-5-5 through qBraid's AI gateway: 5 turns, $0.59. The log is kept locally in `~/vscode/qbraid-gw/logs/`. It found no high-severity mistakes in the teleportation circuit, error composition, BB84 Monte Carlo, Grover maths or the qBraid coin circuit.
+
+Fixed from its findings (each checked by hand first):
+- **Teleportation fidelity was wrong with a spy on.** The lab assumed independent bit and phase flips for the spy too, but intercept-resend gives a bit flip or a phase flip, never both. The lab now composes exact Pauli channels per hop.
+  - |+i⟩ with a full spy now shows 50.0% fidelity; it showed 62.5% before.
+  - The route error is unchanged (9.27% to Hamilton).
+  - Added the teleportation benchmark: average fidelity against the 2/3 classical limit (88.2% on the Hamilton route, so it beats the limit).
+- **BB84 sphere:** now includes fiber noise; Bob's vector is (1 − f/2)(1 − 2p).
+- **Grover sphere:** now a real Bloch picture, with the target at the top and the angle doubled.
+- **Captions:** the sphere labels change per tab.
+- **Wording:** "about N/2" classical tries; the 11% threshold is labelled as the key threshold.
+- **`engines.py` comment updated:** IonQ's free simulator returns exact probabilities, not samples.
