@@ -15,12 +15,23 @@ python3 -m http.server 8000
 
 Then open http://localhost:8000. Three.js and the fonts load from public CDNs, so you need an internet connection.
 
+### With live quantum frameworks
+
+To re-run any fiber as real quantum code from the page, serve it with the bridge instead (needs Qiskit, CUDA-Q and Guppy installed; see `sim/engines.py`):
+
+```bash
+python sim/live_server.py 8000
+```
+
+A fiber's inspector then shows **Run this fiber as real quantum code**: Qiskit Aer, NVIDIA CUDA-Q and Quantinuum Guppy on the Selene emulator each run 4,000 photons with that fiber's current noise and tap, and the error rates appear next to the browser's live value and the theory. Example (L11, 40% tap, theory 12.64%): Qiskit 13.52%, CUDA-Q 12.11%, Guppy 11.15%, each on about 2,000 sifted bits (±0.7%).
+
 ## What you can do
 
 | Control | What it does |
 |---|---|
 | **1 · Inspect** | Click a fiber to see its live QBER, chart, warning line and secret-key fraction. Click a site to see where its keys come from and which trusted nodes relay them. |
 | **2 · Eavesdrop** | Click a fiber to tap it (click again to remove). The panel sets what share of photons the tap intercepts: 100% is loud, a few percent is a careful spy. |
+| **4 · Decoy** | Click a QKD fiber to switch it to decoy traffic: real traffic reroutes (only if every site has another route), the fiber keeps running on fake traffic, and the panel estimates how much the tap intercepts. **Auto-decoy** in the panel does this automatically when a fiber raises an alarm. |
 | **3 · Quarantine** | Click a fiber to take it out of service (click again to restore). Traffic reroutes; a site with no path left keeps its power on and runs on local protection. |
 | Alarm sensitivity | How many standard deviations above a fiber's own baseline counts as an alarm, with the false-alarm chance per check. |
 | Space / Esc / F | Pause and resume / clear the selection / frame the whole network. Drag to orbit, scroll to zoom. |

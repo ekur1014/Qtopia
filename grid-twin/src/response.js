@@ -6,12 +6,19 @@
 //     post-quantum key exchange (ML-KEM), so an attacker who taps a fiber cannot use the alarm to cut comms.
 //  3. Only an operator quarantine removes a link from service; traffic then reroutes around it.
 //  4. A QKD key that crosses several links is relayed through trusted nodes: every relay sees the key.
+//  5. Decoy mode: a suspicious fiber can keep running on fake traffic (and quantum photons) while real traffic
+//     takes another route, so the attack can be measured instead of simply cut off.
+//  6. Real traffic takes the least risky route, not just the shortest: each fiber's cost is its length times
+//     (1 + RISK_WEIGHT x risk), where risk comes from its live error-rate evidence.
 
 import { shortestPathTree, pathFromTree, controlCenters } from "./network.js";
+
+export const RISK_WEIGHT = 4;
 
 /** How one link gets its keys right now. */
 export function linkKeySource(link, state) {
   if (state.quarantined) return "none";
+  if (state.decoy) return "decoy";
   if (link.kind === "pqc") return "pqc";
   return state.alarm === "ok" ? "qkd" : "pqc-fallback";
 }
@@ -26,11 +33,11 @@ export function computeResponse(net, linkStates) {
   for (const link of net.links.values()) {
     const state = linkStates.get(link.id) ?? { alarm: "ok", quarantined: false };
     const keySource = linkKeySource(link, state);
-    links.set(link.id, { keySource, carriesData: keySource !== "none" });
+    links.set(link.id, { keySource, carriesData: keySource !== "none" && keySource !== "decoy", risk: state.risk ?? 0 });
   }
 
   // One search tree for data paths (any link in service) and one for QKD key paths (healthy QKD links only).
-  const dataTree = shortestPathTree(net, centers, (l) => links.get(l.id).carriesData);
+  const dataTree = shortestPathTree(net, centers, (l) => links.get(l.id).carriesData, (l) => l.km * (1 + RISK_WEIGHT * links.get(l.id).risk));
   const qkdTree = shortestPathTree(net, centers, (l) => links.get(l.id).keySource === "qkd");
 
   const sites = new Map();
@@ -78,6 +85,8 @@ export function describeChanges(net, before, after) {
     if (now.keySource === "pqc-fallback" && was.keySource === "qkd") events.push({ level: "warn", text: `${name}: QKD keys no longer trusted. Switched to ML-KEM; link stays up.` });
     else if (now.keySource === "qkd" && was.keySource === "pqc-fallback") events.push({ level: "ok", text: `${name}: enough clean measurements, error rate within normal noise. QKD keys trusted.` });
     else if (now.keySource === "none") events.push({ level: "bad", text: `${name}: quarantined by operator. Traffic rerouted.` });
+    else if (now.keySource === "decoy") events.push({ level: "info", text: `${name}: decoy mode. Real traffic rerouted; the fiber keeps running on fake traffic so the tap can be measured.` });
+    else if (was.keySource === "decoy") events.push({ level: "ok", text: `${name}: decoy mode ended. Real traffic may use this fiber again.` });
     else if (was.keySource === "none") events.push({ level: "ok", text: `${name}: restored to service. On ML-KEM keys until fresh measurements clear it.` });
   }
   for (const [id, now] of after.sites) {
@@ -96,4 +105,13 @@ export function describeChanges(net, before, after) {
     }
   }
   return events;
+}
+
+/** Sites that would lose every communication path if `linkId` stopped carrying real traffic. */
+export function sitesStrandedWithout(net, linkStates, linkId) {
+  const trial = new Map(linkStates);
+  trial.set(linkId, { ...(linkStates.get(linkId) ?? { alarm: "ok" }), decoy: true });
+  const before = computeResponse(net, linkStates);
+  const after = computeResponse(net, trial);
+  return [...after.sites].filter(([id, s]) => s.islanded && !before.sites.get(id).islanded).map(([id]) => id);
 }

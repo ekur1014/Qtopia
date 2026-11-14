@@ -102,3 +102,15 @@ export function runRounds({ rounds, lineError = 0, eveFraction = 0, rng = Math.r
   }
   return { rounds, sifted, errors, intercepted };
 }
+
+/**
+ * Estimate the share of photons an intercept-resend tap is measuring, from the observed QBER q on n sifted bits
+ * and the fiber's own error rate p, by inverting q = p + f(1/4 - p/2). Used by decoy mode to learn about an
+ * attack while the line keeps running. Returns the estimate and its standard error, clamped to [0, 1].
+ */
+export function estimateTapFraction(q, p, n) {
+  const slope = 0.25 - p / 2;
+  const f = (q - p) / slope;
+  const se = n > 0 ? Math.sqrt(Math.max(q * (1 - q), 1e-9) / n) / slope : Infinity;
+  return { f: Math.min(1, Math.max(0, f)), se };
+}

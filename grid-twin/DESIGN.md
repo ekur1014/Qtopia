@@ -22,6 +22,10 @@ A utility already sees its fiber links. A quantum-secured link adds a new signal
 
 8. **No key is trusted before evidence.** A fiber that has just been restored (or has just started) runs on ML-KEM keys until it has collected enough sifted bits to judge its error rate ("Measuring"). Real QKD works the same way: the error rate is estimated before any key is used. This fixed a bug the audit found, where a restored fiber reused its old alarm state.
 
+9. **Decoy traffic instead of cutting a line** (team idea). When a fiber looks tapped, real traffic can move to another route while the fiber keeps running on fake traffic and quantum photons. The tapper keeps tapping, and every photon she disturbs is evidence: inverting Q = p + f(1/4 − p/2) gives her intercepted share f̂ = (Q − p)/(1/4 − p/2) with a standard error. Decoy mode is refused when a site would be left with no route; then real traffic stays on the fiber with ML-KEM keys. (Not to be confused with *decoy-state* QKD, a different technique that uses weaker pulses to catch photon-number-splitting attacks.)
+
+10. **Risk-aware routing** (team idea: "route real traffic over the best possible path with a decision model"). Real traffic takes the path with the lowest cost, where each fiber costs its length × (1 + 4 × risk) and risk comes from its live evidence: 0 when clean, rising toward 0.5 as its error rate nears the warning line, 0.5 while measuring, 2 in warning, 4 above 11%. So traffic leaves a suspicious fiber before it ever raises an alarm, if a safer route exists. It is a weighted shortest-path decision, chosen because it is exact, fast (milliseconds on 300 buses) and explainable; a learned or quantum optimizer could replace the cost function later.
+
 ## Physics
 
 **Error rate with an eavesdropper.** Let p be the fiber's own error rate and f the share of photons Eve intercepts. On sifted rounds: if Eve guesses Alice's basis (probability 1/2), Bob sees only fiber noise, error p; if she guesses wrong, her resent photon is in the other basis and Bob's result is random, error 1/2. So

@@ -19,13 +19,15 @@ const KEY_LABEL = {
   "pqc-fallback": ["ML-KEM fallback", "warn"],
   pqc: ["ML-KEM (post-quantum)", "pqc"],
   none: ["Out of service", "off"],
+  decoy: ["Decoy traffic only", "decoy"],
   local: ["Key authority", "gold"],
 };
 
 const pct = (x, d = 1) => `${(100 * x).toFixed(d)}%`;
 const pill = ([text, tone]) => `<span class="pill pill--${tone}">${text}</span>`;
 
-export function createUI({ panel, net, networks = [], currentNetwork, handlers }) {
+export function createUI({ panel, net, networks = [], currentNetwork, engines = {}, handlers }) {
+  const engineIds = Object.keys(engines);
   const startedAt = performance.now();
   const netOptions = networks
     .map((m) => `<option value="${m.id}"${m.id === currentNetwork ? " selected" : ""}>${m.label} · ${m.nodes} sites</option>`)
@@ -59,6 +61,7 @@ export function createUI({ panel, net, networks = [], currentNetwork, handlers }
         <input type="range" min="2" max="6" step="0.5" value="4.5" data-input="z" aria-label="Alarm sensitivity in standard deviations" />
         <div class="control__note" data-v="znote"></div>
       </div>
+      <label class="check"><input type="checkbox" data-input="autodecoy" /> <span><b>Auto-decoy</b>: when a fiber raises an alarm, keep it running on fake traffic and reroute real traffic, to measure the tap instead of just cutting it off</span></label>
       <div class="btns">
         <button class="btn btn--danger" data-action="clear-eves">Remove all taps</button>
         <button class="btn btn--ok" data-action="restore-all">Restore all fibers</button>
@@ -109,6 +112,7 @@ export function createUI({ panel, net, networks = [], currentNetwork, handlers }
   fill(eveInput);
   showZ();
   $('[data-input="network"]').addEventListener("change", (e) => handlers.onNetwork(e.target.value));
+  $('[data-input="autodecoy"]').addEventListener("change", (e) => handlers.onAutoDecoy(e.target.checked));
 
   panel.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-action]");
@@ -152,14 +156,26 @@ export function createUI({ panel, net, networks = [], currentNetwork, handlers }
       <div class="keybar"><div class="keybar__fill" data-f="sfbar"></div></div>
       <canvas class="chart" data-chart></canvas>
       <div class="chart__legend"><span><i style="background:#e8eefc"></i>QBER</span><span><i style="background:#ffb547"></i>warning</span><span><i style="background:#ff4d6d"></i>11% abort</span><span><i style="background:#4b5571"></i>baseline</span></div>
+      <div class="intel" data-f="intel"></div>
+      ${engineIds.length ? `<div class="frameworks">
+        <div class="frameworks__title">Run this fiber as real quantum code</div>
+        <div class="btns">${engineIds.map((e) => `<button class="btn" data-action="engine:${e}" data-id="${link.id}">${engines[e]}</button>`).join("")}<button class="btn btn--ok" data-action="engine:all" data-id="${link.id}">All</button></div>
+        <div class="frameworks__table" data-f="frameworks"></div>
+      </div>` : ""}
       <p class="explain" data-f="explain"></p>
-      <div class="btns">${tapButton(link, s)}${quarantineButton(link, s)}</div>`;
+      <div class="btns">${tapButton(link, s)}${decoyButton(link, s)}${quarantineButton(link, s)}</div>`;
   }
 
   function tapButton(link, s) {
     return s.eve != null
       ? `<button class="btn btn--ok" data-action="remove-eve" data-id="${link.id}">Remove tap</button>`
       : `<button class="btn btn--danger" data-action="place-eve" data-id="${link.id}">Place tap here</button>`;
+  }
+  function decoyButton(link, s) {
+    if (link.kind !== "qkd" || s.quarantined) return "";
+    return s.decoy
+      ? `<button class="btn btn--ok" data-action="decoy-off" data-id="${link.id}">End decoy mode</button>`
+      : `<button class="btn btn--decoy" data-action="decoy-on" data-id="${link.id}">Decoy traffic</button>`;
   }
   function quarantineButton(link, s) {
     return s.quarantined
@@ -176,11 +192,36 @@ export function createUI({ panel, net, networks = [], currentNetwork, handlers }
     f("n").textContent = s.n.toLocaleString();
     f("key").innerHTML = pill(KEY_LABEL[s.keySource]);
     f("eve").innerHTML = s.eve != null ? `<span class="pill pill--bad">${pct(s.eve, 0)} of photons</span>` : "None";
+    const fw = f("frameworks");
+    if (fw) {
+      const runs = s.engineRuns ?? {};
+      const rows = engineIds
+        .filter((e) => runs[e])
+        .map((e) => {
+          const r = runs[e];
+          if (r === "running") return `<div class="fw__row"><span>${engines[e]}</span><b>running…</b></div>`;
+          if (r.error) return `<div class="fw__row"><span>${engines[e]}</span><b class="bad">error</b></div>`;
+          return `<div class="fw__row"><span>${r.label}</span><b>${pct(r.qber, 2)}</b><em>${r.sifted.toLocaleString()} bits · ${r.ms} ms</em></div>`;
+        });
+      fw.innerHTML = rows.length
+        ? `<div class="fw__row fw__row--head"><span>Browser engine, live window</span><b>${pct(s.qhat, 2)}</b><em>theory ${pct(s.baseline + (s.eve ?? 0) * (0.25 - s.baseline / 2), 2)}</em></div>${rows.join("")}`
+        : `<div class="fw__hint">Runs this fiber's current noise and tap as 4,000 photons of real quantum code and compares the error rate.</div>`;
+    }
+    // Attack intelligence: shown when the fiber is suspicious or running decoy traffic.
+    const showIntel = s.estimate && (s.decoy || s.status === "warning" || s.status === "abort");
+    f("intel").innerHTML = showIntel
+      ? `<div class="intel__title">Attack estimate${s.decoy ? " · decoy mode" : ""}</div>
+         <div class="intel__row"><span>Share of photons intercepted</span><b>${pct(s.estimate.f, 0)} ± ${pct(Math.min(1, s.estimate.se), 0)}</b></div>
+         <div class="intel__row"><span>Signature</span><b>intercept-resend (error rate ≈ p + f(¼ − p/2))</b></div>
+         <div class="intel__row"><span>Real data on this fiber</span><b>${s.decoy ? "none (rerouted)" : "yes, on ML-KEM keys"}</b></div>
+         <div class="intel__note">Simulation check: the tap really intercepts ${s.eve != null ? pct(s.eve, 0) : "0%"} of photons. In the field only the estimate is known.</div>`
+      : "";
     const sf = s.n > 0 ? secretFraction(s.qhat) : secretFraction(s.baseline);
     f("sf").textContent = pct(sf, 0);
     f("sfbar").style.width = pct(sf, 1);
     let text;
-    if (s.quarantined) text = "Out of service. Traffic that used this fiber has been rerouted. Restore it to resume key exchange.";
+    if (s.decoy) text = `<b>Decoy mode.</b> Real traffic has been rerouted; this fiber keeps running on fake traffic and quantum photons, so the tapper keeps tapping and every photon she disturbs tells us more: how much she intercepts, and that the pattern matches intercept-resend. Nothing she captures is real.`;
+    else if (s.quarantined) text = "Out of service. Traffic that used this fiber has been rerouted. Restore it to resume key exchange.";
     else if (s.status === "pending") text = "Measuring. This fiber has just come into service, so it carries traffic on ML-KEM keys until it has enough fresh measurements to judge its error rate. No QKD key is trusted before then.";
     else if (s.status === "abort") text = `The error rate is above 11%. Error correction would leak more than the key is worth, so <b>no secret key can come from this fiber</b>. Its traffic now uses ML-KEM keys and stays up. Someone should inspect the fiber.`;
     else if (s.status === "warning") text = `The error rate is <b>significantly above this fiber's baseline</b>. That is the signature of someone measuring the photons. QKD keys from this fiber are no longer trusted; traffic switches to ML-KEM and stays up.`;
@@ -303,7 +344,7 @@ export function createUI({ panel, net, networks = [], currentNetwork, handlers }
     if (sel.type === "link") {
       const link = net.links.get(sel.id);
       const s = state.links.get(sel.id);
-      const keyNow = `link:${sel.id}:${s.eve != null}:${s.quarantined}`;
+      const keyNow = `link:${sel.id}:${s.eve != null}:${s.quarantined}:${s.decoy}`;
       if (keyNow !== inspectorKey) {
         inspector.innerHTML = buildLinkInspector(link, s);
         inspectorKey = keyNow;

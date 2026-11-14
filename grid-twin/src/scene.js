@@ -17,6 +17,7 @@ const COLORS = {
   photon: new THREE.Color("#e9fbff"),
   photonHit: new THREE.Color("#ff3d62"),
   packet: new THREE.Color("#b5b8ff"),
+  decoy: new THREE.Color("#ff5ec7"),
 };
 const PHOTONS_PER_LINK = 7;
 const PACKETS_PER_LINK = 3;
@@ -361,6 +362,9 @@ export function createScene({ container, net, onPick, onHover }) {
       if (s.quarantined) {
         v.target.copy(COLORS.off);
         v.mat.opacity = 0.35;
+      } else if (s.decoy) {
+        v.target.copy(COLORS.decoy);
+        v.mat.opacity = 0.95;
       } else if (!v.isQkd) {
         v.target.copy(v.base);
         v.mat.opacity = 0.5;
@@ -377,7 +381,7 @@ export function createScene({ container, net, onPick, onHover }) {
         v.target.copy(v.base).lerp(COLORS.warn, t * 0.7);
         v.mat.opacity = 0.85;
       }
-      v.pulse = s.status === "warning" && !s.quarantined ? 1 : s.status === "abort" && !s.quarantined ? 2 : 0;
+      v.pulse = s.quarantined ? 0 : s.decoy ? 3 : s.status === "warning" ? 1 : s.status === "abort" ? 2 : 0;
     }
 
     const sel = view.selected;
@@ -438,7 +442,7 @@ export function createScene({ container, net, onPick, onHover }) {
       v.current.lerp(v.target, 0.12);
       v.mat.color.copy(v.current);
       if (v.pulse) {
-        const speed = v.pulse === 2 ? 9 : 4;
+        const speed = v.pulse === 2 ? 9 : v.pulse === 3 ? 2 : 4;
         v.mat.color.multiplyScalar(0.9 + 0.55 * (0.5 + 0.5 * Math.sin(time * speed)));
       }
       if (v.selected) v.mat.color.multiplyScalar(1.5);

@@ -77,7 +77,7 @@ export function shortestPath(net, sources, target, usable) {
  * The response policy needs a path for every site, so one tree per tick replaces one search per site
  * (this matters on the 300-bus grid).
  */
-export function shortestPathTree(net, sources, usable) {
+export function shortestPathTree(net, sources, usable, weight = (link) => link.km) {
   const ids = [...net.nodes.keys()];
   const dist = new Map(ids.map((id) => [id, Infinity]));
   const prev = new Map();
@@ -98,7 +98,7 @@ export function shortestPathTree(net, sources, usable) {
     for (const link of net.adjacency.get(current)) {
       if (!usable(link)) continue;
       const next = otherEnd(link, current);
-      const d = best + link.km;
+      const d = best + weight(link);
       if (d < dist.get(next)) {
         dist.set(next, d);
         prev.set(next, { node: current, link });

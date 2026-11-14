@@ -1,9 +1,9 @@
 // Wires the pieces together: a 4 Hz simulation loop drives BB84 on every QKD fiber, the detector turns counts
 // into alarms, the response policy decides keys and routes, and the scene and panel draw the result.
 import { buildNetwork } from "./network.js";
-import { baselineQber, transmittance, runRounds } from "./bb84.js";
+import { baselineQber, transmittance, runRounds, estimateTapFraction } from "./bb84.js";
 import { createDetector } from "./detector.js";
-import { computeResponse, describeChanges } from "./response.js";
+import { computeResponse, describeChanges, sitesStrandedWithout } from "./response.js";
 import { createScene } from "./scene.js";
 import { createUI } from "./ui.js";
 
@@ -29,6 +29,8 @@ async function boot() {
   const manifest = await fetchJson("data/networks/index.json");
   const wanted = new URLSearchParams(location.search).get("net") ?? "city";
   const entry = manifest.find((m) => m.id === wanted) ?? manifest[0];
+  // Live quantum frameworks: available only when the page is served by sim/live_server.py.
+  const engines = await fetch("api/engines").then((r) => (r.ok ? r.json() : null)).then((j) => j?.engines ?? {}).catch(() => ({}));
   const net = buildNetwork(await fetchJson(entry.file));
 
   const sim = {
@@ -36,6 +38,7 @@ async function boot() {
     eveStrength: 1,
     z: DEFAULT_Z,
     paused: false,
+    autoDecoy: false,
     selected: null,
     links: new Map(),
   };
@@ -49,6 +52,8 @@ async function boot() {
       perTick: Math.max(40, Math.round((DETECTED_PER_TICK_AT_10KM * transmittance(link.km)) / transmittance(10))),
       eve: null,
       quarantined: false,
+      decoy: false,
+      autoDecoy: false, // true when decoy mode was switched on by the auto-decoy policy, not by the operator
       last: freshReading(baseline),
       history,
     });
@@ -64,6 +69,7 @@ async function boot() {
     net,
     networks: manifest,
     currentNetwork: entry.id,
+    engines,
     handlers: {
       onNetwork: (id) => {
         const url = new URL(location.href);
@@ -89,6 +95,11 @@ async function boot() {
         if (any) ui.log({ level: "ok", text: "All taps removed. Error rates will settle back to baseline as the window refreshes." });
         refresh();
       },
+      onAutoDecoy: (on) => {
+        sim.autoDecoy = on;
+        ui.log({ level: "info", text: on ? "Auto-decoy on: a fiber that raises an alarm keeps running on fake traffic while real traffic reroutes, if every site has another route." : "Auto-decoy off." });
+        refresh();
+      },
       onRestoreAll: () => {
         for (const [id, s] of sim.links) if (s.quarantined) restore(id);
         refresh();
@@ -98,6 +109,9 @@ async function boot() {
         else if (action === "remove-eve") removeEve(id);
         else if (action === "quarantine") quarantine(id);
         else if (action === "restore") restore(id);
+        else if (action.startsWith("engine:")) return runOnEngine(id, action.slice(7));
+        else if (action === "decoy-on") setDecoy(id, true, false);
+        else if (action === "decoy-off") setDecoy(id, false, false);
         refresh();
       },
     },
@@ -116,8 +130,12 @@ async function boot() {
       } else if (pick.type === "link" && sim.tool === "quarantine") {
         sim.links.get(pick.id).quarantined ? restore(pick.id) : quarantine(pick.id);
         sim.selected = pick;
+      } else if (pick.type === "link" && sim.tool === "decoy") {
+        const s = sim.links.get(pick.id);
+        setDecoy(pick.id, !s.decoy, false);
+        sim.selected = pick;
       } else {
-        if (pick.type === "node" && sim.tool !== "inspect") ui.log({ level: "info", text: "Taps and quarantines apply to fibers: click a link, not a site." });
+        if (pick.type === "node" && sim.tool !== "inspect") ui.log({ level: "info", text: "Taps, quarantines and decoys apply to fibers: click a link, not a site." });
         sim.selected = pick;
       }
       refresh();
@@ -155,13 +173,71 @@ async function boot() {
     s.detector?.reset();
     s.last = freshReading(s.baseline);
   }
+  // Re-run a fiber's current physics (its noise and tap) as real quantum programs on a framework.
+  const engineRuns = new Map(); // linkId -> { engine -> result | "running" | {error} }
+  async function runOnEngine(id, engine) {
+    const s = sim.links.get(id);
+    const runs = engineRuns.get(id) ?? {};
+    engineRuns.set(id, runs);
+    const targets = engine === "all" ? Object.keys(engines) : [engine];
+    for (const e of targets) {
+      runs[e] = "running";
+      refresh();
+      try {
+        const res = await fetch("api/bb84", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ engine: e, line_error: s.baseline, eve_fraction: s.eve ?? 0, rounds: 4000 }),
+        }).then((r) => r.json());
+        runs[e] = res;
+        if (res.error) ui.log({ level: "bad", text: `${id} on ${engines[e]}: ${res.error}` });
+        else ui.log({ level: "info", text: `${id} re-run on ${res.label}: QBER ${(100 * res.qber).toFixed(1)}% (theory ${(100 * res.expected).toFixed(1)}%), ${res.sifted.toLocaleString()} sifted photons, ${res.ms} ms.` });
+      } catch (err) {
+        runs[e] = { error: String(err) };
+      }
+      refresh();
+    }
+  }
+
+  function setDecoy(id, on, auto) {
+    const s = sim.links.get(id);
+    const link = net.links.get(id);
+    if (on === s.decoy) return true;
+    if (on) {
+      if (link.kind !== "qkd") {
+        ui.log({ level: "info", text: `${id} is a post-quantum link: it has no quantum signal to measure a tap with, so decoy mode would teach us nothing.` });
+        return false;
+      }
+      if (s.quarantined) {
+        ui.log({ level: "info", text: `${id} is quarantined. Restore it before switching it to decoy traffic.` });
+        return false;
+      }
+      const stranded = sitesStrandedWithout(net, alarmStates(), id);
+      if (stranded.length) {
+        ui.log({ level: "warn", text: `${id}: decoy mode refused: ${stranded.join(", ")} would have no other route. Real traffic stays on this fiber with ML-KEM keys.` });
+        return false;
+      }
+    }
+    s.decoy = on;
+    s.autoDecoy = on && auto;
+    return true;
+  }
   function alarmStates() {
     const m = new Map();
     for (const [id, s] of sim.links) {
       const alarm = s.detector && !s.last.enough ? "pending" : s.last.status;
-      m.set(id, { alarm, quarantined: s.quarantined });
+      m.set(id, { alarm, quarantined: s.quarantined, decoy: s.decoy, risk: riskOf(s, alarm) });
     }
     return m;
+  }
+  // Risk for the routing decision: 0 for a clean fiber, rising with evidence of tampering.
+  function riskOf(s, alarm) {
+    if (!s.detector || s.quarantined) return 0;
+    if (alarm === "abort") return 4;
+    if (alarm === "warning") return 2;
+    if (alarm === "pending") return 0.5;
+    const room = Math.max(1e-6, s.last.threshold - s.baseline);
+    return 0.5 * Math.min(1, Math.max(0, (s.last.qhat - s.baseline) / room));
   }
 
   // Simulation loop -----------------------------------------------------------------------------
@@ -176,6 +252,14 @@ async function boot() {
         s.history.push({ qhat: s.last.qhat, threshold: s.last.threshold });
         if (s.history.length > HISTORY) s.history.shift();
         if (before !== s.last.status) logAlarm(id, before, s.last);
+        // Auto-decoy policy: alarmed fibers go to decoy traffic (when every site has another route) and
+        // come back once the alarm clears.
+        if (sim.autoDecoy && s.last.enough && (s.last.status === "warning" || s.last.status === "abort") && !s.decoy) {
+          if (setDecoy(id, true, true)) ui.log({ level: "info", text: `Auto-decoy: ${id} switched to decoy traffic to measure the tap.` });
+        } else if (s.decoy && s.autoDecoy && s.last.status === "ok") {
+          setDecoy(id, false, false);
+          ui.log({ level: "ok", text: `Auto-decoy: ${id} back to real traffic; its alarm has cleared.` });
+        }
       }
     }
     refresh();
@@ -206,6 +290,10 @@ async function boot() {
         status: s.detector && !s.quarantined && !s.last.enough ? "pending" : s.last.status,
         eve: s.eve,
         quarantined: s.quarantined,
+        decoy: s.decoy,
+        risk: response.links.get(id).risk,
+        estimate: s.detector && s.last.n > 0 ? estimateTapFraction(s.last.qhat, s.baseline, s.last.n) : null,
+        engineRuns: engineRuns.get(id) ?? null,
         keySource: response.links.get(id).keySource,
         history: s.history,
       });
@@ -256,6 +344,7 @@ async function boot() {
     if (e.key === "1") setTool("inspect");
     else if (e.key === "2") setTool("eve");
     else if (e.key === "3") setTool("quarantine");
+    else if (e.key === "4") setTool("decoy");
     else if (e.key === "f" || e.key === "F") {
       sim.selected = null;
       scene.frameAll();
@@ -282,7 +371,8 @@ async function boot() {
     if (tapped && sim.tool === "inspect") return;
     if (sim.tool === "inspect") hint.innerHTML = "Choose <b>Eavesdrop</b> below, then click a glowing fiber.";
     else if (sim.tool === "eve") hint.innerHTML = `Click a fiber to tap it. The tap intercepts <b>${Math.round(sim.eveStrength * 100)}%</b> of photons (set it in the panel).`;
-    else hint.innerHTML = "Click a fiber to take it out of service, or click again to restore it. Traffic reroutes; power never goes off.";
+    else if (sim.tool === "quarantine") hint.innerHTML = "Click a fiber to take it out of service, or click again to restore it. Traffic reroutes; power never goes off.";
+    else hint.innerHTML = "Click a tapped fiber to switch it to <b>decoy traffic</b>: real traffic reroutes, the fiber keeps running so we can measure the tap."; 
   }
 
   // A small handle for scripted demos and browser tests, e.g. gridTwin.tap("L11"); gridTwin.select("node", "S6").
@@ -296,16 +386,18 @@ async function boot() {
     },
     untap: (id) => (removeEve(id), refresh()),
     quarantine: (id) => (quarantine(id), refresh()),
+    decoy: (id, on = true) => (setDecoy(id, on, false), refresh()),
+    autoDecoy: (on = true) => ((sim.autoDecoy = on), refresh()),
     restore: (id) => (restore(id), refresh()),
     select: (type, id) => ((sim.selected = type ? { type, id } : null), refresh()),
     state: () => ({
       links: Object.fromEntries(
         [...sim.links].map(([id, s]) => [
           id,
-          { status: s.detector && !s.quarantined && !s.last.enough ? "pending" : s.last.status, qber: s.last.qhat, tapped: s.eve != null, quarantined: s.quarantined, keySource: response.links.get(id).keySource },
+          { status: s.detector && !s.quarantined && !s.last.enough ? "pending" : s.last.status, qber: s.last.qhat, tapped: s.eve != null, tapFraction: s.eve, decoy: s.decoy, quarantined: s.quarantined, keySource: response.links.get(id).keySource, risk: response.links.get(id).risk, estimatedTap: s.detector && s.last.n > 0 ? estimateTapFraction(s.last.qhat, s.baseline, s.last.n) : null },
         ]),
       ),
-      sites: Object.fromEntries([...response.sites].map(([id, s]) => [id, { keySource: s.keySource, relays: s.relays, islanded: s.islanded, power: s.power }])),
+      sites: Object.fromEntries([...response.sites].map(([id, s]) => [id, { keySource: s.keySource, relays: s.relays, islanded: s.islanded, power: s.power, dataPath: s.dataPath?.nodes ?? null }])),
     }),
   };
 

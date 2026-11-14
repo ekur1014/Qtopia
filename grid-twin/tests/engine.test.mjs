@@ -5,10 +5,10 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { runRounds, mulberry32, expectedQber, baselineQber, secretFraction, ABORT_QBER } from "../src/bb84.js";
+import { runRounds, mulberry32, expectedQber, baselineQber, secretFraction, ABORT_QBER, estimateTapFraction } from "../src/bb84.js";
 import { createDetector, normalTail } from "../src/detector.js";
 import { buildNetwork, shortestPath, controlCenters } from "../src/network.js";
-import { computeResponse } from "../src/response.js";
+import { computeResponse, sitesStrandedWithout } from "../src/response.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const raw = JSON.parse(fs.readFileSync(path.join(here, "../data/network.json"), "utf8"));
@@ -179,5 +179,40 @@ test("Imported IEEE grids: every site can reach a control center, and the respon
     const st = new Map([...g.links.keys()].map((id) => [id, { alarm: "ok", quarantined: false }]));
     const r = computeResponse(g, st);
     for (const [id, site] of r.sites) assert.equal(site.islanded, false, `${m.id} ${id} connected`);
+  }
+});
+
+test("Decoy mode: the fiber stops carrying real traffic, sites reroute, nothing is islanded", () => {
+  const states = healthy();
+  states.set("L5", { alarm: "abort", quarantined: false, decoy: true });
+  const r = computeResponse(net, states);
+  assert.equal(r.links.get("L5").keySource, "decoy");
+  assert.equal(r.links.get("L5").carriesData, false);
+  for (const [id, site] of r.sites) {
+    assert.equal(site.islanded, false, `${id} still connected`);
+    if (site.dataPath) assert.ok(!site.dataPath.links.some((l) => l.id === "L5"), `${id} avoids L5`);
+  }
+});
+
+test("Decoy mode is refused where it would strand a site (a sub-unit's only link)", () => {
+  assert.deepEqual(sitesStrandedWithout(net, healthy(), "P4"), ["U4"]);
+  assert.deepEqual(sitesStrandedWithout(net, healthy(), "L5"), []);
+});
+
+test("Risk-aware routing: real traffic avoids a suspicious fiber when a safer route exists", () => {
+  const states = healthy();
+  const base = computeResponse(net, states).sites.get("S6").dataPath.links.map((l) => l.id);
+  assert.deepEqual(base, ["L11"], "S6 normally uses its direct fiber from CC2");
+  states.set("L11", { alarm: "warning", quarantined: false, risk: 2 });
+  const risky = computeResponse(net, states).sites.get("S6").dataPath.links.map((l) => l.id);
+  assert.ok(!risky.includes("L11"), `with L11 suspicious, S6 routes ${risky.join(",")}`);
+});
+
+test("Tap estimate recovers the true intercepted share within its error bar", () => {
+  let seed = 9000;
+  for (const [p, f] of [[0.033, 0.1], [0.033, 0.5], [0.033, 1], [0.02, 0.3]]) {
+    const r = runRounds({ rounds: 80000, lineError: p, eveFraction: f, rng: mulberry32((seed += 7919)) });
+    const est = estimateTapFraction(r.errors / r.sifted, p, r.sifted);
+    assert.ok(Math.abs(est.f - f) < 4.5 * est.se + 1e-9, `p=${p} f=${f}: estimate ${est.f.toFixed(3)} ± ${est.se.toFixed(3)}`);
   }
 });

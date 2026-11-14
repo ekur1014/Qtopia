@@ -26,6 +26,15 @@ Cutting a communication path. Never power: switching off power is the harm we're
 **Why not QKD everywhere?**
 QKD needs dedicated fiber and costly hardware at both ends, gets weaker with distance (the 140 km rural link would detect about 537 times fewer photons than a city fiber), and still needs classical authentication. Post-quantum cryptography protects every link in software. NSA, the UK NCSC and the French, German, Dutch and Swedish agencies all say to prioritize post-quantum cryptography. We use QKD where it adds something: an eavesdropping alarm on the backbone.
 
+**What is decoy mode?**
+When a fiber looks tapped, real traffic moves to another route but the fiber keeps running on fake traffic. The spy keeps tapping, and we keep measuring: the error rate tells us what share of photons she intercepts (about ±3% after a few seconds). Nothing she captures is real. It's refused where a site would lose its only route. (Different from decoy-state QKD, which uses weak pulses against photon-number-splitting attacks.)
+
+**How does routing decide?**
+Each fiber costs its length times (1 + 4 × risk), with risk from its live error rate. Real traffic takes the cheapest path, so it moves off a fiber that is getting suspicious even before the alarm. It's a weighted shortest-path decision: exact, fast and easy to explain.
+
+**Does the visualization talk to real quantum code?**
+Yes, when served by `sim/live_server.py`: a fiber's current noise and tap can be re-run as 4,000 photons on Qiskit Aer, NVIDIA CUDA-Q and Quantinuum Guppy (Selene emulator), and the error rates appear next to the browser's and the theory.
+
 **What is the trusted-node problem?**
 QKD keys only cross one fiber. To reach a far substation, the key is relayed through intermediate sites, and each relay holds the key in the clear for a moment. Every relay must be trusted and physically secured. Select a substation whose direct fiber is tapped to see its relays (gold rings).
 

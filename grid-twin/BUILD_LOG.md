@@ -75,3 +75,11 @@ What was built, in order, and how each step was checked. Times are Saturday 14 N
 - **Visuals** (user request: bigger nodes, less glow, more deliberate effects): nodes about 40% larger and sized to the network; bloom roughly halved and limited to photons, beacons and taps so fibers stay crisp; flat ground without speckle; a shockwave ring where an alarm fires; the camera glides to whatever is selected; gold key packets flow along the selected site's key path; sites lift on hover; F frames the whole network. On big grids only control centers keep permanent labels.
 - **Probation fix** (from the audit): restoring a fiber now starts it on ML-KEM keys until fresh measurements clear it. Checked in the browser: restored L5 showed "Measuring" on ML-KEM, then "QKD keys trusted" about 3 s later.
 - Tests: 17 passing (added probation and imported-grid checks).
+
+## Team ideas built: decoy mode, risk-aware routing, live frameworks
+
+- **Decoy mode** (`4` / Decoy tool, Auto-decoy toggle): real traffic reroutes, the fiber keeps running so the tap can be measured; refused when a site would be stranded. Browser check on the city network: L11 tapped at 40%; decoy mode kept S6 connected (rerouted via S1); P4 refused (post-quantum link, nothing to measure); auto-decoy switched a fully tapped L5 by itself.
+- **Tap estimate** f̂ = (Q − p)/(1/4 − p/2): unbiased (2,000 simulated windows: mean 39.98% for a true 40%; spread 1.0σ). In the live app, 15 independent readings averaged 38.9% for a true 40%.
+- **Risk-aware routing**: S6's real traffic left L11 as soon as L11 went to warning (CC1 → S1 → S6).
+- **Live frameworks** (`sim/engines.py`, `sim/live_server.py`): the same BB84 fiber in Qiskit Aer (one circuit per case, mid-circuit measurement), NVIDIA CUDA-Q 0.16 (ancilla measurement), and Quantinuum Guppy 1.2.1 on Selene 0.3.8 (the whole round, coin flips included, inside the emulator). Self-test: all three within statistical error of theory at f = 0, 0.4 and 1. From the page: L11 at a 40% tap gave Qiskit 13.52%, CUDA-Q 12.11%, Guppy 11.15% against 12.64% theory (±0.7%).
+- Tests: 21 passing.
