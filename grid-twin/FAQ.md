@@ -42,10 +42,10 @@ The team lead's idea: a fiber under 11% error could supply usable entangled pair
 Yes, with the live server: the **qBraid · IonQ simulator**, **qBraid · QIR simulator** and **Team notebook 1 on qBraid** buttons send that fiber's photons as real jobs to qBraid's free simulators and log the job IDs. At a 40% tap (theory 12.64%) they read 12.55%, 12.96% and 12.48%.
 
 **What is the trusted-node problem?**
-QKD keys only cross one fiber. To reach a far substation, the key is relayed through intermediate sites, and each relay holds the key in the clear for a moment. Every relay must be trusted and physically secured. Select a substation whose direct fiber is tapped to see its relays (gold rings).
+QKD keys only cross one fiber. To reach a far substation, the key is relayed through intermediate sites, and each relay holds the key in the clear for a moment. Every relay must be trusted and physically secured. Select a substation whose direct fiber is tapped to see its relays (gold rings). Key paths and the route search use as few relays as they can.
 
 **Is this a real utility's network?**
-The main view is: Chattanooga's real EPB and TVA substations and lines from OpenStreetMap (public data). The stylized city in the Simulation lab is invented, and the dual ring is the team's design with illustrative distances. The fiber parameters come from a published experiment (GYS 2004, as tabulated by Ma, Qi, Zhao and Lo).
+The main view is: Chattanooga's real EPB and TVA substations and lines from OpenStreetMap (public data). The stylized city in the Simulation lab is invented. The fiber parameters come from a published experiment (GYS 2004, as tabulated by Ma, Qi, Zhao and Lo).
 
 **What does it not model?**
 Attacks beyond intercept-resend (for example photon-number splitting or detector attacks), key rates in bits per second, finite-key effects, and real network traffic. See the limits section of DESIGN.md.
@@ -62,5 +62,9 @@ Only as a drawing, and it will probably be taken out unless we find a quantum ap
 **Is the map real?**
 Yes. Substations and lines are public OpenStreetMap data, the same data OpenInfraMap draws. Two things are our assumptions: which two substations hold the keys, and that fiber runs along every power line.
 
-**Why a dual ring?**
-The lead's design puts the important traffic on a ring of nine supernodes around the command center, with a working ring and a protection ring running opposite ways. If a spy taps a span, its traffic goes the other way round; every supernode on the detour becomes a trusted relay. Distances in our model are illustrative and match the teammate's router.
+**How does the route search work, and where does Grover come in?**
+You pick a start site, an end site and a QBER cutoff (QBER is the share of key bits that arrive wrong; default 11%, where no secret key can be made). Any fiber at or above the cutoff counts as tapped and is skipped. The search first looks for a clean QKD route (QKD: keys sent as single photons). If there is none, it takes the best route over every fiber still in service and uses ML-KEM, post-quantum encryption agreed end to end. If there is no physical path at all, the site is islanded: power stays on, local protection runs, and a crew is sent.
+Grover is a demonstration, not a speed-up. We list the 8 shortest candidate routes (Yen's method), and notebook 2b's Grover circuit (its oracle extended to mark several items) amplifies the clean ones; the route it draws is then checked normally. With no clean route, every draw fails the check and the search falls back to ML-KEM. Dijkstra already solves this exactly and fast on a normal computer, and the oracle is built from error rates we already know. What it shows is the same circuit from 2b working on a grid problem, with √N oracle queries instead of N.
+
+**Why fewest sites rather than shortest distance?**
+There are no quantum repeaters, so a QKD key only crosses one fiber. Every site in the middle is a trusted relay: it measures the key and re-encrypts it for the next fiber. For that moment, someone inside the site, an insider or a hacked device, could read it. Each extra site is one more place the key can leak, while a few extra kilometres of city fiber barely change the error rate (the model's baseline is 3.3% from 8 to 22 km). So the search minimises the number of sites first and only then the risk-weighted distance. The panel shows the difference: "the shortest route would pass through N sites; this one passes through M".

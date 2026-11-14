@@ -6,14 +6,13 @@
   var me = document.currentScript;
   var page = me && me.dataset.page;
   var root = (me && me.dataset.root) || "./";
-  // Simple to complex: the hypothetical dual ring first, then the real map, then the full live grid, then the physics.
+  // Simple to complex: the real map first, then the full live grid, then one fiber, then the physics.
   var PAGES = [
     { id: "home", label: "Home", href: "index.html" },
-    { id: "ring", label: "Dual ring", href: "dual_ring_quantum_routing.html", step: 1 },
-    { id: "map", label: "Real map", href: "chattanooga_quantum_map.html", step: 2 },
-    { id: "grid", label: "Live grid", href: "grid-twin/index.html", step: 3 },
-    { id: "photon", label: "Photon line", href: "bb84_visualizer.html", step: 4 },
-    { id: "lab", label: "Quantum lab", href: "threejs_quantum_grid.html", step: 5 },
+    { id: "map", label: "Real map", href: "chattanooga_quantum_map.html", step: 1 },
+    { id: "grid", label: "Live grid", href: "grid-twin/index.html", step: 2 },
+    { id: "photon", label: "Photon line", href: "bb84_visualizer.html", step: 3 },
+    { id: "lab", label: "Quantum lab", href: "threejs_quantum_grid.html", step: 4 },
   ];
 
   function readTheme() {

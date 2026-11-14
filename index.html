@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tennessee Quantum Grid · Qrypt</title>
-  <meta name="description" content="Quantum keys for Chattanooga's real power grid: a hypothetical dual ring, a real map, a live 3D twin with BB84 on every QKD fiber, a photon-by-photon walkthrough and a quantum lab." />
+  <meta name="description" content="Quantum keys for Chattanooga's real power grid: a real map, a live 3D twin with BB84 on every QKD fiber and a route search that uses the fewest trusted sites, a photon-by-photon walkthrough and a quantum lab." />
   <meta name="page-type" content="software" />
   <meta name="site-kind" content="software" />
   <meta name="theme-color" content="#05070d" />
@@ -90,7 +90,7 @@
     .sec-head .hint { margin-top: 12px; font-size: 15px; }
     kbd { font: 600 13px var(--q-font); padding: 1px 8px; border-radius: 6px; border: 1px solid var(--q-line); background: var(--q-surface); color: var(--q-ink); }
 
-    /* ---------- The journey: five steps on one path ---------- */
+    /* ---------- The journey: four steps on one path ---------- */
     .path { position: relative; list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
     .path__rail { position: absolute; left: 27px; top: 40px; bottom: 40px; width: 2px; background: var(--q-line); border-radius: 2px; pointer-events: none; }
     .path__lit { position: absolute; inset: 0; border-radius: 2px; background: color-mix(in srgb, var(--q-ok) 70%, transparent); transform-origin: top; }
@@ -132,7 +132,7 @@
     .num span { display: block; margin-top: 14px; font-size: 15px; line-height: 1.5; color: var(--q-ink-dim); max-width: 22ch; }
     .num .q-adv { margin-top: 8px; font-size: 14px; }
 
-    /* ---------- Real, assumed, hypothetical ---------- */
+    /* ---------- Real, assumed, demonstration ---------- */
     .truth { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
     .truth__card { padding: 28px; border-radius: 18px; background: var(--q-surface); border: 1px solid var(--q-line); }
     .truth__card h3 { display: flex; align-items: center; gap: 12px; font-size: 22px; }
@@ -214,7 +214,7 @@
           <p class="hero__lead q-enter-item">A working model of the city's real grid whose control links get their keys as single photons (quantum key distribution, QKD). Tap a fiber and the photons give the spy away; the link switches to backup post-quantum encryption and stays up.</p>
           <p class="hero__fact q-enter-item"><span><b>117</b> real substations</span><i class="sep" aria-hidden="true"></i><span>BB84 on every transmission fiber</span></p>
           <div class="hero__actions q-enter-item">
-            <a class="btn btn--primary q-btn" href="dual_ring_quantum_routing.html">Start with the dual ring<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+            <a class="btn btn--primary q-btn" href="chattanooga_quantum_map.html">Start with the real map<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
             <a class="btn btn--ghost q-btn" href="grid-twin/index.html">Open the live grid</a>
           </div>
         </div>
@@ -222,12 +222,12 @@
       <button class="hero__pause" type="button" id="fxPause" aria-label="Pause the light effect" aria-pressed="false" hidden><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="3" y="2" width="3.5" height="12" rx="1"/><rect x="9.5" y="2" width="3.5" height="12" rx="1"/></svg></button>
     </section>
 
-    <!-- The journey: five steps, simple to complex. Dealt moment: one photon travels the path once when it first comes into view, lighting each step. -->
+    <!-- The journey: four steps, simple to complex. Dealt moment: one photon travels the path once when it first comes into view, lighting each step. -->
     <section id="journey" aria-labelledby="journey-h">
       <div class="wrap">
         <div class="sec-head">
-          <h2 id="journey-h">The demo in five steps, simplest first</h2>
-          <p>Each step adds one layer: a ring of nine sites, the real city map, the full live grid, a single fiber, then the physics underneath.</p>
+          <h2 id="journey-h">The demo in four steps, simplest first</h2>
+          <p>Each step adds one layer: the real city map, the full live grid, a single fiber, then the physics underneath.</p>
           <p class="hint q-simple-only">Click any step to open it. For formulas, raw logs and parameter tables, switch to <kbd>Detailed</kbd> in the top bar.</p>
           <p class="hint q-adv">Detailed mode is on: the pages show their formulas, logs and parameter tables too.</p>
         </div>
@@ -236,27 +236,11 @@
           <li class="path__rail" id="pathRail" aria-hidden="true"><span class="path__lit"></span><span class="path__run"><i class="path__photon"></i></span></li>
 
           <li class="step">
-            <span class="step__node step__node--hypo" aria-hidden="true">1</span>
-            <a class="step__card q-card" href="dual_ring_quantum_routing.html">
-              <div>
-                <div class="step__head">
-                  <h3><span class="vh">Step 1: </span>The dual ring</h3>
-                  <span class="q-pill q-pill--warn"><svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2.2 1.8"/></svg>Hypothetical design</span>
-                </div>
-                <p class="step__what">The team lead's proposed architecture, not a published network: nine supernodes on two rings around a command center, with quantum keys on every span.</p>
-                <p class="step__try"><b>Try</b><span>Tap a span and watch the key go the other way round the ring.</span></p>
-                <p class="step__more q-adv">The router also cuts a gateway to the command center and splits the ring in two. The same ring runs in the live grid.</p>
-              </div>
-              <span class="go">Open the dual ring<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-            </a>
-          </li>
-
-          <li class="step">
-            <span class="step__node" aria-hidden="true">2</span>
+            <span class="step__node" aria-hidden="true">1</span>
             <a class="step__card q-card" href="chattanooga_quantum_map.html">
               <div>
                 <div class="step__head">
-                  <h3><span class="vh">Step 2: </span>The real map</h3>
+                  <h3><span class="vh">Step 1: </span>The real map</h3>
                   <span class="q-pill q-pill--ok"><svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 6.2l2.3 2.3L9.5 3.6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Real data</span>
                 </div>
                 <p class="step__what">Chattanooga's real EPB and TVA grid from OpenStreetMap, drawn on a street map.</p>
@@ -268,27 +252,27 @@
           </li>
 
           <li class="step step--main">
-            <span class="step__node" aria-hidden="true">3</span>
+            <span class="step__node" aria-hidden="true">2</span>
             <a class="step__card q-card" href="grid-twin/index.html">
               <div>
                 <div class="step__head">
-                  <h3><span class="vh">Step 3: </span>The live grid</h3>
+                  <h3><span class="vh">Step 2: </span>The live grid</h3>
                   <span class="q-pill q-pill--tele"><svg viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="3" fill="currentColor"/></svg>Main demo</span>
                 </div>
                 <p class="step__what">The 3D twin of the grid. BB84, the standard recipe for sending a key photon by photon, runs four times a second on every QKD fiber.</p>
-                <p class="step__try"><b>Try</b><span>Place a spy on a fiber and watch the network detect it and respond on its own, step by step.</span></p>
-                <p class="step__more q-adv">Switch between Chattanooga, Tennessee's 500 kV backbone, the dual ring and test networks.</p>
+                <p class="step__try"><b>Try</b><span>Place a spy on a fiber and watch the network detect it and respond on its own. Then find a route between two sites: it passes through as few sites as possible, because each one re-encrypts the key and could read it.</span></p>
+                <p class="step__more q-adv">Switch between Chattanooga, Tennessee's 500 kV backbone and test networks. The route search takes an error-rate cutoff (11% by default) and falls back to post-quantum keys when no clean quantum route is left.</p>
               </div>
               <span class="go">Open the live grid<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
             </a>
           </li>
 
           <li class="step">
-            <span class="step__node" aria-hidden="true">4</span>
+            <span class="step__node" aria-hidden="true">3</span>
             <a class="step__card q-card" href="bb84_visualizer.html">
               <div>
                 <div class="step__head">
-                  <h3><span class="vh">Step 4: </span>The photon line</h3>
+                  <h3><span class="vh">Step 3: </span>The photon line</h3>
                   <span class="q-pill pill-plain">One fiber, up close</span>
                 </div>
                 <p class="step__what">One fiber in 3D: Alice's bits and bases, a spy in the middle, and Bob's results.</p>
@@ -300,11 +284,11 @@
           </li>
 
           <li class="step">
-            <span class="step__node" aria-hidden="true">5</span>
+            <span class="step__node" aria-hidden="true">4</span>
             <a class="step__card q-card" href="threejs_quantum_grid.html">
               <div>
                 <div class="step__head">
-                  <h3><span class="vh">Step 5: </span>The quantum lab</h3>
+                  <h3><span class="vh">Step 4: </span>The quantum lab</h3>
                   <span class="q-pill pill-plain">The physics</span>
                 </div>
                 <p class="step__what">Teleportation, BB84 and Grover's search computed in your browser, next to real hardware results.</p>
@@ -335,7 +319,7 @@
       </div>
     </section>
 
-    <!-- What is real, what is assumed, what is hypothetical -->
+    <!-- What is real, what is assumed, what is only a demonstration -->
     <section id="real" aria-labelledby="real-h">
       <div class="wrap">
         <div class="sec-head">
@@ -358,9 +342,9 @@
             </ul>
           </article>
           <article class="truth__card truth__card--hypo">
-            <h3><span class="truth__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 12h6"/></svg></span>Hypothetical</h3>
+            <h3><span class="truth__icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9 12h6"/></svg></span>Demonstration</h3>
             <ul>
-              <li><strong>The dual ring</strong> is the team lead's proposed architecture, not a published or built network.</li>
+              <li><strong>Grover's search on routes</strong> is a demonstration: a classical search already finds the exact route. It shows notebook 2b's circuit working on the grid problem, not a speed-up.</li>
             </ul>
           </article>
         </div>

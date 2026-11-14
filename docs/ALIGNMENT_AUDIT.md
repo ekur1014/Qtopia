@@ -73,6 +73,8 @@ Live engine results for one fiber (p = 3.3%, tap 40%, theory 12.64%): Qiskit Aer
 
 ## 6. Team decision of 14 Nov, 12:48 (New Chat Grid)
 
+14 Nov: dual ring removed by team decision; replaced by the route search (see docs/REMOVE_RING_PLAN.md).
+
 | Asked for | Done |
 |---|---|
 | Model the dual ring: command center, nine supernodes, two rings so traffic can go either way | `?net=dualring`: 9 supernodes, one QKD fiber pair (working + protection ring) per 8.5 km span, command center linked to gateways 3 and 7, matching the teammate's router |

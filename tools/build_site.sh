@@ -18,7 +18,6 @@ cp index.html                    site/index.html                  # home: links 
 cp shared/qrypt.css shared/qbar.js site/shared/                   # one design system and top bar
 cp chattanooga_quantum_map.html  site/                            # Real map
 cp bb84_visualizer.html          site/                            # Photon line (notebook 1, one fiber)
-cp dual_ring_quantum_routing.html site/                           # Dual ring router (team design)
 cp threejs_quantum_grid.html     site/                            # Quantum lab
 cp interactive_grid_monitor.html site/                            # first prototype, linked from home
 cp grid_twin.html                site/                            # the live grid as one downloadable file

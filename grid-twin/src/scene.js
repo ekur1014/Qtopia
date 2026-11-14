@@ -499,10 +499,13 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
     }
     const focusSite = sel && sel.type === "node" ? view.sites.get(sel.id) : null;
     const teleRoute = view.teleport?.route ?? null;
-    // In the teleportation view the rings mark swapping nodes (blue: never hold the key); otherwise trusted relays (gold).
-    const relaySet = new Set(view.teleport ? (teleRoute ? teleRoute.nodes.slice(1, -1) : []) : (focusSite?.relays ?? []));
-    keyPath = view.teleport ? teleRoute : (focusSite?.keyPath ?? focusSite?.dataPath ?? null);
-    const ringColor = view.teleport ? COLORS.tele : COLORS.gold;
+    // A shown route search wins over the selected site's own key path (outside the teleportation view).
+    const searched = !view.teleport && view.route?.path ? view.route : null;
+    // In the teleportation view the rings mark swapping nodes (blue: never hold the key); otherwise trusted relays
+    // (gold). On an ML-KEM route the sites in between only forward ciphertext, so their rings are blue.
+    const relaySet = new Set(view.teleport ? (teleRoute ? teleRoute.nodes.slice(1, -1) : []) : searched ? searched.relays : (focusSite?.relays ?? []));
+    keyPath = view.teleport ? teleRoute : searched ? searched.path : (focusSite?.keyPath ?? focusSite?.dataPath ?? null);
+    const ringColor = view.teleport ? COLORS.tele : searched && searched.mode === "pqc" ? COLORS.pqc : COLORS.gold;
     keyPackets.material.color.copy(glow(ringColor, 2.2));
     const pathLinks = new Set((keyPath?.links ?? []).map((l) => l.id));
     for (const [id, nv] of nodeViews) {

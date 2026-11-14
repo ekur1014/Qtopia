@@ -15,7 +15,7 @@ const out = join(root, "..", "grid_twin.html");
 const read = (p) => readFileSync(join(root, p), "utf8");
 
 // Dependency order: a module comes after everything it imports.
-const ORDER = ["bb84", "detector", "network", "teleport", "response", "scene", "ui", "main"];
+const ORDER = ["bb84", "detector", "network", "teleport", "route", "response", "scene", "ui", "main"];
 const external = new Set(); // imports of three and its addons, resolved by the page's import map
 const parts = [];
 for (const name of ORDER) {

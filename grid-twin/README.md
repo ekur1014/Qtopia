@@ -58,22 +58,36 @@ A fiber's inspector then shows **Run this fiber as real quantum code**: Qiskit A
 | Operator overrides | In a fiber's inspector, or on the incident card: **Quarantine fiber** takes it out of service (a site with no path left keeps power and runs on local protection), **Restore fiber** brings it back on probation, **Decoy traffic** switches decoy mode by hand. Quarantine is never automatic, so an attacker cannot take a fiber down by tapping it. |
 | Alarm sensitivity | How many standard deviations above a fiber's own baseline counts as an alarm, with the false-alarm chance per check. |
 | Find a fiber or site | Picker in the panel: selects anything without clicking in 3D (keyboard and projector friendly). |
+| Find a route | Pick a **Start** and an **End** site and set the **QBER cutoff** (1% to 25%, default 11%, the Shor–Preskill limit). A fiber at or above the cutoff counts as tapped and is not used. The route is highlighted in 3D, with its hops, km, highest QBER and the trusted sites it passes through. It updates live as taps are placed. See "Route search" below. |
 | QKD coverage | **Backbone only** (our design) or **Every fiber** (the team's whiteboard sketch); also `?qkd=all`. |
 | Satellite (concept) | Off by default. Draws a satellite and its beams to the control centers, labeled *concept, not simulated*: for discussion only. It will probably be taken out unless we find a quantum application only a satellite can serve. |
 | Teleportation view | Fibers under 11% error light up as usable for entanglement; select a substation to see its entanglement-swapping route and end-to-end error. Swapping nodes are shown in blue: unlike trusted relays (gold), they never hold the key. |
 | View dock (bottom right of the 3D view) | **+** / **−** zoom; **Fit** (H) flies back to the whole network; **Focus** (F) flies close to the selection and fades everything unrelated; **Cinematic orbit** (O) turns the view slowly, stops the moment you drag, scroll or click, and resumes after 20 s idle; **Light/dark** (T). |
 | Space / Esc | Pause and resume / clear the selection. Drag to orbit, scroll to zoom. |
-| Browser console | `gridTwin.tap("L4", 0.1)`, `gridTwin.quarantine("P4")`, `gridTwin.select("node", "S6")`, `gridTwin.incidents()`, `gridTwin.focus()`, `gridTwin.theme("dark")`, `gridTwin.orbit(false)`, `gridTwin.state()`: for scripted demos and tests. |
+| Browser console | `gridTwin.tap("L4", 0.1)`, `gridTwin.quarantine("P4")`, `gridTwin.select("node", "S6")`, `gridTwin.incidents()`, `gridTwin.focus()`, `gridTwin.route("T1", "T4", 0.11)`, `gridTwin.theme("dark")`, `gridTwin.orbit(false)`, `gridTwin.state()`: for scripted demos and tests. |
+
+## Route search
+
+The **Find a route** section answers one question: how does site A reach site B when some fibers may be tapped? It is built for the real Chattanooga grid.
+
+- **Inputs:** a start site, an end site, and a QBER cutoff (QBER is the share of key bits that arrive wrong). A fiber at or above the cutoff counts as tapped and is not used. The default, 11%, is the Shor–Preskill limit, where no secret key can be made.
+- **Fewest sites first.** There are no quantum repeaters, so every site a QKD key passes through is a trusted relay: it measures the key and re-encrypts it for the next fiber. Someone inside that site (an insider, or a hacked device) could read the key in between. So the search picks the route with the fewest intermediate sites, and only among those the lowest risk-weighted distance, km × (1 + 20 × QBER). The panel compares it with the plain shortest route by km: "the shortest route would pass through N sites; this one passes through M".
+- **Fallback order:**
+  1. A clean QKD route, every fiber under the cutoff, relayed by trusted sites.
+  2. If there is none: the best route over every fiber still in service, on ML-KEM keys (post-quantum encryption) agreed end to end. Sites along the way only forward ciphertext they cannot read.
+  3. If there is no physical path at all: the site is islanded. Power stays on, it runs on local protection, and a crew is dispatched.
+- **Grover card.** A small card shows the same route problem as a Grover search: 8 candidate routes, how many are clean, the number of Grover steps, and the chance of drawing a clean route. This is a demonstration, not a speed-up. See DESIGN.md.
+
+Code: `src/route.js` (shared by the page and the tests). Python twin: `chattanooga_router.py` at the repo root, which credits teammate Asheb's earlier ring router for the cutoff, the blocked-link rule, the cost formula and the ML-KEM fallback. The automatic response's QKD key paths follow the same fewest-sites rule.
 
 ## Networks
 
-Pick one in the panel, or open `?net=<id>`:
+Pick one in the panel, or open `?net=<id>`. An old link to the removed ring network opens Chattanooga instead.
 
 | id | Network | Sites | Fibers | QKD fibers |
 |---|---|---|---|---|
 | `chattanooga` (default, the hero) | **Real** Chattanooga grid: EPB and TVA substations and lines from OpenStreetMap | 117 | 145 | 34 |
 | `tennessee500` | **Real** TVA 500 kV backbone across Tennessee, from OpenStreetMap | 33 | 38 | 30 |
-| `dualring` | **Team design:** command center + nine supernodes on a counter-rotating dual ring (one QKD fiber pair per 8.5 km span), substations off each supernode | 19 | 20 | 11 |
 | `city` | Simulation lab: stylized city network, hand-made | 17 | 21 | 11 |
 | `ieee14` | IEEE 14-bus test grid | 14 | 20 | 13 |
 | `ieee30` | IEEE 30-bus test grid | 30 | 41 | 20 |
@@ -97,7 +111,7 @@ The IEEE grids are public test systems (MATPOWER, UW Power Systems Test Case Arc
 | Cross-check against Qiskit | `sim/bb84_reference.py` runs the same scenarios as real circuits on Qiskit Aer and writes `data/calibration.json`; `tests/engine.test.mjs` checks the browser engine against it. All 7 scenarios agree. |
 | Fiber loss and detector noise | A standard model (Eq. (8) of Lo, Ma and Chen, PRL 94, 230504, 2005) with published lab parameters: the GYS 2004 row of Table 1 in Ma, Qi, Zhao and Lo, arXiv quant-ph/0503005: 0.21 dB/km loss, 4.5% detection efficiency, 1.7e-6 dark counts, 3.3% detector error, 1550 nm. Assumptions for a generic metro fiber, not measurements of any utility. |
 | Abort line at 11% | Where the secret-key fraction 1 − 2h(Q) reaches zero (Shor and Preskill, PRL 85, 441, 2000). |
-| The network layout | Real for Chattanooga and the Tennessee 500 kV view (OpenStreetMap, public data); the team's design for the dual ring (illustrative distances); made up for the Simulation lab's city (2 control centers, 6 major substations, 8 feeder sub-units, 1 remote site). Which substations hold the keys is our assumption. |
+| The network layout | Real for Chattanooga and the Tennessee 500 kV view (OpenStreetMap, public data); made up for the Simulation lab's city (2 control centers, 6 major substations, 8 feeder sub-units, 1 remote site). Which substations hold the keys is our assumption. |
 | The response policy | Our design (`src/response.js`). See DESIGN.md. |
 | Key rates in bits per second | Not shown: the tool shows the *fraction* of sifted bits that become secret key, which does not depend on hardware we do not have. |
 
@@ -105,7 +119,7 @@ The IEEE grids are public test systems (MATPOWER, UW Power Systems Test Case Arc
 
 ```bash
 cd grid-twin
-node --test tests/*.test.mjs                       # 27 tests: physics, detector, networks, response policy
+node --test tests/*.test.mjs                       # physics, detector, networks, response policy, route search
 ~/vscode/qrypt-venv/bin/python sim/bb84_reference.py # regenerate the Qiskit Aer reference (about 20 s)
 ```
 
@@ -118,6 +132,7 @@ grid-twin/
   src/detector.js         sliding-window QBER, statistical warning, 11% abort, hysteresis (pure, tested)
   src/network.js          graph model and shortest paths (pure, tested)
   src/response.js         response policy: ML-KEM fallback, rerouting, quarantine, trusted relays (pure, tested)
+  src/route.js            route search from a start to an end site under a QBER cutoff, plus the Grover demo (pure, tested)
   src/scene.js            Three.js scene: fibers, photons, taps, relay rings, bloom, camera
   src/ui.js               control panel, inspector, live chart, event log
   src/main.js             simulation loop (4 Hz) wiring it all together
@@ -162,10 +177,11 @@ Every page has a **Simple / Detailed** switch in the top bar (default Simple, re
 Pages mark detail with `class="q-adv"`.
 
 **The journey runs from simple to complex**, in the top bar's order:
-1. The hypothetical dual ring.
-2. The real map.
-3. The live grid.
-4. The photon line.
-5. The quantum lab.
+1. The real map.
+2. The live grid.
+3. The photon line.
+4. The quantum lab.
+
+Home comes before step 1.
 
 **In the live grid**, "Tap a fiber for me" taps the network's demo fiber, so a first-time visitor sees the automatic response at once.

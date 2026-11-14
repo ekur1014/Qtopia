@@ -39,13 +39,11 @@
     .hint svg { width: 18px; height: 18px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
     .hint.is-gone { opacity: 0; transform: translate(-50%, -6px); }
 
-    /* Labels drawn on the map (selected line, ring sites) */
+    /* Labels drawn on the map (selected line) */
     .map-tag > span { position: absolute; left: 0; bottom: 10px; transform: translateX(-50%); white-space: nowrap; padding: 5px 10px; border-radius: 8px; background: var(--q-surface); color: var(--q-ink); border: 1px solid var(--q-line); box-shadow: var(--q-shadow); font: 600 13px var(--q-font); }
     .map-tag > span b { font-weight: 500; color: var(--q-ink-dim); margin-left: 6px; }
     .map-tag--sel > span { border-left: 4px solid var(--tag-c, var(--q-ok)); }
-    .map-tag--ring > span { border: 1.5px dashed var(--q-gold); font-size: 12px; letter-spacing: .02em; }
-    .ring-num > span { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--q-surface); color: var(--q-ink); border: 2px solid var(--q-gold); font: 600 11px var(--q-mono); }
-    .ring-num--cc > span { width: auto; height: 24px; padding: 0 9px; border-radius: 999px; border-style: dashed; font: 600 11px var(--q-font); letter-spacing: .02em; }
+
 
     /* Photons on the selected fiber: light pulses that travel for a few seconds, then rest */
     .q-photon { opacity: 0; }
@@ -102,7 +100,7 @@
 
     .btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 11px 18px; border-radius: 999px; border: 1px solid transparent; background: var(--q-ink); color: var(--q-surface); font: 600 14px var(--q-font); text-decoration: none; cursor: pointer; }
     .btn:hover { background: color-mix(in srgb, var(--q-ink) 86%, var(--q-surface)); }
-    .btn:focus-visible, .seg button:focus-visible, .switch:focus-visible, select:focus-visible, .spy input:focus-visible { outline: 2px solid var(--q-ok); outline-offset: 2px; }
+    .btn:focus-visible, .seg button:focus-visible, select:focus-visible, .spy input:focus-visible { outline: 2px solid var(--q-ok); outline-offset: 2px; }
     .btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
     .pick { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; font-size: 13px; color: var(--q-ink-dim); }
@@ -114,30 +112,10 @@
     .stat span { display: block; font-size: 13px; line-height: 1.35; color: var(--q-ink-dim); margin-top: 2px; }
     .stat--ok b { color: var(--q-ok); } .stat--pqc b { color: var(--q-pqc); } .stat--warn b { color: var(--q-warn); }
 
-    /* Hypothetical ring card */
-    .card--ring { border-style: dashed; border-color: color-mix(in srgb, var(--q-gold) 60%, var(--q-line)); }
-    .hypo { display: inline-block; padding: 2px 9px; border-radius: 999px; border: 1.5px dashed var(--q-gold); font: 600 11px var(--q-mono); letter-spacing: .06em; color: var(--q-ink); }
-    .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 10px 0 10px; }
-    .switch-row label { font-size: 15px; font-weight: 600; cursor: pointer; }
-    .switch { position: relative; width: 52px; height: 30px; flex: none; border-radius: 999px; border: 1px solid var(--q-line); background: var(--q-tint-2); cursor: pointer; transition: background var(--q-m-in) var(--q-ease); }
-    .switch::before { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--q-surface); box-shadow: 0 1px 3px rgba(15, 26, 46, .25); transition: transform 180ms var(--q-ease); }
-    .switch[aria-checked="true"] { background: var(--q-gold); border-color: var(--q-gold); }
-    .switch[aria-checked="true"]::before { transform: translateX(22px); }
-    .switch:disabled { opacity: .45; cursor: not-allowed; }
-    .switch-state { font: 500 12px var(--q-mono); color: var(--q-ink-dim); margin-left: auto; margin-right: 10px; }
-    .ring-out[hidden] { display: none; }
-    .ring-len { font-size: 14px; color: var(--q-ink-dim); margin: 4px 0 10px; }
-    .ring-len b { display: block; font-size: 30px; font-weight: 600; letter-spacing: -0.02em; color: var(--q-ink); font-variant-numeric: tabular-nums; }
-    .ring-list { margin: 0 0 10px; padding: 0; list-style: none; counter-reset: r; font-size: 14px; }
-    .ring-list li { counter-increment: r; display: flex; gap: 10px; align-items: baseline; padding: 5px 0; border-bottom: 1px solid var(--q-line); }
-    .ring-list li::before { content: counter(r); flex: none; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; border: 2px solid var(--q-gold); font: 600 11px var(--q-mono); transform: translateY(5px); }
-    .ring-list li span { flex: 1; } .ring-list li small { font-size: 12px; color: var(--q-ink-dim); white-space: nowrap; }
-
     .legend div { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--q-ink-dim); margin: 7px 0; }
     .legend div[hidden] { display: none; }
     .legend i { display: inline-block; width: 24px; flex: none; border-radius: 3px; }
     .legend i.dot { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--q-surface); box-shadow: 0 0 0 1px var(--q-line); margin: 0 6px; }
-    .legend i.dash { height: 0 !important; border-top: 3px dashed var(--q-gold); border-radius: 0; }
 
     .foot { font-size: 13px; color: var(--q-ink-dim); line-height: 1.6; margin: 18px 0 0; max-width: 66ch; }
     .foot a { color: var(--q-ink); }
@@ -152,7 +130,7 @@
     }
     @media (prefers-reduced-motion: reduce) {
       .q-photon.is-running { animation: none; opacity: .9; }
-      .hint, .gauge__fill, .switch, .switch::before { transition: none; }
+      .hint, .gauge__fill { transition: none; }
     }
   </style>
 </head>
@@ -167,7 +145,7 @@
     </div>
     <aside>
       <div class="head" data-enter>
-        <span class="q-label">Step 2 · Real map</span>
+        <span class="q-label">Step 1 · Real map</span>
         <h1 id="title">Chattanooga's real grid, on the map</h1>
         <p class="lead q-enter-item" id="subtitle"></p>
         <div class="seg q-enter-item" role="group" aria-label="Which grid">
@@ -180,22 +158,10 @@
 
       <div class="stats" id="stats"></div>
 
-      <section class="card card--ring" aria-labelledby="ring-h">
-        <span class="hypo">Hypothetical</span>
-        <h2 id="ring-h">Hypothetical dual ring</h2>
-        <p>Our team's nine-site ring design from step 1, placed on real substations. This only shows where such a ring could sit on the real grid; it is not EPB's network.</p>
-        <div class="switch-row">
-          <label for="ring-switch">Show the hypothetical ring</label>
-          <span class="switch-state" id="ring-state" aria-hidden="true">Off</span>
-          <button type="button" class="switch" id="ring-switch" role="switch" aria-checked="false"></button>
-        </div>
-        <p class="ring-note" id="ring-note" hidden>The ring is placed on the Chattanooga grid. Switch to Chattanooga city to see it.</p>
-        <div class="ring-out" id="ring-out" hidden>
-          <p class="ring-len"><b id="ring-km">0 km</b>Ring length, measured as straight lines between the nine sites. Real fiber along the power lines would run longer.</p>
-          <p id="ring-cc"></p>
-          <ol class="ring-list" id="ring-list"></ol>
-          <p class="q-adv" id="ring-how"></p>
-        </div>
+      <section class="card" aria-labelledby="route-h">
+        <span class="q-label" id="route-h">Route search</span>
+        <p>A QKD key is decrypted and re-encrypted at every substation it passes, so someone inside any of them could read it. The live grid finds routes between two sites that pass through <b>as few sites as possible</b>, skipping any fiber whose error rate is over the cutoff.</p>
+        <p><a class="q-link" href="grid-twin/index.html">Find a route in the live grid</a></p>
       </section>
 
       <section class="card legend" aria-labelledby="legend-h">
@@ -205,7 +171,6 @@
         <div><i class="dot" style="background:var(--q-gold);width:16px;height:16px;margin:0 4px"></i>Control center (location assumed)</div>
         <div><i class="dot" style="background:var(--q-ok)"></i>Transmission substation</div>
         <div><i class="dot" style="background:var(--q-pqc);width:9px;height:9px;margin:0 7.5px"></i>Distribution substation</div>
-        <div id="legend-ring" hidden><i class="dash"></i>Hypothetical dual ring (dashed gold)</div>
       </section>
 
       <section class="card" aria-labelledby="reach-h">
@@ -266,13 +231,11 @@
     }
 
     var layer = L.layerGroup().addTo(map);     // grid lines and substations
-    var ringLayer = L.layerGroup().addTo(map); // the hypothetical ring
     var selLayer = L.layerGroup().addTo(map);  // glow, photons and the label of the selected line
     var net = null, nodes = {};
     var selected = null;  // { link, line }
     var photon = null;    // the photon overlay of the selected line
     var tap = 0;          // share of photons the hypothetical spy intercepts
-    var ringOn = false;
     var hintGone = false;
 
     function ll(n, pos) {
@@ -358,7 +321,6 @@
       }
       document.querySelectorAll("[data-region]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.region === region)); });
 
-      drawRing();
       // Open straight on a fiber that is good for the demo (or keep the one picked before a theme change).
       var want = keepId || (region === "chattanooga" ? "L6" : "L11");
       var first = net.links.find(function (l) { return l.id === want; }) || qkd[0];
@@ -474,92 +436,6 @@
       if (photon) photon.setStyle({ color: tap > 0 && st.c !== "ok" ? c : (isDark() ? "#ffffff" : css("--q-surface")) });
     }
 
-    // Hypothetical dual ring on the real grid ------------------------------------------------------------
-    // Nine transmission substations (161 kV and up) stand in for the nine supernodes. Centre: the mean
-    // position of all substations. Nine 40-degree sectors around it; in each, the transmission substation
-    // whose distance from the centre is closest to the median distance of all transmission substations.
-    // Command center: the "control" substation nearest the centre (left out of the ring itself).
-    function haversine(p, q) {
-      var R = 6371, r = Math.PI / 180;
-      var dLat = (q[0] - p[0]) * r, dLon = (q[1] - p[1]) * r;
-      var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(p[0] * r) * Math.cos(q[0] * r) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      return 2 * R * Math.asin(Math.sqrt(h));
-    }
-    function planRing() {
-      var all = net.nodes.map(function (n) { return { n: n, ll: ll(net, n.pos) }; });
-      var lat0 = all.reduce(function (s, o) { return s + o.ll[0]; }, 0) / all.length;
-      var lon0 = all.reduce(function (s, o) { return s + o.ll[1]; }, 0) / all.length;
-      var kx = 111.32 * Math.cos(lat0 * Math.PI / 180), ky = 110.57;
-      function geo(o, from) { // km east and north of a point, bearing clockwise from north
-        var dx = (o.ll[1] - from[1]) * kx, dy = (o.ll[0] - from[0]) * ky;
-        return { d: Math.sqrt(dx * dx + dy * dy), bearing: (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360 };
-      }
-      var trans = all.filter(function (o) { return o.n.type === "substation" || o.n.type === "control"; });
-      var controls = trans.filter(function (o) { return o.n.type === "control"; });
-      if (trans.length < 3 || !controls.length) return null;
-      trans.forEach(function (o) { var g = geo(o, [lat0, lon0]); o.d = g.d; o.bearing = g.bearing; });
-      var cc = controls.slice().sort(function (x, y) { return x.d - y.d; })[0];
-      var ds = trans.map(function (o) { return o.d; }).sort(function (x, y) { return x - y; });
-      var median = ds.length % 2 ? ds[(ds.length - 1) / 2] : (ds[ds.length / 2 - 1] + ds[ds.length / 2]) / 2;
-      var ring = [];
-      for (var s = 0; s < 9; s++) {
-        var inSector = trans.filter(function (o) { return o !== cc && o.bearing >= s * 40 && o.bearing < s * 40 + 40; });
-        if (!inSector.length) continue;
-        ring.push(inSector.sort(function (x, y) { return Math.abs(x.d - median) - Math.abs(y.d - median); })[0]);
-      }
-      ring.sort(function (x, y) { return x.bearing - y.bearing; });
-      var spans = ring.map(function (o, i) { return haversine(o.ll, ring[(i + 1) % ring.length].ll); });
-      var length = spans.reduce(function (s, v) { return s + v; }, 0);
-      // Gateways: the ring members whose direction from the command center is nearest to due east and due west.
-      var fromCc = ring.map(function (o) { var g = geo(o, cc.ll); return { o: o, b: g.bearing }; });
-      var off = function (b, target) { var d = Math.abs(b - target) % 360; return d > 180 ? 360 - d : d; };
-      var east = fromCc.slice().sort(function (x, y) { return off(x.b, 90) - off(y.b, 90); })[0].o;
-      var west = fromCc.filter(function (x) { return x.o !== east; }).sort(function (x, y) { return off(x.b, 270) - off(y.b, 270); })[0].o;
-      return { ring: ring, cc: cc, east: east, west: west, length: length, longestSpan: Math.max.apply(null, spans), median: median };
-    }
-
-    function drawRing() {
-      ringLayer.clearLayers();
-      var canRing = region === "chattanooga";
-      var sw = $("ring-switch");
-      sw.disabled = !canRing;
-      $("ring-note").hidden = canRing;
-      var on = ringOn && canRing;
-      sw.setAttribute("aria-checked", String(on));
-      $("ring-state").textContent = on ? "On" : "Off";
-      $("ring-out").hidden = !on;
-      $("legend-ring").hidden = !on;
-      if (!on) return;
-      var plan = planRing();
-      if (!plan) { $("ring-out").hidden = true; return; }
-      var gold = css("--q-gold");
-      var loop = plan.ring.map(function (o) { return o.ll; });
-      loop.push(plan.ring[0].ll);
-      // Two counter-rotating fibers share one path in the design, so the ring is drawn as a doubled dashed loop.
-      L.polyline(loop, { renderer: canvasR, interactive: false, color: gold, weight: 9, opacity: isDark() ? 0.18 : 0.14 }).addTo(ringLayer);
-      L.polyline(loop, { renderer: canvasR, interactive: false, color: gold, weight: 3, opacity: 1, dashArray: "10 8" }).addTo(ringLayer);
-      [plan.east, plan.west].forEach(function (g) {
-        L.polyline([plan.cc.ll, g.ll], { renderer: canvasR, interactive: false, color: gold, weight: 2, opacity: 0.95, dashArray: "4 7" }).addTo(ringLayer);
-      });
-      plan.ring.forEach(function (o, i) { tag(o.ll, "<span>" + (i + 1) + "</span>", "ring-num").addTo(ringLayer); });
-      tag(plan.cc.ll, "<span>Command center</span>", "ring-num ring-num--cc").addTo(ringLayer);
-      var north = plan.ring.slice().sort(function (x, y) { return y.ll[0] - x.ll[0]; })[0];
-      tag([north.ll[0], north.ll[1]], '<span style="bottom:18px">Hypothetical ring</span>', "map-tag map-tag--ring").addTo(ringLayer);
-
-      $("ring-km").textContent = plan.length.toFixed(1) + " km";
-      $("ring-cc").innerHTML = "Command center: <b>" + esc(nameOf(plan.cc.n)) + "</b>, one of the two control centers in our data (location assumed). Dashed spokes join it to the ring members nearest due east and due west.";
-      $("ring-list").innerHTML = plan.ring.map(function (o) {
-        var role = o === plan.east ? "east gateway" : o === plan.west ? "west gateway" : "";
-        return "<li><span>" + esc(nameOf(o.n)) + "</span><small>" + (o.n.kv ? o.n.kv + " kV" : "") + (role ? " · " + role : "") + "</small></li>";
-      }).join("");
-      $("ring-how").textContent = "How the " + plan.ring.length + " sites were picked: from the centre of all substations, the map is cut into nine 40° slices. In each slice we take the transmission substation (161 kV and up) whose distance from the centre is closest to the median, " + plan.median.toFixed(1) + " km. Longest straight-line span: " + plan.longestSpan.toFixed(1) + " km.";
-    }
-
-    $("ring-switch").addEventListener("click", function () {
-      if (this.disabled) return;
-      ringOn = !ringOn;
-      drawRing();
-    });
     document.querySelectorAll("[data-region]").forEach(function (b) {
       b.addEventListener("click", function () { if (region === b.dataset.region) return; region = b.dataset.region; tap = 0; draw(); });
     });

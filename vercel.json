@@ -3,5 +3,17 @@
   "framework": null,
   "installCommand": "",
   "buildCommand": "bash tools/build_site.sh",
-  "outputDirectory": "site"
+  "outputDirectory": "site",
+  "redirects": [
+    {
+      "source": "/dual_ring_quantum_routing.html",
+      "destination": "/chattanooga_quantum_map.html",
+      "permanent": false
+    },
+    {
+      "source": "/dual_ring_mesh_satellite_upload.html",
+      "destination": "/chattanooga_quantum_map.html",
+      "permanent": false
+    }
+  ]
 }

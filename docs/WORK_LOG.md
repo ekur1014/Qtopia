@@ -36,6 +36,7 @@ Everything this part of the team built for the Tennessee Quantum Hackathon (Secu
 
 - Direction from the team recordings: an interactive network view with live QBER and click-to-place eavesdroppers; satellites out of scope. Built in 3D with Three.js. Full details in `grid-twin/BUILD_LOG.md` and `grid-twin/DESIGN.md`.
 - Commit `3665f06`. The team chose Grid Twin's design over the teammate's 2D monitor.
+- 14 Nov: dual ring removed by team decision; replaced by the route search (see docs/REMOVE_RING_PLAN.md).
 
 ## 6. Audit (Saturday)
 

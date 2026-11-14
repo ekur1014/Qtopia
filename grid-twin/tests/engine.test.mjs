@@ -9,6 +9,7 @@ import { runRounds, mulberry32, expectedQber, baselineQber, secretFraction, ABOR
 import { createDetector, normalTail } from "../src/detector.js";
 import { buildNetwork, shortestPath, controlCenters } from "../src/network.js";
 import { computeResponse, sitesStrandedWithout } from "../src/response.js";
+import { findRoute, candidateRoutes, grover } from "../src/route.js";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const raw = JSON.parse(fs.readFileSync(path.join(here, "../data/network.json"), "utf8"));
@@ -288,17 +289,150 @@ test("Every fiber up to 80 km reaches the detector's minimum evidence within one
   }
 });
 
-test("Dual ring (team design): a tapped span sends the key the other way round the ring", () => {
-  const raw = JSON.parse(fs.readFileSync(path.join(here, "../data/networks/dualring.json"), "utf8"));
-  const g = buildNetwork(raw);
-  assert.equal([...g.nodes.values()].filter((n) => n.type === "substation").length, 9, "nine supernodes");
-  const ring = raw.links.filter((l) => l.ring);
-  assert.equal(ring.length, 9, "one fiber pair per span");
-  assert.ok(ring.every((l) => l.kind === "qkd" && l.km === 8.5), "QKD on every 8.5 km span");
-  const ok = () => new Map([...g.links.keys()].map((id) => [id, { alarm: "ok", quarantined: false, risk: 0 }]));
-  const keyLinks = (st) => computeResponse(g, st).sites.get("N4").keyPath.links.map((l) => l.id);
-  assert.deepEqual(keyLinks(ok()), ["C3", "R3"]);
-  const st = ok();
-  st.set("R3", { alarm: "abort", quarantined: false, risk: 4 });
-  assert.deepEqual(keyLinks(st), ["C7", "R6", "R5", "R4"], "the other way round the ring");
+const chattanooga = () => buildNetwork(JSON.parse(fs.readFileSync(path.join(here, "../data/networks/chattanooga.json"), "utf8")));
+const allOk = (g) => new Map([...g.links.keys()].map((id) => [id, { alarm: "ok", quarantined: false, risk: 0 }]));
+
+test("Chattanooga: an aborted fiber on a key path sends the key another way to a control center", () => {
+  const g = chattanooga();
+  const centers = controlCenters(g);
+  const before = computeResponse(g, allOk(g));
+  // A site whose QKD key path has at least two fibers and survives losing its first one.
+  let found = null;
+  for (const [id, s] of before.sites) {
+    if (s.keySource !== "qkd" || !s.keyPath || s.keyPath.links.length < 2) continue;
+    const cut = s.keyPath.links[0].id;
+    const st = allOk(g);
+    st.set(cut, { alarm: "abort", quarantined: false, risk: 4 });
+    const after = computeResponse(g, st).sites.get(id);
+    if (after.keySource === "qkd") {
+      found = { id, cut, after };
+      break;
+    }
+  }
+  assert.ok(found, "some substation has a reroutable QKD key path");
+  const ids = found.after.keyPath.links.map((l) => l.id);
+  assert.ok(!ids.includes(found.cut), "the new key path avoids the aborted fiber");
+  assert.ok(centers.includes(found.after.keyPath.nodes[0]), "and still starts at a control center");
+});
+
+test("Key paths use the fewest trusted relays: never more than the shortest-km QKD path", () => {
+  const g = chattanooga();
+  const centers = controlCenters(g);
+  const res = computeResponse(g, allOk(g));
+  const healthyQkd = (l) => l.kind === "qkd";
+  let compared = 0;
+  for (const [id, s] of res.sites) {
+    if (s.keySource !== "qkd" || !s.keyPath) continue;
+    const byKm = centers.map((c) => shortestPath(g, [c], id, healthyQkd)).filter(Boolean).sort((a, b) => a.km - b.km)[0];
+    assert.ok(s.relays.length <= byKm.nodes.length - 2, `${id}: ${s.relays.length} relays vs ${byKm.nodes.length - 2} on the shortest path`);
+    compared++;
+  }
+  assert.ok(compared >= 20, "most Chattanooga substations have QKD keys");
+});
+
+test("Route search: clean QKD route with fewest sites; the shortest-km route is reported for comparison", () => {
+  const g = chattanooga();
+  const r = findRoute(g, "T1", "T4");
+  assert.equal(r.mode, "qkd");
+  assert.equal(r.nodes[0], "T1");
+  assert.equal(r.nodes.at(-1), "T4");
+  assert.ok(r.relaysCanReadKey);
+  assert.ok(r.links.every((id) => g.links.get(id).kind === "qkd"), "QKD fibers only");
+  assert.ok(r.shortest && r.relays.length <= r.shortest.sites, "never more sites than the shortest-km route");
+  assert.ok(r.km >= r.shortest.km, "and never shorter than it");
+});
+
+test("Route search: a fiber at the cutoff is blocked; lowering the cutoff blocks an 8.5% fiber", () => {
+  const g = chattanooga();
+  const base = findRoute(g, "T1", "T4");
+  const L = base.links[1];
+  const at = findRoute(g, "T1", "T4", { cutoff: 0.11, qberOf: (l) => (l.id === L ? 0.11 : null) });
+  assert.ok(at.blocked.includes(L) && !at.links.includes(L), "QBER equal to the cutoff counts as tapped");
+  const q = (l) => (l.id === L ? 0.085 : null);
+  const loose = findRoute(g, "T1", "T4", { cutoff: 0.11, qberOf: q });
+  assert.ok(!loose.blocked.includes(L), "8.5% is allowed under 11%");
+  const strict = findRoute(g, "T1", "T4", { cutoff: 0.07, qberOf: q });
+  assert.ok(strict.blocked.includes(L) && !strict.links.includes(L), "8.5% is blocked under a 7% cutoff");
+  assert.equal(strict.mode, "qkd", "and another clean QKD route exists");
+});
+
+test("Route search: a QKD fiber still measuring carries no QKD key", () => {
+  const g = chattanooga();
+  const base = findRoute(g, "T1", "T4");
+  const L = base.links[0];
+  const r = findRoute(g, "T1", "T4", { measured: (l) => l.id !== L });
+  assert.ok(r.pending.includes(L) && !r.links.includes(L) && !r.blocked.includes(L));
+});
+
+test("Route search: every QKD fiber over the cutoff falls back to ML-KEM; no fiber at all is islanded", () => {
+  const g = chattanooga();
+  const pqc = findRoute(g, "T1", "T4", { qberOf: (l) => (l.kind === "qkd" ? 0.2 : null) });
+  assert.equal(pqc.mode, "pqc");
+  assert.ok(pqc.ok && !pqc.relaysCanReadKey, "sites on an ML-KEM route only forward ciphertext");
+  const cutOff = new Set(g.adjacency.get("T1").map((l) => l.id));
+  const island = findRoute(g, "T1", "T4", { inService: (l) => !cutOff.has(l.id) });
+  assert.equal(island.mode, "islanded");
+  assert.equal(island.ok, false);
+});
+
+test("Grover over routes: state vector matches the closed form for every set of marks at N = 8", () => {
+  for (let mask = 0; mask < 256; mask++) {
+    const marked = [...Array(8).keys()].filter((i) => mask & (1 << i));
+    const g = grover(8, marked);
+    const M = marked.length;
+    if (M === 0) {
+      assert.ok(g.probs.every((p) => Math.abs(p - 1 / 8) < 1e-12), "no clean route: output stays uniform");
+      continue;
+    }
+    const th = Math.asin(Math.sqrt(M / 8));
+    const s = Math.sin((2 * g.iterations + 1) * th) ** 2;
+    marked.forEach((i) => assert.ok(Math.abs(g.probs[i] - s / M) < 1e-12));
+    if (M < 8) [...Array(8).keys()].filter((i) => !marked.includes(i)).forEach((i) => assert.ok(Math.abs(g.probs[i] - (1 - s) / (8 - M)) < 1e-12));
+  }
+  assert.ok(grover(8, [5]).success > 0.94, "one clean route in eight: about 94.5% after 2 iterations");
+  for (let M = 1; M <= 8; M++) for (const N of [8, 16]) if (M <= N) assert.ok(grover(N, [...Array(M).keys()]).success >= M / N - 1e-12, `N=${N} M=${M}: Grover never does worse than a random pick`);
+});
+
+test("Route candidates (Yen): distinct simple QKD routes, fewest sites first, the first equal to the route search", () => {
+  const g = chattanooga();
+  const c = candidateRoutes(g, "T1", "T4", { k: 8 });
+  assert.equal(c.length, 8);
+  const keys = c.map((r) => r.map((l) => l.id).join(","));
+  assert.equal(new Set(keys).size, 8, "all different");
+  for (const r of c) {
+    const seen = new Set(["T1"]);
+    let at = "T1";
+    for (const l of r) {
+      assert.equal(l.kind, "qkd");
+      at = l.a === at ? l.b : l.a;
+      assert.ok(!seen.has(at), "simple path");
+      seen.add(at);
+    }
+    assert.equal(at, "T4");
+  }
+  for (let i = 1; i < c.length; i++) assert.ok(c[i].length >= c[i - 1].length, "ranked by number of sites");
+  assert.deepEqual(c[0].map((l) => l.id), findRoute(g, "T1", "T4").links);
+});
+
+// Cross-check with the Python twin (chattanooga_router.py) and Qiskit Aer (check_grover.py --write-fixture).
+test("Route search and Grover match the Python router and the Aer state vector (fixture)", () => {
+  const fx = JSON.parse(fs.readFileSync(path.join(here, "fixtures/route_cases.json"), "utf8"));
+  const g = chattanooga();
+  for (const c of fx.cases) {
+    const off = new Set(c.out_of_service);
+    const r = findRoute(g, c.start, c.end, { cutoff: c.cutoff, qberOf: (l) => c.qber[l.id] ?? null, inService: (l) => !off.has(l.id) });
+    assert.equal(r.mode, c.expect.mode, c.name);
+    assert.deepEqual(r.nodes, c.expect.nodes, c.name);
+    assert.deepEqual(r.links, c.expect.links, c.name);
+    assert.deepEqual(r.relays, c.expect.relays, c.name);
+    if (c.detail?.km != null && r.ok) assert.equal(r.km, c.detail.km, `${c.name}: km`);
+    if (c.detail?.blocked) assert.deepEqual(r.blocked, c.detail.blocked, `${c.name}: blocked`);
+  }
+  const k = fx.candidates;
+  assert.deepEqual(candidateRoutes(g, k.start, k.end, { k: k.k }).map((r) => r.map((l) => l.id)), k.routes, "Yen candidates");
+  for (const e of fx.grover) {
+    const out = grover(e.N, e.marked);
+    assert.equal(out.iterations, e.iterations, `N=${e.N} marked=${e.marked}: iterations`);
+    out.probs.forEach((p, i) => assert.ok(Math.abs(p - e.probs[i]) < 1e-9, `N=${e.N} marked=${e.marked}: index ${i}`));
+  }
 });

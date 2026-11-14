@@ -8,12 +8,17 @@
 //  4. A QKD key that crosses several links is relayed through trusted nodes: every relay sees the key.
 //  5. Decoy mode: a suspicious fiber can keep running on fake traffic (and quantum photons) while real traffic
 //     takes another route, so the attack can be measured instead of simply cut off.
+//  7. Key paths use the fewest trusted relays (see RELAY_COST): fewer sites that could read the key.
 //  6. Real traffic takes the least risky route, not just the shortest: each fiber's cost is its length times
 //     (1 + RISK_WEIGHT x risk), where risk comes from its live error-rate evidence.
 
 import { shortestPathTree, pathFromTree, controlCenters } from "./network.js";
 
 export const RISK_WEIGHT = 4;
+// No quantum repeaters: every site a QKD key passes through measures and re-encrypts it, so an insider there
+// could read it. Key paths minimise the number of such trusted relays first (this cost dwarfs any route's km),
+// then distance.
+export const RELAY_COST = 1e5;
 
 /** How one link gets its keys right now. */
 export function linkKeySource(link, state) {
@@ -38,7 +43,8 @@ export function computeResponse(net, linkStates) {
 
   // One search tree for data paths (any link in service) and one for QKD key paths (healthy QKD links only).
   const dataTree = shortestPathTree(net, centers, (l) => links.get(l.id).carriesData, (l) => l.km * (1 + RISK_WEIGHT * links.get(l.id).risk));
-  const qkdTree = shortestPathTree(net, centers, (l) => links.get(l.id).keySource === "qkd");
+  // Key paths: fewest trusted relays first (each relay re-encrypts the key and could leak it), then km.
+  const qkdTree = shortestPathTree(net, centers, (l) => links.get(l.id).keySource === "qkd", (l) => RELAY_COST + l.km);
 
   const sites = new Map();
   for (const node of net.nodes.values()) {

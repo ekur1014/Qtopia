@@ -1,14 +1,5 @@
 [
  {
-  "id": "dualring",
-  "label": "Dual ring: command center + 9 supernodes (team design)",
-  "file": "data/networks/dualring.json",
-  "nodes": 19,
-  "links": 20,
-  "qkd": 11,
-  "design": true
- },
- {
   "id": "chattanooga",
   "label": "Chattanooga real grid (OpenStreetMap)",
   "file": "data/networks/chattanooga.json",

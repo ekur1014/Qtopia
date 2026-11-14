@@ -29,18 +29,34 @@ const pill = ([text, tone]) => `<span class="pill pill--${tone}">${text}</span>`
 // Footer: what is real and what is simulated, per kind of network.
 const FOOT = {
   real: "<b>What is real.</b> Substations, lines and their lengths (OpenStreetMap). <b>Simulated:</b> the photons, the fiber noise and the spy, checked against Qiskit, CUDA-Q, Guppy and qBraid. Assumed: fiber along every power line, and which sites hold the keys. Only data links are ever cut, never power.",
-  design: "<b>What this is.</b> The team's dual-ring design, with illustrative distances. <b>Simulated:</b> the photons, the fiber noise and the spy, checked against Qiskit, CUDA-Q, Guppy and qBraid. Only data links are ever cut, never power.",
   lab: "<b>What this is.</b> A test network: the layout is made up. <b>Simulated:</b> the photons, the fiber noise and the spy, checked against Qiskit, CUDA-Q, Guppy and qBraid. Only data links are ever cut, never power.",
 };
 
-export function createUI({ panel, incidentsEl = null, net, networks = [], currentNetwork, coverage = "backbone", engines = {}, handlers }) {
+const MODE_PILL = {
+  qkd: ["QKD route", "ok"],
+  pqc: ["ML-KEM fallback", "pqc"],
+  islanded: ["No path: islanded", "bad"],
+  local: ["Same site", "gold"],
+};
+
+export function createUI({ panel, incidentsEl = null, net, networks = [], currentNetwork, coverage = "backbone", engines = {}, routeDefaults = null, handlers }) {
   const engineIds = Object.keys(engines);
   const startedAt = performance.now();
   const opt = (m) => `<option value="${m.id}"${m.id === currentNetwork ? " selected" : ""}>${m.label} · ${m.nodes} sites</option>`;
   const netOptions =
     `<optgroup label="Real grid">${networks.filter((m) => m.real).map(opt).join("")}</optgroup>` +
-    `<optgroup label="Team design">${networks.filter((m) => m.design).map(opt).join("")}</optgroup>` +
-    `<optgroup label="Test networks (not real)">${networks.filter((m) => !m.real && !m.design).map(opt).join("")}</optgroup>`;
+    `<optgroup label="Test networks (not real)">${networks.filter((m) => !m.real).map(opt).join("")}</optgroup>`;
+  // Route pickers: control centers first, then substations, then the rest, each by name.
+  const RANK = { control: 0, substation: 1, remote: 2, subunit: 3 };
+  const siteName = (id) => {
+    const n = net.nodes.get(id);
+    return n ? (n.short ?? n.name) : id;
+  };
+  const siteOptions = (selected) =>
+    [...net.nodes.values()]
+      .sort((a, b) => (RANK[a.type] ?? 9) - (RANK[b.type] ?? 9) || (a.short ?? a.name).localeCompare(b.short ?? b.name))
+      .map((n) => `<option value="${n.id}"${n.id === selected ? " selected" : ""}>${n.short ?? n.name} · ${n.id}${n.type === "control" ? " · control center" : ""}</option>`)
+      .join("");
   panel.innerHTML = `
     <section class="section">
       <h2>Network</h2>
@@ -65,6 +81,26 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
       <p class="try__text"><b>Green fibers</b> carry keys sent as single photons (QKD). Choose <b>Eavesdrop</b> at the bottom of the screen and click a green fiber, or let us do it:</p>
       <button class="btn btn--try q-btn" data-action="demo">Tap a fiber for me</button>
       <p class="try__after">Then watch the incident card: the network notices the spy in about a second and protects itself, with no one at the controls.</p>
+    </section>
+    <section class="section route">
+      <h2>Find a route</h2>
+      <p class="route__text">Pick two sites. A QKD key is decrypted and re-encrypted at every site it passes (there are no quantum repeaters), so someone inside any of them could read it. The search uses <b>as few sites as possible</b>, then the shortest, cleanest fibers.</p>
+      <div class="route__pick">
+        <label class="field" for="route-from">From</label>
+        <select class="select" id="route-from" data-input="route-from">${siteOptions(routeDefaults?.from)}</select>
+        <label class="field" for="route-to">To</label>
+        <select class="select" id="route-to" data-input="route-to">${siteOptions(routeDefaults?.to)}</select>
+      </div>
+      <div class="control">
+        <div class="control__row"><span>Error-rate cutoff</span><span class="control__val" data-v="cutoff">11%</span></div>
+        <input type="range" min="1" max="25" step="0.5" value="11" data-input="cutoff" aria-label="Error-rate cutoff: fibers at or above it count as tapped" />
+        <div class="control__note">A fiber at or above the cutoff counts as tapped and is skipped. 11% is the Shor–Preskill limit: above it no secret key can be made.</div>
+      </div>
+      <div class="btns">
+        <button class="btn btn--try q-btn" data-action="route-show">Show this route</button>
+        <button class="btn" data-action="route-clear" hidden>Clear route</button>
+      </div>
+      <div class="route__out" data-route aria-live="polite"></div>
     </section>
     <section class="section">
       <h2>Network now</h2>
@@ -111,7 +147,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     </section>
 
     <section class="section foot" data-foot>
-      ${FOOT[net.meta?.real ? "real" : net.meta?.teamDesign ? "design" : "lab"]}
+      ${FOOT[net.meta?.real ? "real" : "lab"]}
     </section>`;
 
   const $ = (sel) => panel.querySelector(sel);
@@ -147,6 +183,22 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
   $('[data-input="satellite"]').addEventListener("change", (e) => handlers.onSatellite(e.target.checked));
   $('[data-input="teleport"]').addEventListener("change", (e) => handlers.onTeleportView(e.target.checked));
   $('[data-input="coverage"]').addEventListener("change", (e) => handlers.onCoverage(e.target.value));
+  // Route search inputs: the cutoff and the two sites update a shown route live.
+  const cutoffInput = $('[data-input="cutoff"]');
+  const routeFrom = $('[data-input="route-from"]');
+  const routeTo = $('[data-input="route-to"]');
+  let routeOn = false;
+  const routeArgs = () => ({ from: routeFrom.value, to: routeTo.value, cutoff: Number(cutoffInput.value) / 100 });
+  const showCutoff = () => {
+    $('[data-v="cutoff"]').textContent = `${Number(cutoffInput.value).toFixed(cutoffInput.value % 1 ? 1 : 0)}%`;
+    fill(cutoffInput);
+  };
+  showCutoff();
+  cutoffInput.addEventListener("input", () => {
+    showCutoff();
+    handlers.onRoute?.(routeArgs(), routeOn);
+  });
+  for (const el of [routeFrom, routeTo]) el.addEventListener("change", () => handlers.onRoute?.(routeArgs(), routeOn));
   const jump = $('[data-input="jump"]');
   jump.addEventListener("change", () => {
     const [type, id] = jump.value.split(":");
@@ -161,6 +213,13 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     else if (action === "clear-eves") handlers.onClearEves();
     else if (action === "restore-all") handlers.onRestoreAll();
     else if (action === "demo") handlers.onDemo();
+    else if (action === "route-show") {
+      routeOn = true;
+      handlers.onRoute?.(routeArgs(), true);
+    } else if (action === "route-clear") {
+      routeOn = false;
+      handlers.onRoute?.(routeArgs(), false);
+    }
     else handlers.onAction(action, btn.dataset.id);
   });
 
@@ -365,8 +424,70 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     g.fillText(pct(top, 0), 4, 12);
   }
 
+  // Route result ------------------------------------------------------------------------------
+  let routeSig = "";
+  function renderRoute(r, linkStates) {
+    const out = $("[data-route]");
+    $('[data-action="route-clear"]').hidden = !r;
+    $('[data-action="route-show"]').textContent = r ? "Route shown on the map" : "Show this route";
+    $('[data-action="route-show"]').classList.toggle("is-on", !!r);
+    const sig = r ? JSON.stringify([r.mode, r.links.map((id) => linkStates?.get(id)?.status), r.nodes, r.km, r.maxQber.toFixed(3), r.blocked, r.pending, r.unavailable, r.grover && [r.grover.marked, r.grover.pick]]) : "";
+    if (sig === routeSig) return;
+    routeSig = sig;
+    if (!r) {
+      out.innerHTML = "";
+      return;
+    }
+    const n = r.relays.length;
+    const sitesWord = (k) => `${k} site${k === 1 ? "" : "s"}`;
+    let lead;
+    if (r.mode === "islanded") lead = "<b>No fiber path between these sites.</b> A site cut off this way keeps running on its local protection: power stays on, and a crew is dispatched.";
+    else if (r.mode === "local") lead = "Start and end are the same site.";
+    else if (r.mode === "qkd") lead = n ? `The key passes through <b>${sitesWord(n)}</b> that decrypt and re-encrypt it. Each must be trusted.` : "<b>Direct fiber.</b> No site in between ever holds the key.";
+    else lead = `<b>No QKD route stays under the cutoff.</b> Keys come from ML-KEM, agreed end to end, so the ${sitesWord(n)} on the way only forward data they cannot read.`;
+    const chain = r.nodes.length
+      ? `<ol class="route__chain">${r.nodes.map((id, i) => `<li class="${i === 0 || i === r.nodes.length - 1 ? "is-end" : r.relaysCanReadKey ? "is-relay" : "is-forward"}"><b>${siteName(id)}</b><span>${id}</span></li>`).join("")}</ol>`
+      : "";
+    let compare = "";
+    if (r.shortest && (r.mode === "qkd" || r.mode === "pqc")) {
+      const s = r.shortest;
+      compare =
+        s.sites > n
+          ? `<p class="route__compare">The shortest route by distance (${s.km} km) would pass through ${sitesWord(s.sites)}. This one passes through ${n}${r.km > s.km ? `, for ${(r.km - s.km).toFixed(1)} km more fiber` : ""}.</p>`
+          : `<p class="route__compare">This is also the shortest route by distance.</p>`;
+    }
+    // A fiber on the route that is alarmed (above its own normal level) yet under the cutoff: say so, so it does not look like a mistake.
+    const alarmed = r.mode === "qkd" && linkStates ? r.links.filter((id) => ["warning", "abort"].includes(linkStates.get(id)?.status)) : [];
+    const alarmNote = alarmed.length ? `<p class="route__compare"><b>${alarmed.join(", ")}</b> ${alarmed.length === 1 ? "is" : "are"} in alarm (error rate above ${alarmed.length === 1 ? "its" : "their"} normal level) but under your cutoff, so the search still uses ${alarmed.length === 1 ? "it" : "them"}. Lower the cutoff to avoid ${alarmed.length === 1 ? "it" : "them"}.</p>` : "";
+    const blocked = r.blocked.length ? `${r.blocked.length} fiber${r.blocked.length === 1 ? "" : "s"}: ${r.blocked.join(", ")}` : "none";
+    let groverHtml = "";
+    if (r.grover && r.grover.routes.length) {
+      const g = r.grover;
+      const M = g.marked.length;
+      groverHtml = `<div class="route__grover">
+        <div class="route__grover-title">Grover check (quantum search)</div>
+        <p>${g.routes.length} candidate QKD routes, <b>${M} clean</b>. ${M ? `${g.iterations ? `After ${g.iterations} Grover round${g.iterations === 1 ? "" : "s"}, a` : "With most routes clean no Grover round is needed: a"} clean route comes out ${pct(g.success, 0)} of the time${g.iterations ? `, against ${pct(M / g.N, 0)} for a random pick` : ""}.` : "None is clean, so Grover's output stays random and every check fails: fall back to ML-KEM."}</p>
+        <p class="q-adv">Notebook 2b's oracle marks every route whose fibers are all under the cutoff; its diffuser amplifies them. ${g.N} slots (${Math.log2(g.N)} qubits), ${g.iterations} iteration${g.iterations === 1 ? "" : "s"}, the best count for ${M || 1} marked in ${g.N}${M > g.N / 2 ? " (with most routes clean, a plain random draw already wins, so Grover adds no rounds)" : ""}. This draw: candidate ${g.pick + 1}, ${g.pickClean ? "clean, checked hop by hop" : "not clean, so it is rejected and Grover runs again"}. Classical search already finds the exact answer quickly; this shows the same circuit working on the grid problem, not a speed-up.</p>
+      </div>`;
+    }
+    out.innerHTML = `
+      <div class="route__head">${pill(MODE_PILL[r.mode])}${r.mode === "qkd" || r.mode === "pqc" ? `<span class="route__km">${r.km} km</span>` : ""}</div>
+      <p class="route__lead">${lead}</p>
+      ${chain}
+      ${compare}
+      ${alarmNote}
+      <dl class="kv">
+        ${r.mode === "qkd" || r.mode === "pqc" ? `<dt>Highest error rate on the route</dt><dd>${pct(r.maxQber, 1)}</dd>` : ""}
+        <dt>Fibers over the cutoff</dt><dd>${blocked}</dd>
+        ${r.pending?.length ? `<dt>Fibers still measuring</dt><dd>${r.pending.join(", ")}</dd>` : ""}
+        ${r.unavailable?.length ? `<dt>Fibers out of service (decoy or quarantine)</dt><dd>${r.unavailable.join(", ")}</dd>` : ""}
+      </dl>
+      ${groverHtml}`;
+  }
+
   // Public ----------------------------------------------------------------------------------
   function render(state) {
+    renderRoute(state.route ?? null, state.links);
     let healthy = 0;
     let alerts = 0;
     let qkdLinks = 0;

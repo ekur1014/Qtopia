@@ -58,7 +58,7 @@ the single-photon case of Eq. (8) in Lo, Ma and Chen (PRL 94, 230504, 2005), usi
 | Operator quarantines a fiber | out of service | traffic reroutes over any remaining link; a site with no path left is cut off from comms, keeps power, runs on local protection, crew dispatched |
 | Tap on a post-quantum link | nothing detects it | ML-KEM keeps the traffic unreadable to the tapper |
 
-Paths are shortest by fiber length (Dijkstra), from either control center.
+Paths start from either control center. A QKD key path takes the fewest trusted sites first and only then the shortest fiber length (see "Route search" below for why). Other paths are shortest by fiber length (Dijkstra).
 
 ## Limits (say these on the "What we learned" slide)
 
@@ -97,23 +97,37 @@ The default view is Chattanooga's real grid from OpenStreetMap, and a statewide 
 
 **Long fibers:** they detect fewer photons. Each fiber gets at least 90 detections per tick (about 45 sifted bits), so one 16-tick window always reaches the detector's 600-bit minimum. Before this floor, fibers over about 50 km stayed in "Measuring" forever.
 
-## The dual ring (team design, 14 Nov)
+## Route search (replaces the ring model, 14 Nov)
 
-From the lead's whiteboard and recording (`New Chat Grid/`; Ethan's architecture): the important traffic runs on a ring of **nine supernodes** around the **command center**. There are two counter-rotating rings, so anything can travel either way round, and the supernodes feed the substations. The teammate's router (`dual_ring_router.py`, `dual_ring_quantum_routing.html`) models the same ring in 2D. Grid Twin's version (`?net=dualring`, `tools/make_dualring.mjs`) matches it.
+On 14 Nov the team dropped the hypothetical ring model (a command center and nine hub sites), so the real Chattanooga grid is the main model. In its place is a route search on that grid. Code: `src/route.js`, shared by the page and the tests. Python twin: `chattanooga_router.py`. From teammate Asheb's earlier ring router it keeps the cutoff, the blocked-link rule, the cost km × (1 + 20 × QBER) and the ML-KEM fallback. Background and work plan: `docs/REMOVE_RING_PLAN.md`.
 
-**The model:**
-- The command center links to gateway supernodes 3 and 7 (6 km each).
-- Each 8.5 km span is one QKD fiber pair in one corridor: the working ring (clockwise) and the protection ring (counter-clockwise). A spy in the corridor compromises the span.
-- Each supernode has one substation, on ML-KEM. The lead said not to worry about substations for now.
-- Distances are illustrative.
+**Inputs:** a start site, an end site and a QBER cutoff (slider from 1% to 25%, default 11%, the Shor–Preskill limit). A fiber whose QBER is at or above the cutoff counts as tapped and is not used. Console: `gridTwin.route("T1", "T4", 0.11)`.
 
-**Best path when an error rate rises:** the key goes **the other way round the ring** to reach the command center. For example, supernode 4 normally keys via gateway 3; with span 3–4 tapped, it keys via 7, 6 and 5.
-- Every supernode passed on the way is a trusted relay (gold ring).
-- A full detour therefore passes three of them, which is the trusted-node cost of the design.
+**Fewest sites first (the team's rule).** There are no quantum repeaters, so every site a QKD key passes through is a trusted relay: it measures the key and re-encrypts it for the next fiber. Someone inside that site, an insider or a hacked device, could read the key before it is re-encrypted. Each extra site is one more place the key can leak. So the search:
+1. minimises the number of intermediate sites first;
+2. only then minimises the risk-weighted distance, km × (1 + 20 × QBER).
 
-**Differences from the teammate's router, kept on purpose:**
-- **Baseline:** Grid Twin computes each fiber's normal error (about 3.3% at 8.5 km) where the router fixes 1.8%.
-- **Alarm:** Grid Twin's is statistical where the router's is fixed at 8%.
-- **What an alarm does:** in Grid Twin, a link that alarms switches its keys to ML-KEM and stays up.
+The panel compares the result with the plain shortest route by km: "the shortest route would pass through N sites; this one passes through M".
 
-**Open question:** the lead is still checking how the real architecture works. The model follows the whiteboard, not a published network map.
+**Fallback order:**
+1. **QKD route.** A route over QKD fibers in service, every one under the cutoff. Its intermediate sites are trusted relays (gold rings).
+2. **ML-KEM route.** If no clean QKD route exists: the best route over every fiber still in service, whatever its QBER, on ML-KEM keys agreed end to end. Sites along the way only forward ciphertext they cannot read, so they need not be trusted.
+3. **Islanded.** If there is no physical path at all: power stays on, the site runs on local protection, and a crew is dispatched. These are the same words the automatic response uses.
+
+**In the live grid:** a "Find a route" section with Start and End pickers and the cutoff slider. The route is highlighted in 3D, with a list of hops, km, highest QBER and the trusted sites. It updates live as taps are placed.
+
+**Same rule in the automatic response.** The automatic response (`src/response.js`) answers "how does every site reach a control center"; the route search answers "how does A reach B under my cutoff". Both use the same graph and the same live QBER. The response's QKD key paths now also prefer the fewest trusted sites.
+
+### Where Grover comes in (a demonstration, not a speed-up)
+
+Notebook 2b uses Grover's search to find one secret key among N. The same circuit can pick a clean route among N candidate routes:
+1. **Candidates (classical):** Yen's k-shortest routes from start to end give N = 8 candidate QKD routes, so 3 qubits.
+2. **Oracle:** marks the clean candidates, those with every fiber under the cutoff. It is 2b's oracle generalised from one marked item to M marked items.
+3. **Diffuser:** 2b's, unchanged.
+4. **Iterations:** floor(π / (4·asin(√(M/N)))), the optimal count. The textbook round(π/4 · √(N/M)) overshoots when more than half the routes are clean (7 of 8 clean would fall to 22%), so with most routes clean the search uses 0 rounds: a plain random draw already wins. Grover is never worse than a random pick (tested).
+5. **Check (classical):** the drawn route is verified fiber by fiber before it is used.
+6. **No clean route (M = 0):** the output stays uniform, every check fails, and the search falls back to ML-KEM.
+
+Notebook `3b_grover_route_search.ipynb` runs it on Qiskit Aer. `check_grover.py` verifies the generalised oracle for every subset of marks at N = 8. The live grid shows a small Grover card: N, M, iterations, and the chance of drawing a clean route.
+
+**What we say about it:** Dijkstra solves this exactly and fast on a classical computer, and the oracle is built from QBER values we already know. This shows the same Grover circuit from 2b running on the grid problem with √N oracle queries. It is not a speed-up claim.

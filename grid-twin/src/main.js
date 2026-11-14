@@ -8,6 +8,7 @@ import { createScene } from "./scene.js";
 import { createUI } from "./ui.js";
 import { teleportRoute } from "./teleport.js";
 import { controlCenters } from "./network.js";
+import { findRoute, candidateRoutes, grover, DEFAULT_CUTOFF } from "./route.js";
 
 const TICK_MS = 250;
 // Detected photons simulated per tick on a 10 km fiber; longer fibers detect fewer, so they collect
@@ -67,18 +68,17 @@ async function boot() {
   const net = buildNetwork(raw);
   // Hero framing: the real grid gets the Tennessee title and the map-data credit the ODbL licence requires.
   const real = !!net.meta?.real;
-  const design = !!net.meta?.teamDesign;
   document.body.classList.toggle("is-real", real); // shows the OpenStreetMap credit
-  document.body.classList.toggle("is-design", design);
-  document.querySelector(".brand__title").textContent = real ? "Tennessee Quantum Grid" : design ? "The Dual Ring" : "Grid Twin";
-  document.querySelector(".brand__mark").textContent = real ? "QRYPT · REAL GRID" : design ? "QRYPT · TEAM DESIGN" : "QRYPT · TEST NETWORK";
+  document.querySelector(".brand__title").textContent = real ? "Tennessee Quantum Grid" : "Grid Twin";
+  document.querySelector(".brand__mark").textContent = real ? "QRYPT · REAL GRID" : "QRYPT · TEST NETWORK";
   document.querySelector(".brand__sub").textContent = real
     ? `${net.meta.name.replace(" (real)", "")}: real substations and lines. Every green fiber runs BB84 live; tap one and the network defends itself.`
-    : design
-      ? "Nine supernodes on a counter-rotating dual ring around the command center, QKD on every span. Tap a span and its traffic goes the other way round to reach the command center."
-      : "A quantum-secured utility network, live. Every green fiber runs BB84; every error is counted.";
-  document.title = real ? "Tennessee Quantum Grid · Qrypt" : design ? "Dual Ring · Qrypt" : "Grid Twin · Qrypt";
+    : "A quantum-secured utility network, live. Every green fiber runs BB84; every error is counted.";
+  document.title = real ? "Tennessee Quantum Grid · Qrypt" : "Grid Twin · Qrypt";
   const centers = controlCenters(net);
+  // Route search defaults: the substation whose QKD key path to a control center passes the most trusted sites,
+  // so the first route shown has something to compare. Falls back to the first two sites.
+  const routeDefaults = pickRouteDefaults(net, centers);
 
   const sim = {
     tool: "inspect",
@@ -88,6 +88,7 @@ async function boot() {
     autoResponse: true, // detect, switch keys, reroute, decoy, measure, recommend: all without a click
     teleportView: false,
     satellite: false,
+    route: null, // { from, to, cutoff } while a route is shown
     selected: null,
     links: new Map(),
   };
@@ -125,7 +126,17 @@ async function boot() {
     currentNetwork: entry.id,
     coverage,
     engines,
+    routeDefaults,
     handlers: {
+      onRoute: (args, on) => {
+        const was = sim.route;
+        sim.route = on ? args : null;
+        if (on && (!was || was.from !== args.from || was.to !== args.to)) {
+          sim.selected = null;
+          scene.setOrbit(false);
+        }
+        refresh();
+      },
       onNetwork: (id) => {
         const url = new URL(location.href);
         url.searchParams.set("net", id);
@@ -188,7 +199,7 @@ async function boot() {
       },
       // "Tap a fiber for me": a full tap on the network's demo fiber, so a first-time visitor sees the response at once.
       onDemo: () => {
-        const preferred = { chattanooga: "L6", dualring: "R3", tennessee500: "L11", city: "L11" }[entry.id];
+        const preferred = { chattanooga: "L6", tennessee500: "L11", city: "L11" }[entry.id];
         const id = preferred && net.links.get(preferred)?.kind === "qkd" ? preferred : [...net.links.values()].find((l) => l.kind === "qkd")?.id;
         if (!id) return;
         const s = sim.links.get(id);
@@ -531,7 +542,8 @@ async function boot() {
       const route = sel && sel.type === "node" && net.nodes.get(sel.id).type !== "control" ? teleportRoute(net, centers, sel.id, linkQ) : null;
       teleport = { linkQ, route };
     }
-    const view = { links, sites: response.sites, selected: sim.selected, paused: sim.paused, teleport, coverage };
+    const route = sim.route ? routeNow(sim.route) : null;
+    const view = { links, sites: response.sites, selected: sim.selected, paused: sim.paused, teleport, coverage, route };
     scene.update(view);
     ui.render(view);
     ui.renderIncidents(incidents);
@@ -539,6 +551,44 @@ async function boot() {
     lastView = view;
   }
   let lastView = null;
+
+  // Route search ------------------------------------------------------------------------------
+  // A fiber's QBER for the search: its live measured error rate (unknown until it has measurements).
+  // Quarantined and decoy fibers carry no real traffic, so the search skips them.
+  const routeQber = (l) => {
+    const s = sim.links.get(l.id);
+    return s.detector && s.last.n > 0 ? s.last.qhat : null;
+  };
+  // A QKD fiber on probation (new or just restored, too few measurements) carries no trusted QKD key yet.
+  const routeMeasured = (l) => {
+    const s = sim.links.get(l.id);
+    return !s.detector || s.last.enough;
+  };
+  const routeInService = (l) => {
+    const s = sim.links.get(l.id);
+    return !s.quarantined && !s.decoy;
+  };
+  // Grover's candidates (Yen's search) change only when the sites or the fibers in service change, and its
+  // sampled draw only when the clean set changes, so both are cached rather than recomputed every tick.
+  let groverCache = { key: null, routes: [], drawKey: null, result: null };
+  function routeNow({ from, to, cutoff }) {
+    const r = findRoute(net, from, to, { cutoff, qberOf: routeQber, inService: routeInService, measured: routeMeasured });
+    const service = [...net.links.values()].filter((l) => l.kind === "qkd" && !routeInService(l)).map((l) => l.id).join(",");
+    const key = `${from}|${to}|${service}`;
+    if (groverCache.key !== key) groverCache = { key, routes: candidateRoutes(net, from, to, { k: 8, inService: routeInService }), drawKey: null, result: null };
+    const marked = groverCache.routes.map((links, i) => (links.every((l) => routeMeasured(l) && (routeQber(l) ?? 0) < cutoff) ? i : -1)).filter((i) => i >= 0);
+    const drawKey = marked.join(",");
+    if (groverCache.drawKey !== drawKey) {
+      const g = grover(8, marked);
+      let x = Math.random();
+      let pick = 7;
+      for (let i = 0; i < 8; i++) if ((x -= g.probs[i]) <= 0) ((pick = i), (i = 8));
+      groverCache.drawKey = drawKey;
+      groverCache.result = { ...g, routes: groverCache.routes.map((rt) => rt.map((l) => l.id)), marked, pick, pickClean: marked.includes(pick) };
+    }
+    const toLinks = (ids) => ids.map((id) => net.links.get(id));
+    return { ...r, path: r.links.length ? { nodes: r.nodes, links: toLinks(r.links) } : null, grover: r.mode === "local" ? null : groverCache.result };
+  }
 
   // Tooltip -----------------------------------------------------------------------------------
   const tooltip = document.getElementById("tooltip");
@@ -682,6 +732,12 @@ async function boot() {
     satellite: (on = true) => ((document.getElementById("satellite").checked = on), scene.setSatellite(on)),
     restore: (id) => (restore(id), refresh()),
     select: (type, id) => ((sim.selected = type ? { type, id } : null), refresh()),
+    // Route search, e.g. gridTwin.route("T1", "T4", 0.11); gridTwin.route(null) clears it.
+    route: (from, to, cutoff = DEFAULT_CUTOFF) => {
+      sim.route = from ? { from, to, cutoff } : null;
+      refresh();
+      return lastView.route ? { mode: lastView.route.mode, nodes: lastView.route.nodes, links: lastView.route.links, relays: lastView.route.relays, km: lastView.route.km, maxQber: lastView.route.maxQber, shortest: lastView.route.shortest, grover: lastView.route.grover && { N: lastView.route.grover.N, M: lastView.route.grover.M, iterations: lastView.route.grover.iterations, success: lastView.route.grover.success } } : null;
+    },
     state: () => ({
       links: Object.fromEntries(
         [...sim.links].map(([id, s]) => [
@@ -719,6 +775,23 @@ async function boot() {
   const hideLoader = () => loader.classList.add("is-done");
   requestAnimationFrame(hideLoader);
   setTimeout(hideLoader, 400);
+}
+
+function pickRouteDefaults(net, centers) {
+  const ids = [...net.nodes.keys()];
+  let best = null;
+  if (net.nodes.size > 150) return { from: [...net.nodes.values()].find((n) => n.type === "substation")?.id ?? ids[0], to: centers[0] ?? ids[1] }; // keep boot fast on the big test grids
+  for (const n of net.nodes.values()) {
+    if (n.type !== "substation") continue;
+    for (const c of centers) {
+      const r = findRoute(net, n.id, c);
+      if (r.mode !== "qkd") continue;
+      const gap = (r.shortest?.sites ?? 0) - r.relays.length; // routes where fewest-sites differs from shortest-km first
+      const score = [gap, r.relays.length];
+      if (!best || score[0] > best.score[0] || (score[0] === best.score[0] && score[1] > best.score[1])) best = { from: n.id, to: c, score };
+    }
+  }
+  return best ? { from: best.from, to: best.to } : { from: ids[0], to: centers[0] ?? ids[1] };
 }
 
 function freshReading(baseline) {

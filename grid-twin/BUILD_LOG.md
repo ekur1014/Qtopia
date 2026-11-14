@@ -220,6 +220,8 @@ Fixed from its findings (each checked by hand first):
 
 ## Dual ring (New Chat Grid), sync and audits
 
+14 Nov: dual ring removed by team decision; replaced by the route search (see docs/REMOVE_RING_PLAN.md).
+
 - **Read the new folder:** the whiteboard photo and the 7-minute recording. Re-transcribed it locally with whisper.cpp because the app's transcript looked short; the gaps were side conversation. Saved as `transcript-local.txt`.
 - **Built the dual ring** (`tools/make_dualring.mjs`, `?net=dualring`), as described in DESIGN.md. Added a "Team design" group in the network list, its own title, and a home-page card.
 - **New test:** one tapped fiber moves to its twin; with both fibers tapped, the key goes the other way round. 27 tests passing.
@@ -278,3 +280,24 @@ User request: make the dual ring the first step (hypothetical), go from simple t
     - No sideways scroll at 390 px, in light or dark.
   - copy-lint: 0 FAIL; 1 WARN, for the results tiles, accepted.
 - **Done:** all six pages are redesigned and checked in light, dark and phone width. The claude.ai preview was republished from the new build.
+
+## Ring removed; route search with fewest trusted sites
+
+Team decision, 14 Nov: drop the hypothetical ring model completely. It added complexity and pulled attention from the main model, Chattanooga's real grid. Plan: `docs/REMOVE_RING_PLAN.md`.
+
+- **Removed:** the ring page, the teammate's ring router in Python, the ring network data and its generator script. The old ring link in the live grid now opens Chattanooga.
+- **Journey is four steps:** Home, then 1 Real map, 2 Live grid, 3 Photon line, 4 Quantum lab.
+- **Route search** (`src/route.js`, shared by the page and the tests; Python twin `chattanooga_router.py`, crediting Asheb's router for the cutoff, the blocked-link rule, the km × (1 + 20 × QBER) cost and the ML-KEM fallback). Inputs: start site, end site, QBER cutoff (1% to 25%, default 11%). A fiber at or above the cutoff counts as tapped.
+- **Fewest sites first** (teammate's rule): with no quantum repeaters, every site on a QKD route is a trusted relay that briefly holds the key, so an insider or a hacked device there could read it. The search minimises intermediate sites first, then the risk-weighted km. The panel compares it with the plain shortest route by km.
+- **Fallback order:** clean QKD route; else the best route over every fiber in service on end-to-end ML-KEM keys (sites in between only forward ciphertext); else islanded (power on, local protection, crew dispatched).
+- **Live grid:** a "Find a route" section (Start, End, cutoff slider), the route highlighted in 3D, a list of hops, km, highest QBER and trusted sites, live as taps are placed. Console: `gridTwin.route("T1", "T4", 0.11)`.
+- **Automatic response:** unchanged in what it does; its QKD key paths now also prefer the fewest trusted sites.
+- **Grover demonstration:** Yen's k-shortest routes give N = 8 candidates; 2b's oracle, generalised to M marked items, marks the clean ones; 2b's diffuser; floor(π / (4·asin(√(M/N)))) iterations, the optimal count (the textbook round(π/4 · √(N/M)) overshoots when more than half the routes are clean; with most routes clean it uses 0 rounds, since a plain random draw already wins); the drawn route is checked classically, and M = 0 falls back to ML-KEM. `3b_grover_route_search.ipynb` (Qiskit Aer), `check_grover.py` (every subset of marks at N = 8), and a small Grover card in the live grid. Stated as a demonstration, not a speed-up: Dijkstra solves this exactly.
+- **Docs:** README, DESIGN ("Route search" replaces the ring section), FAQ, DEMO and `WRITEUP.md` Step 3 Part 1 updated.
+
+Checks:
+- `node --test grid-twin/tests/engine.test.mjs`: 35 pass (was 27; the ring test was replaced by a Chattanooga reroute test, plus route, fewest-relay, probation, Grover and fixture tests).
+- The JavaScript route search, the Yen candidates and Grover's probabilities match `chattanooga_router.py` and the Qiskit Aer state vector exactly (`tests/fixtures/route_cases.json`). `check_grover.py`: total mismatches 0, including every subset of marks at N = 8.
+- `3b_grover_route_search.ipynb` ran end to end on Aer only, with no qBraid jobs. M = 3 of 8 clean: 84.4% exact, 172/200 shots clean.
+- Bug found and fixed while checking: the textbook iteration count round(π/4·√(N/M)) overshoots when most routes are clean (7 of 8 gave 22%). The count is now floor(π/(4·asin(√(M/N)))), and a test checks that Grover never does worse than a random pick. Unmeasured fibers on probation no longer count as clean.
+- Headless Chrome, every page: a four-step bar everywhere; `?net=dualring` opens Chattanooga; every network loads; `grid_twin.html` works from disk. With automatic response off, a 20% tap reads about 8%: the route keeps that fiber at an 11% cutoff and drops it at 7%. No sideways scroll at phone width.
