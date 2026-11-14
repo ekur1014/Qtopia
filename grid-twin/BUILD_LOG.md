@@ -266,3 +266,15 @@ User request: make the dual ring the first step (hypothetical), go from simple t
   - Ten expert parts Detailed-only.
   - Short site names.
 - **Copy-lint** (the skill's checker) on the live grid's visible text: 0 FAIL. Its one WARN came from JavaScript operators in the extraction, not copy.
+- **Photon line** (redone by an Opus worker in small edits after a first attempt stalled):
+  - Each round plays as a five-beat scene: Alice picks, the photon travels, Eve may grab it, Bob measures, the result lands in the table. The caption updates at each beat.
+  - The send buttons now say what each does, and the Eve switch states what it does.
+  - The error rate is a big number on a bar marked at 11% and 25%.
+  - Step 6 (cloud job details) and the formulas are Detailed-only.
+  - Checked in headless Chrome:
+    - One round plays through to "5. Result".
+    - 200 photons with Eve on every photon gave about 21% to 30% error rate (theory: 25%).
+    - No script errors.
+    - No sideways scroll at 390 px, in light or dark.
+  - copy-lint: 0 FAIL; 1 WARN, for the results tiles, accepted.
+- **Done:** all six pages are redesigned and checked in light, dark and phone width. The claude.ai preview was republished from the new build.
