@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EPB Generalized Quantum Mesh &amp; Satellite Router</title>
+  <style>
+    :root {
+      --bg: #070a13;
+      --card-bg: rgba(15, 23, 42, 0.90);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --accent-cyan: #00f2fe;
+      --accent-blue: #38bdf8;
+      --secure-green: #10b981;
+      --warn-yellow: #f59e0b;
+      --danger-red: #ef4444;
+      --purple-satellite: #c084fc;
+      --text: #f8fafc;
+      --text-dim: #94a3b8;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; width: 100vw; display: flex; flex-direction: column; }
+
+    header {
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(7, 10, 19, 0.95);
+      border-bottom: 1px solid var(--card-border);
+      z-index: 20;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .badge-epb {
+      background: linear-gradient(135deg, #0284c7, #00f2fe);
+      color: #000;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+    h1 { font-size: 16px; font-weight: 700; color: #fff; text-shadow: 0 0 16px rgba(0,242,254,0.4); }
+
+    .header-pills { display: flex; gap: 10px; }
+    .pill {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .pill-green { border-color: var(--secure-green); color: var(--secure-green); }
+    .pill-purple { border-color: var(--purple-satellite); color: var(--purple-satellite); }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse 1.6s infinite; }
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
+
+    .workspace {
+      flex: 1;
+      display: flex;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #canvas-container {
+      flex: 1;
+      position: relative;
+      background: radial-gradient(circle at center, #0f172a 0%, #070a13 75%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    canvas { display: block; cursor: crosshair; }
+
+    #sidebar {
+      width: 440px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border-left: 1px solid var(--card-border);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      z-index: 10;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .card-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-dim);
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .hero-path {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--accent-cyan);
+      background: rgba(0, 242, 254, 0.08);
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 242, 254, 0.2);
+      margin-top: 4px;
+      word-break: break-all;
+    }
+
+    .stat-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 4px; color: var(--text-dim); }
+    .stat-val { font-weight: 700; color: #fff; font-family: var(--font-mono); }
+
+    .btn {
+      width: 100%;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      margin-top: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-attack { background: rgba(239, 68, 68, 0.15); color: var(--danger-red); border: 1px solid var(--danger-red); }
+    .btn-attack:hover { background: var(--danger-red); color: #fff; }
+    .btn-clear { background: rgba(0, 242, 254, 0.15); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); }
+    .btn-clear:hover { background: var(--accent-cyan); color: #000; }
+
+    .node-selector { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 4px; }
+    .node-btn {
+      width: 30px;
+      height: 30px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .node-btn:hover { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+    .node-btn.active-start { background: var(--accent-cyan); color: #000; border-color: var(--accent-cyan); font-weight: 800; box-shadow: 0 0 10px rgba(0,242,254,0.4); }
+    .node-btn.active-end { background: var(--secure-green); color: #000; border-color: var(--secure-green); font-weight: 800; box-shadow: 0 0 10px rgba(16,185,129,0.4); }
+
+    /* Slider styling */
+    input[type=range] { width: 100%; accent-color: var(--accent-cyan); cursor: pointer; margin-top: 4px; }
+
+    .terminal-box {
+      background: #030712;
+      border: 1px solid rgba(0,242,254,0.2);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #38bdf8;
+      height: 120px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+
+    .canvas-legend {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 11px;
+      color: var(--text-dim);
+      pointer-events: none;
+      line-height: 1.6;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-line { width: 18px; height: 3px; border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="badge-epb">EPB QUANTUM MESH</div>
+      <h1>Generalized Routing Engine &amp; LEO Satellite Tie</h1>
+    </div>
+    <div class="header-pills">
+      <div class="pill pill-green">
+        <div class="dot"></div>
+        <span id="tier-pill-text">TIER 1: GROUND QUANTUM FIBER ACTIVE</span>
+      </div>
+      <div class="pill" style="border-color: #00f2fe; color: #00f2fe;">
+        <div class="dot" style="background: #00f2fe;"></div>
+        <span>OUT-OF-BAND TELEMETRY: 10ms HEARTBEAT STREAM</span>
+      </div>
+      <div class="pill pill-purple">
+        <span>SATELLITE STANDBY (LEO ORBIT 500 KM)</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="workspace">
+    <div id="canvas-container">
+      <canvas id="ringCanvas"></canvas>
+      
+      <div class="canvas-legend">
+        <div style="font-weight: 700; color: #fff; margin-bottom: 4px;">ROUTING HIERARCHY</div>
+        <div class="legend-item"><div class="legend-line" style="background: #10b981; height: 4px;"></div> Tier 1: Active Ground Fiber Path</div>
+        <div class="legend-item"><div class="legend-line" style="background: var(--purple-satellite); height: 4px;"></div> Tier 2: Free-Space LEO Satellite Hub (Orbital Teleportation)</div>
+        <div class="legend-item"><div class="legend-line" style="background: var(--danger-red); height: 4px;"></div> Inaccessible / Tapped Fiber (QBER &ge; Threshold)</div>
+        <div style="margin-top: 4px; color: var(--accent-cyan); font-size: 10px;">Click any link to tap fiber | Click nodes to set Start/End</div>
+      </div>
+    </div>
+
+    <div id="sidebar">
+      
+      <!-- Start and End Node Selectors -->
+      <div class="card">
+        <div class="card-title">1. Start Node (Source)</div>
+        <div class="node-selector">
+          <button class="node-btn active-start" onclick="setStart(1)">1</button>
+          <button class="node-btn" onclick="setStart(2)">2</button>
+          <button class="node-btn" onclick="setStart(3)">3</button>
+          <button class="node-btn" onclick="setStart(4)">4</button>
+          <button class="node-btn" onclick="setStart(5)">5</button>
+          <button class="node-btn" onclick="setStart(6)">6</button>
+          <button class="node-btn" onclick="setStart(7)">7</button>
+          <button class="node-btn" onclick="setStart(8)">8</button>
+          <button class="node-btn" onclick="setStart(9)">9</button>
+          <button class="node-btn" onclick="setStart('CC')">CC</button>
+        </div>
+
+        <div class="card-title" style="margin-top: 10px;">2. End Node (Destination)</div>
+        <div class="node-selector">
+          <button class="node-btn" onclick="setEnd(1)">1</button>
+          <button class="node-btn" onclick="setEnd(2)">2</button>
+          <button class="node-btn" onclick="setEnd(3)">3</button>
+          <button class="node-btn" onclick="setEnd(4)">4</button>
+          <button class="node-btn active-end" onclick="setEnd(5)">5</button>
+          <button class="node-btn" onclick="setEnd(6)">6</button>
+          <button class="node-btn" onclick="setEnd(7)">7</button>
+          <button class="node-btn" onclick="setEnd(8)">8</button>
+          <button class="node-btn" onclick="setEnd(9)">9</button>
+          <button class="node-btn" onclick="setEnd('CC')">CC</button>
+        </div>
+      </div>
+
+      <!-- Configurable QBER Threshold Slider -->
+      <div class="card">
+        <div class="card-title">
+          <span>QBER Cutoff Threshold</span>
+          <span id="thresh-val" style="color: var(--accent-cyan); font-family: var(--font-mono); font-weight: 800;">11.0%</span>
+        </div>
+        <div style="font-size: 11px; color: var(--text-dim);">Links with QBER above this cutoff are marked INACCESSIBLE.</div>
+        <input type="range" id="thresh-slider" min="5" max="25" step="0.5" value="11" oninput="updateThreshold(this.value)">
+        <div style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-dim); margin-top: 2px;">
+          <span>5% Strict</span>
+          <span style="color: var(--warn-yellow);">8% Utility Alarm</span>
+          <span style="color: var(--danger-red);">11% Shor-Preskill</span>
+          <span>25% Max</span>
+        </div>
+      </div>
+
+      <!-- Dynamic Best-Path Readout -->
+      <div class="card">
+        <div class="card-title">
+          <span>Active Dynamic Route</span>
+          <span id="route-badge" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.2); color: var(--secure-green);">TIER 1 GROUND</span>
+        </div>
+        <div class="hero-path" id="route-path-text">[1] &rarr; [2] &rarr; [3] &rarr; [4] &rarr; [5]</div>
+
+        <div style="margin-top: 10px;">
+          <div class="stat-row">
+            <span>Routing Tier:</span>
+            <span class="stat-val" id="stat-tier" style="color: var(--secure-green);">Tier 1: Ground Quantum Fiber</span>
+          </div>
+          <div class="stat-row">
+            <span>Hop Count:</span>
+            <span class="stat-val" id="stat-hops">4 Hops</span>
+          </div>
+          <div class="stat-row">
+            <span>Total Path Distance:</span>
+            <span class="stat-val" id="stat-dist">34.0 km</span>
+          </div>
+          <div class="stat-row">
+            <span>Worst Link QBER:</span>
+            <span class="stat-val" id="stat-qber" style="color: var(--secure-green);">1.8%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Network Security Alarm System (Q-IDS / SOC) -->
+      <div class="card" id="alarm-card" style="border-color: rgba(16, 185, 129, 0.4);">
+        <div class="card-title">
+          <span>Layer-1 Q-IDS Alarm Status</span>
+          <span id="alarm-badge" style="font-size: 10px; padding: 2px 6px; border-radius: 4px; background: rgba(16,185,129,0.2); color: var(--secure-green);">NORMAL</span>
+        </div>
+        <div style="font-size: 12px; font-weight: 700; color: #fff;" id="alarm-summary">All Optical Spans Secure (QBER &lt; 8.0%)</div>
+        <div style="font-family: var(--font-mono); font-size: 10px; color: var(--accent-cyan); margin-top: 6px; background: #030712; padding: 8px; border-radius: 4px; border: 1px solid rgba(0,242,254,0.2);" id="snmp-trap-box">
+[SNMP-TRAP] OID: 1.3.6.1.4.1.EPB.QIDS.0 · Status: ALL_FIBER_SPANS_NOMINAL
+BGP Flowspec: Normal forwarding across active 10.161.x.x subnets.
+        </div>
+        <button class="btn" id="btn-dispatch-crew" style="display: none; background: rgba(245, 158, 11, 0.2); color: var(--warn-yellow); border: 1px solid var(--warn-yellow); margin-top: 8px;" onclick="dispatchFieldCrew()">🚨 Dispatch Field Security Crew (OTDR Fault Pinpoint)</button>
+        <button class="btn" id="btn-decoy-probe" style="display: none; background: rgba(0, 242, 254, 0.2); color: var(--accent-cyan); border: 1px solid var(--accent-cyan); margin-top: 6px;" onclick="simulateDecoyProbeStream()">🛰️ Decoy Probing: Stream Dummy Bits (Track Live QBER)</button>
+        <button class="btn" id="btn-recover-link" style="display: none; background: rgba(16, 185, 129, 0.2); color: var(--secure-green); border: 1px solid var(--secure-green); margin-top: 6px;" onclick="simulateTapRemovalAndRecovery()">✅ Remove Tap & Auto-Restore Link (QBER &lt; 11%)</button>
+      </div>
+
+      <!-- Attack Simulation Presets -->
+      <div class="card">
+        <div class="card-title">Simulate Physical Fiber Tap (Trigger Alarm)</div>
+        <button class="btn btn-attack" onclick="cutPrimaryPath()">Inject Optical Tap on Active Link (Trigger Alarm)</button>
+        <button class="btn btn-attack" onclick="severAllGround()">Sever All Ground Paths (Forces Satellite Link)</button>
+        <button class="btn btn-clear" onclick="clearAllAttacks()">Clear All Taps (Reset Alarms)</button>
+      </div>
+
+      <!-- Live Terminal Output -->
+      <div class="card" style="flex: 1; display: flex; flex-direction: column;">
+        <div class="card-title">Routing Algorithm Terminal</div>
+        <div class="terminal-box" id="term-log">
+[ALGORITHM READY] EPB Multi-Tier Quantum Router.
+Configurable QBER Threshold: 11.0% (Shor-Preskill).
+Source: Supernode 1 | Destination: Supernode 5.
+Optimal ground route discovered via counter-rotating ring.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('ringCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let currentStart = 1;
+    let currentEnd = 5;
+    let qberThreshold = 0.11; // 11% default
+
+    const numNodes = 9;
+    const ringRadius = 210;
+
+    // Links between adjacent supernodes and gateways
+    const links = [];
+    for (let i = 1; i <= 9; i++) {
+      const next = i === 9 ? 1 : i + 1;
+      links.push({ u: i, v: next, dist: 8.5, qber: 0.018, eve: false, type: 'fiber' });
+    }
+    links.push({ u: 3, v: 'CC', dist: 6.0, qber: 0.015, eve: false, type: 'fiber' });
+    links.push({ u: 7, v: 'CC', dist: 6.0, qber: 0.015, eve: false, type: 'fiber' });
+
+    function resizeCanvas() {
+      const container = document.getElementById('canvas-container');
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function getNodePos(id) {
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      if (id === 'CC') return { x: cx, y: cy };
+      if (id === 'SAT') return { x: cx, y: cy - 290 }; // LEO Satellite at top
+
+      const angle = -Math.PI / 2 + ((id - 1) * 2 * Math.PI / numNodes);
+      return {
+        x: cx + ringRadius * Math.cos(angle),
+        y: cy + ringRadius * Math.sin(angle),
+        angle: angle
+      };
+    }
+
+    // -------------------------------------------------------------
+    // GENERALIZED DIJKSTRA ROUTING ALGORITHM
+    // -------------------------------------------------------------
+    function findBestPath(start, end) {
+      const allGroundNodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 'CC'];
+      const dist = {};
+      const prev = {};
+      const unvisited = new Set(allGroundNodes);
+
+      allGroundNodes.forEach(n => {
+        dist[n] = Infinity;
+        prev[n] = null;
+      });
+      dist[start] = 0;
+
+      while (unvisited.size > 0) {
+        let curr = null;
+        let minDist = Infinity;
+        unvisited.forEach(n => {
+          if (dist[n] < minDist) {
+            minDist = dist[n];
+            curr = n;
+          }
+        });
+
+        if (curr === null || dist[curr] === Infinity || curr === end) break;
+        unvisited.delete(curr);
+
+        links.forEach(l => {
+          let neighbor = null;
+          if (l.u === curr) neighbor = l.v;
+          else if (l.v === curr) neighbor = l.u;
+
+          if (neighbor !== null && unvisited.has(neighbor)) {
+            // Cutoff check: If link QBER >= threshold, link is INACCESSIBLE
+            if (l.qber >= qberThreshold) return;
+
+            const weight = l.dist * (1.0 + 15.0 * l.qber);
+            const alt = dist[curr] + weight;
+            if (alt < dist[neighbor]) {
+              dist[neighbor] = alt;
+              prev[neighbor] = curr;
+            }
+          }
+        });
+      }
+
+      const path = [];
+      let step = end;
+      while (step !== null) {
+        path.unshift(step);
+        step = prev[step];
+      }
+
+      if (path.length > 1 && path[0] === start) {
+        return { success: true, tier: 'TIER_1_GROUND', path: path };
+      }
+
+      // Tier 2: Satellite Fallback
+      return {
+        success: true,
+        tier: 'TIER_2_SATELLITE',
+        path: [start, 'SAT', end]
+      };
+    }
+
+    // -------------------------------------------------------------
+    // CONTROLS & UPDATES
+    // -------------------------------------------------------------
+    function setStart(n) {
+      if (n === currentEnd) return;
+      currentStart = n;
+      document.querySelectorAll('.node-selector:first-of-type .node-btn').forEach(b => {
+        b.classList.remove('active-start');
+        if (b.innerText == n || (n === 'CC' && b.innerText === 'CC')) b.classList.add('active-start');
+      });
+      log(`[SOURCE] Set starting node to ${n}.`);
+      updateHUD();
+    }
+
+    function setEnd(n) {
+      if (n === currentStart) return;
+      currentEnd = n;
+      document.querySelectorAll('.node-selector:last-of-type .node-btn').forEach(b => {
+        b.classList.remove('active-end');
+        if (b.innerText == n || (n === 'CC' && b.innerText === 'CC')) b.classList.add('active-end');
+      });
+      log(`[DESTINATION] Set destination node to ${n}.`);
+      updateHUD();
+    }
+
+    function updateThreshold(val) {
+      qberThreshold = parseFloat(val) / 100.0;
+      document.getElementById('thresh-val').innerText = parseFloat(val).toFixed(1) + '%';
+      log(`[THRESHOLD AMENDED] Cutoff QBER set to ${parseFloat(val).toFixed(1)}%. Links exceeding this threshold marked INACCESSIBLE.`);
+      updateHUD();
+    }
+
+    function toggleLink(u, v) {
+      const l = links.find(item => (item.u === u && item.v === v) || (item.u === v && item.v === u));
+      if (l) {
+        l.eve = !l.eve;
+        l.qber = l.eve ? 0.268 : 0.018;
+        log(l.eve 
+          ? `[OPTICAL TAP] Link ${u} <-> ${v} intercepted! QBER = 26.8% >= ${ (qberThreshold*100).toFixed(1) }%. Link blocked.`
+          : `[CLEARED] Link ${u} <-> ${v} tap removed. QBER = 1.8%.`);
+        updateHUD();
+      }
+    }
+
+    function cutPrimaryPath() {
+      const res = findBestPath(currentStart, currentEnd);
+      if (res.tier === 'TIER_1_GROUND') {
+        const u = res.path[0];
+        const v = res.path[1];
+        const l = links.find(item => (item.u === u && item.v === v) || (item.u === v && item.v === u));
+        if (l) {
+          l.eve = true;
+          l.qber = 0.268;
+          log(`[ATTACK] Cut primary hop ${u} <-> ${v}! Re-evaluating optimal route.`);
+          updateHUD();
+        }
+      }
+    }
+
+    function severAllGround() {
+      links.forEach(l => {
+        l.eve = true;
+        l.qber = 0.268;
+      });
+      log(`[TOTAL GROUND FAILURE] All ground fiber links severed! Autonomous failover to LEO Satellite Quantum Hub.`);
+      updateHUD();
+    }
+
+    function clearAllAttacks() {
+      links.forEach(l => {
+        l.eve = false;
+        l.qber = 0.018;
+      });
+      log(`[RESTORED] All ground links cleared.`);
+      updateHUD();
+    }
+
+    function dispatchFieldCrew() {
+      const tappedLink = links.find(l => l.qber >= qberThreshold);
+      if (!tappedLink) return;
+      const uIP = tappedLink.u === 'CC' ? '10.161.0.1' : `10.161.${tappedLink.u}.1`;
+      const vIP = tappedLink.v === 'CC' ? '10.161.0.1' : `10.161.${tappedLink.v}.1`;
+      log(`[CREW DISPATCHED 🚨] Utility Security Unit #4 rolled to Tower Line 161 (${uIP} <-> ${vIP}). OTDR reflection echo localizes physical tap at 4.25 km from substation. Traffic actively protected via counter-rotating ring!`);
+      const snmpBox = document.getElementById('snmp-trap-box');
+      if (snmpBox) {
+        snmpBox.innerText = `[INCIDENT DISPATCH ACTIVE 🚨]\nSecurity Unit #4 en route to Line 161 (${uIP} <-> ${vIP}).\nOTDR Pinpoint: Tap detected at Mile Marker 4.2 (GPS: 35.0456 N, -85.3097 W).\nZero Outage: SCADA flow maintained via dynamic ring wrap!`;
+      }
+    }
+
+    function simulateDecoyProbeStream() {
+      const tappedLink = links.find(l => l.qber >= qberThreshold);
+      if (!tappedLink) return;
+      const uIP = tappedLink.u === 'CC' ? '10.161.0.1' : `10.161.${tappedLink.u}.1`;
+      const vIP = tappedLink.v === 'CC' ? '10.161.0.1' : `10.161.${tappedLink.v}.1`;
+      log(`[DECOY PROBING ACTIVE 🛰️] Quarantined link ${uIP} <-> ${vIP} is streaming sacrificial dummy bits. QBER tracked at ${(tappedLink.qber * 100).toFixed(1)}%. Real SCADA keys are completely protected on alternate path!`);
+      const snmpBox = document.getElementById('snmp-trap-box');
+      if (snmpBox) {
+        snmpBox.innerText = `[QUARANTINE DECOY PROBING ACTIVE]\nSpan: ${uIP} <-> ${vIP}\nReal Payload Keys: Diverted to Counter-Clockwise Ring.\nTransmitting: Sacrificial decoy states (useless pseudo-random noise).\nLive Telemetry: Tracking physical QBER until tap is removed.`;
+      }
+    }
+
+    function simulateTapRemovalAndRecovery() {
+      const tappedLink = links.find(l => l.qber >= qberThreshold);
+      if (!tappedLink) return;
+      const uIP = tappedLink.u === 'CC' ? '10.161.0.1' : `10.161.${tappedLink.u}.1`;
+      const vIP = tappedLink.v === 'CC' ? '10.161.0.1' : `10.161.${tappedLink.v}.1`;
+      tappedLink.eve = false;
+      tappedLink.qber = 0.018;
+      log(`[LINK RECOVERED ✅] Linemen removed physical tap on ${uIP} <-> ${vIP}. Decoy probe stream confirmed QBER dropped to 1.8% (< 11.0% threshold). Link automatically re-admitted to active dual ring!`);
+      updateHUD();
+    }
+
+    function log(msg) {
+      const box = document.getElementById('term-log');
+      const time = new Date().toLocaleTimeString();
+      box.innerHTML = `[${time}] ${msg}\n` + box.innerHTML;
+    }
+
+    function updateHUD() {
+      const res = findBestPath(currentStart, currentEnd);
+      const pathText = document.getElementById('route-path-text');
+      const badge = document.getElementById('route-badge');
+      const tierText = document.getElementById('stat-tier');
+      const hopsText = document.getElementById('stat-hops');
+      const distText = document.getElementById('stat-dist');
+      const qberText = document.getElementById('stat-qber');
+      const tierPillText = document.getElementById('tier-pill-text');
+      const alarmCard = document.getElementById('alarm-card');
+      const alarmBadge = document.getElementById('alarm-badge');
+      const alarmSummary = document.getElementById('alarm-summary');
+      const snmpBox = document.getElementById('snmp-trap-box');
+      const btnDispatch = document.getElementById('btn-dispatch-crew');
+      const btnDecoyProbe = document.getElementById('btn-decoy-probe');
+      const btnRecoverLink = document.getElementById('btn-recover-link');
+
+      // Check for any tapped links
+      const tappedLink = links.find(l => l.qber >= qberThreshold);
+      if (tappedLink) {
+        alarmCard.style.borderColor = 'var(--danger-red)';
+        alarmBadge.innerText = 'CRITICAL ALARM';
+        alarmBadge.style.background = 'rgba(239, 68, 68, 0.2)';
+        alarmBadge.style.color = 'var(--danger-red)';
+        const uIP = tappedLink.u === 'CC' ? '10.161.0.1' : `10.161.${tappedLink.u}.1`;
+        const vIP = tappedLink.v === 'CC' ? '10.161.0.1' : `10.161.${tappedLink.v}.1`;
+        alarmSummary.innerHTML = `<span style="color: var(--danger-red);">PHYSICAL FIBER TAP ON SPAN ${uIP} &harr; ${vIP}</span>`;
+        snmpBox.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+        snmpBox.style.color = '#fca5a5';
+        snmpBox.innerText = `[SNMP-TRAP] OID: 1.3.6.1.4.1.EPB.QIDS.1 · Event: PHYSICAL_OPTICAL_TAP\nSpan: ${uIP} <-> ${vIP} | QBER = ${(tappedLink.qber * 100).toFixed(1)}% >= ${(qberThreshold * 100).toFixed(1)}%\nAction: Dynamic Reroute (<12 ms) + Decoy Probe Stream Active\nStatus: Link Quarantined · Sending Dummy Bits to Track QBER`;
+        if (btnDispatch) btnDispatch.style.display = 'block';
+        if (btnDecoyProbe) btnDecoyProbe.style.display = 'block';
+        if (btnRecoverLink) btnRecoverLink.style.display = 'block';
+      } else {
+        alarmCard.style.borderColor = 'rgba(16, 185, 129, 0.4)';
+        alarmBadge.innerText = 'NORMAL';
+        alarmBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+        alarmBadge.style.color = 'var(--secure-green)';
+        alarmSummary.innerText = 'All Optical Spans Secure (QBER < 8.0%)';
+        snmpBox.style.borderColor = 'rgba(0, 242, 254, 0.2)';
+        snmpBox.style.color = 'var(--accent-cyan)';
+        snmpBox.innerText = `[SNMP-TRAP] OID: 1.3.6.1.4.1.EPB.QIDS.0 · Status: ALL_FIBER_SPANS_NOMINAL\nBGP Flowspec: Normal forwarding across active 10.161.x.x utility subnets.`;
+        if (btnDispatch) btnDispatch.style.display = 'none';
+        if (btnDecoyProbe) btnDecoyProbe.style.display = 'none';
+        if (btnRecoverLink) btnRecoverLink.style.display = 'none';
+      }
+
+      if (res.tier === 'TIER_1_GROUND') {
+        pathText.innerText = res.path.map(n => `[${n}]`).join(' → ');
+        badge.innerText = 'TIER 1: GROUND OPTIMAL';
+        badge.style.background = 'rgba(16,185,129,0.2)';
+        badge.style.color = 'var(--secure-green)';
+        tierText.innerText = 'Tier 1: Ground Optical Fiber';
+        tierText.style.color = 'var(--secure-green)';
+        hopsText.innerText = (res.path.length - 1) + ' Hops';
+
+        let dist = 0;
+        let maxQ = 0;
+        for (let i = 0; i < res.path.length - 1; i++) {
+          const l = links.find(item => (item.u === res.path[i] && item.v === res.path[i+1]) || (item.u === res.path[i+1] && item.v === res.path[i]));
+          if (l) { dist += l.dist; maxQ = Math.max(maxQ, l.qber); }
+        }
+        distText.innerText = dist.toFixed(1) + ' km';
+        qberText.innerText = (maxQ * 100).toFixed(1) + '%';
+        tierPillText.innerText = 'TIER 1: GROUND QUANTUM FIBER ACTIVE';
+      } else {
+        pathText.innerHTML = `[${currentStart}] <span style="color: var(--purple-satellite);">&rarr; [LEO SATELLITE HUB] &rarr;</span> [${currentEnd}]`;
+        badge.innerText = 'TIER 2: SATELLITE TIE';
+        badge.style.background = 'rgba(192,132,252,0.2)';
+        badge.style.color = 'var(--purple-satellite)';
+        tierText.innerText = 'Tier 2: LEO Satellite Free-Space Optics';
+        tierText.style.color = 'var(--purple-satellite)';
+        hopsText.innerText = '2 Hops (Uplink + Downlink)';
+        distText.innerText = '1,100 km (Slant Range)';
+        qberText.innerText = '2.5% (Atmospheric Baseline)';
+        tierPillText.innerText = 'TIER 2: LEO SATELLITE QUANTUM LINK ACTIVE';
+      }
+    }
+
+    // -------------------------------------------------------------
+    // RENDER CANVAS
+    // -------------------------------------------------------------
+    let animOffset = 0;
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+
+      const res = findBestPath(currentStart, currentEnd);
+      const activeEdges = new Set();
+      if (res.tier === 'TIER_1_GROUND') {
+        for (let i = 0; i < res.path.length - 1; i++) {
+          activeEdges.add(`${res.path[i]}-${res.path[i+1]}`);
+          activeEdges.add(`${res.path[i+1]}-${res.path[i]}`);
+        }
+      }
+
+      // Draw Satellite at Top
+      const satPos = getNodePos('SAT');
+      ctx.fillStyle = (res.tier === 'TIER_2_SATELLITE') ? '#c084fc' : '#475569';
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 2;
+      ctx.shadowColor = (res.tier === 'TIER_2_SATELLITE') ? '#c084fc' : 'transparent';
+      ctx.shadowBlur = 20;
+
+      // Draw Satellite Icon (Octahedron + Solar Panels)
+      ctx.beginPath();
+      ctx.arc(satPos.x, satPos.y, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Panels
+      ctx.fillRect(satPos.x - 42, satPos.y - 4, 20, 8);
+      ctx.fillRect(satPos.x + 22, satPos.y - 4, 20, 8);
+      ctx.shadowBlur = 0;
+
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 9px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('LEO SAT', satPos.x, satPos.y + 26);
+
+      // Draw Satellite Laser Beams if Tier 2 Active
+      if (res.tier === 'TIER_2_SATELLITE') {
+        const p1 = getNodePos(currentStart);
+        const p2 = getNodePos(currentEnd);
+
+        ctx.strokeStyle = '#c084fc';
+        ctx.lineWidth = 4;
+        ctx.setLineDash([8, 6]);
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(satPos.x, satPos.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Draw Ground Fiber Links
+      links.forEach(l => {
+        const p1 = getNodePos(l.u);
+        const p2 = getNodePos(l.v);
+        const isPath = activeEdges.has(`${l.u}-${l.v}`);
+        const isBlocked = (l.qber >= qberThreshold);
+
+        ctx.lineWidth = isPath ? 5 : (isBlocked ? 3 : 2);
+        
+        if (isBlocked) {
+          ctx.strokeStyle = '#ef4444';
+        } else if (isPath) {
+          ctx.strokeStyle = '#10b981';
+        } else {
+          ctx.strokeStyle = 'rgba(0, 242, 254, 0.25)';
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.stroke();
+
+        if (isBlocked) {
+          const mx = (p1.x + p2.x) / 2;
+          const my = (p1.y + p2.y) / 2;
+          ctx.strokeStyle = '#ef4444';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(mx - 7, my - 7); ctx.lineTo(mx + 7, my + 7);
+          ctx.moveTo(mx + 7, my - 7); ctx.lineTo(mx - 7, my + 7);
+          ctx.stroke();
+        }
+      });
+
+      // Animate Moving Photons along active path
+      animOffset += 0.015;
+      if (animOffset > 1) animOffset = 0;
+
+      if (res.tier === 'TIER_1_GROUND') {
+        for (let i = 0; i < res.path.length - 1; i++) {
+          const p1 = getNodePos(res.path[i]);
+          const p2 = getNodePos(res.path[i+1]);
+          const px = p1.x + (p2.x - p1.x) * animOffset;
+          const py = p1.y + (p2.y - p1.y) * animOffset;
+
+          ctx.fillStyle = '#00f2fe';
+          ctx.shadowColor = '#00f2fe';
+          ctx.shadowBlur = 12;
+          ctx.beginPath();
+          ctx.arc(px, py, 5, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        }
+      }
+
+      // Draw Central Command (CC)
+      const ccPos = getNodePos('CC');
+      const isCCStart = (currentStart === 'CC');
+      const isCCEnd = (currentEnd === 'CC');
+      ctx.fillStyle = isCCStart ? '#00f2fe' : (isCCEnd ? '#10b981' : 'rgba(15, 23, 42, 0.95)');
+      ctx.strokeStyle = isCCStart || isCCEnd ? '#fff' : 'var(--accent-cyan)';
+      ctx.lineWidth = 2;
+      ctx.fillRect(ccPos.x - 45, ccPos.y - 25, 90, 50);
+      ctx.strokeRect(ccPos.x - 45, ccPos.y - 25, 90, 50);
+
+      ctx.fillStyle = isCCStart || isCCEnd ? '#000' : '#fff';
+      ctx.font = 'bold 15px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('CC', ccPos.x, ccPos.y);
+      ctx.font = 'bold 9px monospace';
+      ctx.fillStyle = isCCStart || isCCEnd ? '#000' : 'var(--accent-cyan)';
+      ctx.fillText('10.161.0.1', ccPos.x, ccPos.y + 14);
+
+      // Draw 9 Supernodes
+      for (let i = 1; i <= 9; i++) {
+        const pos = getNodePos(i);
+        const isStart = (i === currentStart);
+        const isEnd = (i === currentEnd);
+        const inPath = res.path.includes(i);
+
+        ctx.fillStyle = isStart ? '#00f2fe' : (isEnd ? '#10b981' : (inPath ? 'rgba(16,185,129,0.3)' : '#0f172a'));
+        ctx.strokeStyle = isStart ? '#00f2fe' : (isEnd ? '#10b981' : '#38bdf8');
+        ctx.lineWidth = (isStart || isEnd) ? 3 : 2;
+
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 20, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = (isStart || isEnd) ? '#000' : '#fff';
+        ctx.font = 'bold 13px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(i, pos.x, pos.y + 5);
+
+        // Node IP address underneath
+        ctx.fillStyle = inPath ? '#10b981' : '#94a3b8';
+        ctx.font = '9px monospace';
+        ctx.fillText(`10.161.${i}.1`, pos.x, pos.y + 32);
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      const my = e.clientY - rect.top;
+
+      links.forEach(l => {
+        const p1 = getNodePos(l.u);
+        const p2 = getNodePos(l.v);
+        const midX = (p1.x + p2.x) / 2;
+        const midY = (p1.y + p2.y) / 2;
+        if (Math.hypot(mx - midX, my - midY) < 25) {
+          toggleLink(l.u, l.v);
+        }
+      });
+    });
+
+    updateHUD();
+    render();
+  </script>
+</body>
+</html>
