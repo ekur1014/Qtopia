@@ -37,7 +37,7 @@ The team's entry for the **Tennessee Quantum Hackathon, "Secure the Grid" track*
 ## 3. Current decisions (and one open conflict)
 
 - **The main model is Chattanooga's real grid** (OpenStreetMap). That was the first thing built and it is the hero.
-- **The dual ring: the team decided to remove it** (user, 14 Nov; recording in `remove the ring/`). The removal is **in progress in another session** (14 Nov, 15:00), following `docs/REMOVE_RING_PLAN.md`. Don't redo it: check `git log` and `git status` for where it stands.
+- **The dual ring is removed** (team decision, 14 Nov; recording in `remove the ring/`; done in commit `919d24a`). Only `vercel.json` redirects from its old URLs remain.
 - **Next feature: route search on Chattanooga** (from the recording). Inputs are a start site, an end site and an adjustable QBER cutoff (default 11%). Links above the cutoff are blocked, and the search finds the best other path. If none exists: ML-KEM, then islanding.
   - Plus a Grover demonstration that reuses notebook 2b's oracle and diffuser to pick a clean route among 8–16 candidates.
   - Frame it honestly: Dijkstra already solves this exactly, so this is a demo, not a speed-up. Details in the plan.
@@ -65,7 +65,7 @@ The team's entry for the **Tennessee Quantum Hackathon, "Secure the Grid" track*
 
 ```bash
 cd ~/VSCode/Qrypt
-cd grid-twin && node --test tests/*.test.mjs && cd ..          # all must pass (27 at 1b5ad2f; 33 with the route search)
+cd grid-twin && node --test tests/*.test.mjs && cd ..          # all must pass (35 as of 3982065)
 python3 -m http.server 8000                                     # site at http://localhost:8000
 python3 grid-twin/start.py                                      # live grid + quantum-code buttons
 bash tools/build_site.sh                                        # build site/ (Vercel runs this too)
@@ -144,10 +144,8 @@ bash tools/build_site.sh                                        # build site/ (V
 
 1. **The deck:** fill the 5-slide template from `slides.md`. Slide 3 still describes the old stylized city; update it to Chattanooga.
 2. **`[TEAM]` items in `WRITEUP.md`:** confirm the rollout plan (Step 3 Part 4), and save Grid Twin screenshots as images for the Solution slide.
-3. **The ring and the route search:** in progress in another session (see section 3). Two known issues in `grid-twin/src/route.js` as of 15:08:
-   - **Grover's iteration count is wrong.** It uses `round(π/4 · √(N/M))`, which is only right when few routes are clean. With 6 of 8 routes clean it picks a clean route 0% of the time (random picking gives 75%); with 2 of 8 it is no better than random. Use `floor(π / (4θ))` with `θ = asin(√(M/N))`, which gives 0 iterations when more than about half are clean. Add a test that Grover's success is never below M/N.
-   - **An unmeasured fiber counts as clean.** `qberOf(l) ?? 0` treats a fiber with no measurement yet as 0% QBER. Treat it as not yet usable for a QKD key, matching the probation rule.
-4. **`bb84_visualizer.html`** quotes "QBER 0.247", which matches no saved run (the notebook now shows 0.258). Another session had uncommitted edits to this file; check before touching it.
+3. **The route search** (`grid-twin/src/route.js`, `chattanooga_router.py`, `3b_grover_route_search.ipynb`) is built. Its two early bugs are fixed: Grover now uses `floor(π / (4θ))` with θ = asin(√(M/N)), so it is never worse than a random pick; and fibers still on probation can't carry a QKD key.
+4. **`bb84_visualizer.html`** now quotes the notebook's saved Eve result, 0.258 (it said 0.247 before 14 Nov).
 5. **The submission ZIP:** about 72 MB of recordings are committed. Ask the user whether they belong in the ZIP.
 
 ## 8. People and sources
