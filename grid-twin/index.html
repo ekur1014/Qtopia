@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Grid Twin · Qrypt</title>
+  <meta name="description" content="A 3D twin of a utility's quantum-secured communication network: live BB84 error rates per fiber link, click-to-place eavesdroppers, and an automatic response that cuts communication paths, never power." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="stage" aria-label="3D view of the utility network"></div>
+
+  <header class="brand">
+    <div class="brand__mark">QRYPT</div>
+    <h1 class="brand__title">Grid Twin</h1>
+    <p class="brand__sub">A quantum-secured utility network, live. Every glowing fiber runs BB84; every error is counted.</p>
+  </header>
+
+  <div class="hint" id="hint">
+    <span class="hint__dot"></span>
+    <span id="hint-text">Choose <b>Eavesdrop</b> below, then click a glowing fiber.</span>
+  </div>
+
+  <nav class="toolbar" aria-label="Tools">
+    <button class="tool is-active" data-tool="inspect"><span class="tool__key">1</span>Inspect</button>
+    <button class="tool" data-tool="eve"><span class="tool__key">2</span>Eavesdrop</button>
+    <button class="tool" data-tool="quarantine"><span class="tool__key">3</span>Quarantine</button>
+  </nav>
+
+  <aside class="panel" id="panel" aria-label="Control panel"></aside>
+
+  <div class="tooltip" id="tooltip" role="status"></div>
+
+  <div class="legend" aria-label="Legend">
+    <div><i class="sw sw--ok"></i>QKD fiber, healthy</div>
+    <div><i class="sw sw--warn"></i>Error rate above baseline</div>
+    <div><i class="sw sw--bad"></i>Above 11%: no key possible</div>
+    <div><i class="sw sw--pqc"></i>Post-quantum link (ML-KEM)</div>
+    <div><i class="sw sw--off"></i>Quarantined</div>
+  </div>
+
+  <div class="loader" id="loader"><div class="loader__bar"></div><span>Calibrating fibers</span></div>
+
+  <noscript>This page needs JavaScript and a local web server (see README.md).</noscript>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

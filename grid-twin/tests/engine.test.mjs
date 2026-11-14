@@ -1,0 +1,162 @@
+// Run with: node --test tests/   (from the grid-twin folder)
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+import { runRounds, mulberry32, expectedQber, baselineQber, secretFraction, ABORT_QBER } from "../src/bb84.js";
+import { createDetector, normalTail } from "../src/detector.js";
+import { buildNetwork, shortestPath, controlCenters } from "../src/network.js";
+import { computeResponse } from "../src/response.js";
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+const raw = JSON.parse(fs.readFileSync(path.join(here, "../data/network.json"), "utf8"));
+const net = buildNetwork(raw);
+
+function measuredQber(p, f, rounds, seed) {
+  const r = runRounds({ rounds, lineError: p, eveFraction: f, rng: mulberry32(seed) });
+  return { q: r.errors / r.sifted, n: r.sifted };
+}
+function assertNear(q, expected, n, label) {
+  const sigma = Math.sqrt(Math.max(expected * (1 - expected), 1e-6) / n);
+  assert.ok(Math.abs(q - expected) < 4.5 * sigma, `${label}: got ${q.toFixed(4)}, expected ${expected.toFixed(4)} ± ${(4.5 * sigma).toFixed(4)}`);
+}
+
+test("BB84 with no eavesdropper and no noise has zero errors", () => {
+  const r = runRounds({ rounds: 50000, lineError: 0, eveFraction: 0, rng: mulberry32(1) });
+  assert.equal(r.errors, 0);
+  assert.ok(Math.abs(r.sifted / r.rounds - 0.5) < 0.01, "about half the rounds survive sifting");
+});
+
+test("A full intercept-resend eavesdropper causes about 25% QBER", () => {
+  const { q, n } = measuredQber(0, 1, 200000, 101);
+  assertNear(q, 0.25, n, "f=1");
+});
+
+test("QBER follows p + f(1/4 - p/2) across noise and tap strengths", () => {
+  let seed = 1000;
+  for (const p of [0, 0.033, 0.08]) {
+    for (const f of [0, 0.1, 0.5, 1]) {
+      const { q, n } = measuredQber(p, f, 120000, (seed += 7919));
+      assertNear(q, expectedQber(p, f), n, `p=${p} f=${f}`);
+    }
+  }
+});
+
+test("Engine agrees with Qiskit Aer reference runs (sim/bb84_reference.py)", (t) => {
+  const file = path.join(here, "../data/calibration.json");
+  if (!fs.existsSync(file)) return t.skip("data/calibration.json not generated yet");
+  const cal = JSON.parse(fs.readFileSync(file, "utf8"));
+  let seed = 5000;
+  for (const sc of cal.scenarios) {
+    const js = measuredQber(sc.line_error, sc.eve_fraction, 200000, (seed += 104729));
+    // Two independent estimates: compare with their combined standard error.
+    const se = Math.sqrt(sc.qber * (1 - sc.qber) / sc.sifted + js.q * (1 - js.q) / js.n) || 1e-3;
+    assert.ok(Math.abs(js.q - sc.qber) < 4.5 * se + 1e-9, `p=${sc.line_error} f=${sc.eve_fraction}: JS ${js.q.toFixed(4)} vs Aer ${sc.qber.toFixed(4)}`);
+  }
+});
+
+test("Fiber model: baseline rises with distance and QKD dies around 200 km", () => {
+  assert.ok(Math.abs(baselineQber(10) - 0.033) < 0.001, "short fiber: misalignment error only");
+  assert.ok(baselineQber(100) > baselineQber(50));
+  assert.ok(baselineQber(200) > ABORT_QBER, "200 km is beyond the 11% abort line with these parameters");
+});
+
+test("Secret-key fraction is 1 at zero error and reaches zero near 11%", () => {
+  assert.equal(secretFraction(0), 1);
+  assert.ok(secretFraction(ABORT_QBER) < 0.001);
+  assert.equal(secretFraction(0.2), 0);
+});
+
+test("Detector: no false alarms on a clean fiber, warning for a quiet tap, abort for a loud one", () => {
+  const baseline = 0.033;
+  const run = (f, ticks, seed) => {
+    const d = createDetector({ baseline, z: 4.5 });
+    const rng = mulberry32(seed);
+    let last;
+    const seen = new Set();
+    for (let i = 0; i < ticks; i++) {
+      last = d.push(runRounds({ rounds: 400, lineError: baseline, eveFraction: f, rng }));
+      seen.add(last.status);
+    }
+    return { last, seen };
+  };
+  assert.ok(!run(0, 400, 7).seen.has("warning"), "clean fiber stays ok for 400 checks");
+  assert.equal(run(0.15, 40, 8).last.status, "warning");
+  assert.equal(run(1, 40, 9).last.status, "abort");
+});
+
+test("Detector clears only after several calm checks (hysteresis)", () => {
+  const d = createDetector({ baseline: 0.033, z: 4.5, windowTicks: 4, clearChecks: 3 });
+  const rng = mulberry32(42);
+  for (let i = 0; i < 6; i++) d.push(runRounds({ rounds: 400, lineError: 0.033, eveFraction: 1, rng }));
+  const statuses = [];
+  for (let i = 0; i < 12; i++) statuses.push(d.push(runRounds({ rounds: 400, lineError: 0.033, eveFraction: 0, rng })).status);
+  assert.notEqual(statuses[0], "ok", "still alarmed right after the tap is removed");
+  assert.equal(statuses.at(-1), "ok", "eventually clears");
+});
+
+test("normalTail matches known values", () => {
+  assert.ok(Math.abs(normalTail(0) - 0.5) < 1e-6);
+  assert.ok(Math.abs(normalTail(1.96) - 0.025) < 1e-4);
+  assert.ok(Math.abs(normalTail(4.5) - 3.398e-6) < 1e-7);
+});
+
+test("Network data is consistent", () => {
+  assert.equal(controlCenters(net).length, 2);
+  for (const node of net.nodes.values()) {
+    if (node.type === "control") continue;
+    assert.ok(shortestPath(net, controlCenters(net), node.id, () => true), `${node.id} reachable`);
+  }
+});
+
+const healthy = () => new Map([...net.links.keys()].map((id) => [id, { alarm: "ok", quarantined: false }]));
+
+test("Response: healthy network gives every substation a QKD key and every site comms", () => {
+  const r = computeResponse(net, healthy());
+  for (const [id, site] of r.sites) {
+    const type = net.nodes.get(id).type;
+    assert.equal(site.islanded, false, `${id} connected`);
+    assert.equal(site.power, "energized");
+    if (type === "substation") assert.equal(site.keySource, "qkd", `${id} on QKD`);
+    if (type === "subunit" || type === "remote") assert.equal(site.keySource, "pqc", `${id} on ML-KEM`);
+  }
+});
+
+test("Response: an alarm switches the link to ML-KEM but never takes it down", () => {
+  const states = healthy();
+  states.set("L4", { alarm: "abort", quarantined: false });
+  const r = computeResponse(net, states);
+  assert.equal(r.links.get("L4").keySource, "pqc-fallback");
+  assert.equal(r.links.get("L4").carriesData, true);
+  // S3's direct QKD fiber is in alarm, so its key must route around L4 through a trusted relay.
+  const s3 = r.sites.get("S3");
+  assert.equal(s3.keySource, "qkd");
+  assert.ok(!s3.keyPath.links.some((l) => l.id === "L4"));
+  assert.ok(s3.relays.length >= 1, "relayed through a trusted node");
+});
+
+test("Response: quarantining a sub-unit's only link islands it, but power stays on", () => {
+  const states = healthy();
+  states.set("P4", { alarm: "ok", quarantined: true });
+  const r = computeResponse(net, states);
+  const u4 = r.sites.get("U4");
+  assert.equal(u4.islanded, true);
+  assert.equal(u4.power, "energized");
+});
+
+test("Response: the response never de-energizes anything, whatever the alarms", () => {
+  const states = new Map([...net.links.keys()].map((id) => [id, { alarm: "abort", quarantined: true }]));
+  const r = computeResponse(net, states);
+  for (const site of r.sites.values()) assert.equal(site.power, "energized");
+});
+
+test("Response: a substation with no healthy QKD chain falls back to ML-KEM and stays connected", () => {
+  const states = healthy();
+  for (const id of ["L8", "L9"]) states.set(id, { alarm: "warning", quarantined: false });
+  const r = computeResponse(net, states);
+  const s5 = r.sites.get("S5");
+  assert.equal(s5.keySource, "pqc");
+  assert.equal(s5.islanded, false);
+});
