@@ -1,0 +1,5 @@
+# macOS folder metadata
+.DS_Store
+
+# Too large for GitHub (544 MB and 126 MB videos; one is a YouTube download): kept on our machines only
+Video Resources/
