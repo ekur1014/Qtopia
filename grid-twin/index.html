@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Grid Twin · Qrypt</title>
+  <meta name="description" content="A 3D twin of a utility's quantum-secured communication network: live BB84 error rates per fiber link, click-to-place eavesdroppers, and an automatic response that cuts communication paths, never power." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <script>
+    // Theme before first paint: ?theme=dark|light, else the viewer's last choice, else light.
+    (function () {
+      var t = new URLSearchParams(location.search).get("theme");
+      if (t !== "dark" && t !== "light") {
+        try { t = localStorage.getItem("gridtwin-theme"); } catch (e) { t = null; }
+      }
+      document.documentElement.dataset.theme = t === "dark" ? "dark" : "light";
+    })();
+  </script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="stage" aria-label="3D view of the utility network"></div>
+
+  <header class="brand">
+    <div class="brand__mark">QRYPT</div>
+    <h1 class="brand__title">Grid Twin</h1>
+    <p class="brand__sub">A quantum-secured utility network, live. Every green fiber runs BB84; every error is counted.</p>
+  </header>
+
+  <div class="hint" id="hint">
+    <span class="hint__dot"></span>
+    <span id="hint-text">Choose <b>Eavesdrop</b> below, then click a fiber. The network responds on its own.</span>
+  </div>
+
+  <nav class="toolbar" aria-label="Tools">
+    <button class="tool is-active" data-tool="inspect"><span class="tool__key">1</span>Inspect</button>
+    <button class="tool" data-tool="eve"><span class="tool__key">2</span>Eavesdrop</button>
+  </nav>
+
+  <div class="dock" role="toolbar" aria-label="View">
+    <button class="dock__btn" data-view="zoom-in" title="Zoom in (+)" aria-label="Zoom in"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="dock__btn" data-view="zoom-out" title="Zoom out (−)" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+    <div class="dock__sep"></div>
+    <button class="dock__btn" data-view="fit" title="Fit the whole network (H)" aria-label="Fit the whole network"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
+    <button class="dock__btn" data-view="focus" title="Focus on the selection (F)" aria-label="Focus on the selection" aria-pressed="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+    <button class="dock__btn" data-view="orbit" title="Cinematic orbit: turns slowly until you interact (O)" aria-label="Cinematic orbit" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/></svg></button>
+    <div class="dock__sep"></div>
+    <button class="dock__btn" data-view="theme" title="Light or dark (T)" aria-label="Switch light or dark"><svg viewBox="0 0 24 24" data-icon="theme"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg></button>
+  </div>
+
+  <div class="incidents" id="incidents" aria-live="polite" aria-label="Incidents"></div>
+
+  <aside class="panel" id="panel" aria-label="Control panel"></aside>
+
+  <div class="tooltip" id="tooltip" role="status"></div>
+
+  <div class="legend" aria-label="Legend">
+    <div><i class="sw sw--ok"></i>QKD fiber, healthy</div>
+    <div><i class="sw sw--warn"></i>Error rate above baseline</div>
+    <div><i class="sw sw--bad"></i>Above 11%: no key possible</div>
+    <div><i class="sw sw--pqc"></i>Post-quantum link (ML-KEM)</div>
+    <div><i class="sw sw--decoy"></i>Decoy traffic (real traffic rerouted)</div>
+    <div><i class="sw sw--off"></i>Quarantined</div>
+  </div>
+
+  <div class="credit">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors, ODbL</div>
+
+  <div class="gate" role="alert">
+    <div class="gate__card">
+      <div class="gate__mark">QRYPT</div>
+      <h2>Needs a bigger screen</h2>
+      <p>The 3D grid and its control panel need a window at least <b>1024 × 600</b> pixels: a laptop, desktop or projector. Make this window larger, or open the page on a computer.</p>
+    </div>
+  </div>
+
+  <div class="loader" id="loader"><div class="loader__bar"></div><span>Calibrating fibers</span></div>
+
+  <noscript>This page needs JavaScript and a local web server (see README.md).</noscript>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>

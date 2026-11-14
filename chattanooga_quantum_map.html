@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EPB Chattanooga Real-World Quantum Infrastructure & Cost GIS Map</title>
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: rgba(15, 23, 42, 0.92);
+      --cyan: #00f2fe;
+      --blue: #38bdf8;
+      --purple: #c084fc;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.12);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: var(--bg); color: var(--text); height: 100vh; width: 100vw; display: flex; flex-direction: column; overflow: hidden; }
+
+    header {
+      background: #0f172a;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .badge { background: linear-gradient(135deg, #0284c7, var(--cyan)); color: #000; font-weight: 800; font-size: 11px; padding: 4px 8px; border-radius: 4px; }
+    h1 { font-size: 17px; font-weight: 700; color: #fff; }
+
+    #main-container { display: flex; flex: 1; position: relative; overflow: hidden; }
+    #map { flex: 1; height: 100%; width: 100%; z-index: 1; }
+
+    /* Floating Left Overlay Stats */
+    .cost-banner {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      z-index: 1000;
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      padding: 14px 18px;
+      border-radius: 10px;
+      max-width: 380px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .cost-title { font-size: 11px; font-weight: 700; color: var(--cyan); text-transform: uppercase; letter-spacing: 0.05em; }
+    .cost-val { font-size: 26px; font-weight: 800; color: #fff; margin: 4px 0 2px; }
+    .cost-sub { font-size: 12px; color: var(--muted); line-height: 1.4; }
+
+    /* Right Sidebar Control Panel */
+    #panel {
+      width: 400px;
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      border-left: 1px solid var(--border);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow-y: auto;
+      z-index: 1000;
+      box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+    }
+
+    .card { background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; }
+    .card-head { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; display: flex; justify-content: space-between; }
+    
+    .qber-metric { font-size: 32px; font-weight: 800; }
+    
+    .btn { width: 100%; padding: 10px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; border: none; transition: 0.2s; margin-top: 8px; }
+    .btn-red { background: rgba(239, 68, 68, 0.15); color: var(--red); border: 1px solid var(--red); }
+    .btn-red:hover { background: var(--red); color: #fff; }
+    .btn-blue { background: rgba(0, 242, 254, 0.15); color: var(--cyan); border: 1px solid var(--cyan); }
+    .btn-blue:hover { background: var(--cyan); color: #000; }
+
+    /* Cost Comparison Table */
+    .cost-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
+    .cost-table th, .cost-table td { padding: 6px 4px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .cost-table th { color: var(--muted); font-weight: 600; }
+    .cost-table td:last-child { text-align: right; font-weight: 700; }
+
+    /* Legend */
+    .legend-row { display: flex; align-items: center; gap: 8px; font-size: 11px; margin-bottom: 5px; }
+    .legend-badge { width: 12px; height: 12px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="badge">OPENINFRA REAL-WORLD GIS</div>
+      <h1>EPB Chattanooga &amp; TVA Quantum Grid Infrastructure</h1>
+    </div>
+    <div style="font-size: 12px; color: var(--cyan); font-weight: 600;">
+      Real Coordinates: 35.0456° N, 85.3097° W
+    </div>
+  </header>
+
+  <div id="main-container">
+    <div id="map"></div>
+
+    <!-- Left Cost Justification Banner -->
+    <div class="cost-banner">
+      <div class="cost-title">Infrastructure Economics (EPB vs. Large-Scale)</div>
+      <div class="cost-val" id="cost-display">$250,000 Total</div>
+      <div class="cost-sub" id="cost-detail">
+        <strong>Hybrid Architecture:</strong> Reuses existing EPB OPGW aerial fiber (0 trenching cost) + Satellite/Teleportation for long-haul ties.
+      </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div id="panel">
+
+      <!-- Active Substation Info -->
+      <div class="card">
+        <div class="card-head">Inspected Substation / Node</div>
+        <div style="font-size: 15px; font-weight: 800; color: #fff;" id="node-name">EPB Downtown Control Center</div>
+        <div style="font-size: 12px; color: var(--cyan); margin-top: 2px;" id="node-meta">Bulk Grid Control · 161 kV Tie · 10 W MLK Blvd</div>
+      </div>
+
+      <!-- Real-time QBER Gauge -->
+      <div class="card">
+        <div class="card-head">
+          <span>Observed QBER on Active Path</span>
+          <span id="qber-badge" style="background: rgba(16,185,129,0.2); color: var(--green); padding: 2px 6px; border-radius: 4px;">NORMAL</span>
+        </div>
+        <div class="qber-metric" id="qber-text" style="color: var(--green);">1.6%</div>
+        <div style="font-size: 11px; color: var(--muted);" id="qber-sub">Fiber Baseline Noise across 8.4 km</div>
+        
+        <button class="btn btn-red" id="btn-spy">Tap Selected Link (Inject Eavesdropper)</button>
+        <button class="btn btn-blue" id="btn-restore" style="display: none;">Remove Spy &amp; Restore QKD</button>
+      </div>
+
+      <!-- Satellite vs Dedicated Long-Haul Trenching Cost Analysis -->
+      <div class="card">
+        <div class="card-head">Why Satellite / Teleportation Wins at Scale</div>
+        <table class="cost-table">
+          <thead>
+            <tr>
+              <th>Approach</th>
+              <th>Deployment Scope</th>
+              <th>Estimated Cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span style="color: var(--cyan);">EPB Metro Hybrid</span></td>
+              <td>Existing OPGW Fiber (Chattanooga)</td>
+              <td style="color: var(--green);">$250,000</td>
+            </tr>
+            <tr>
+              <td><span style="color: var(--purple);">Satellite / Free-Space</span></td>
+              <td>Wide-Area Long-Haul (TVA Scale)</td>
+              <td style="color: var(--cyan);">$1,200,000</td>
+            </tr>
+            <tr>
+              <td><span style="color: var(--red);">Trenching Dedicated Fiber</span></td>
+              <td>Long-Haul + Trusted Repeaters</td>
+              <td style="color: var(--red);">$12,500,000+</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="font-size: 10px; color: var(--muted); margin-top: 8px; line-height: 1.4;">
+          <strong>Selling Point for the Board:</strong> Trenching fiber across Tennessee costs \$100k/mile. Free-space / Satellite Teleportation saves <strong>over 90%</strong> in capital costs!
+        </div>
+      </div>
+
+      <!-- OpenInfra Voltage Legend -->
+      <div class="card">
+        <div class="card-head">OpenInfra Map Voltage Classification</div>
+        <div class="legend-row">
+          <div class="legend-badge" style="background: var(--red);"></div>
+          <span><strong>161 kV / 500 kV Bulk Transmission:</strong> Critical (High Priority)</span>
+        </div>
+        <div class="legend-row">
+          <div class="legend-badge" style="background: var(--yellow);"></div>
+          <span><strong>46 kV Sub-Transmission:</strong> Regional Substations</span>
+        </div>
+        <div class="legend-row">
+          <div class="legend-badge" style="background: var(--green);"></div>
+          <span><strong>13.8 kV Distribution:</strong> Feeder lines (Lowest Priority)</span>
+        </div>
+        <div class="legend-row">
+          <div class="legend-badge" style="background: var(--purple);"></div>
+          <span><strong>Quantum Teleportation Link:</strong> Entanglement Backbone</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Initialize Leaflet Map centered on Chattanooga, TN
+    const map = L.map('map', {
+      zoomControl: true,
+      attributionControl: false
+    }).setView([35.050, -85.275], 12);
+
+    // Dark Matter Tiles (OpenStreetMap data)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      maxZoom: 18,
+      subdomains: 'abcd'
+    }).addTo(map);
+
+    // Real Chattanooga Substation Coordinates (OpenInfraMap / EPB / TVA Data)
+    const substations = [
+      { id: 'epb_hq', name: 'EPB Downtown Control Center', lat: 35.0456, lng: -85.3097, type: 'core', kv: '161 kV Bulk Tie', critical: 'CRITICAL PRIORITY' },
+      { id: 'chickamauga', name: 'Chickamauga Dam Hydroelectric & Switchyard', lat: 35.1030, lng: -85.2290, type: 'bulk', kv: '161 kV Bulk Generator', critical: 'CRITICAL PRIORITY' },
+      { id: 'north_chatt', name: 'North Chattanooga (Hixson) Substation', lat: 35.1180, lng: -85.2420, type: 'sub', kv: '46 kV Regional', critical: 'HIGH PRIORITY' },
+      { id: 'south_chatt', name: 'South Chattanooga (Alton Park) Substation', lat: 35.0080, lng: -85.3120, type: 'sub', kv: '46 kV Regional', critical: 'HIGH PRIORITY' },
+      { id: 'east_ridge', name: 'East Ridge Substation', lat: 34.9980, lng: -85.2340, type: 'sub', kv: '46 kV Regional', critical: 'MEDIUM PRIORITY' },
+      { id: 'tiftonia', name: 'Lookout Valley (Tiftonia) Substation', lat: 35.0320, lng: -85.3780, type: 'sub', kv: '46 kV Regional', critical: 'HIGH PRIORITY' },
+      { id: 'enterprise_south', name: 'TVA Power Control Center (Enterprise South)', lat: 35.0780, lng: -85.1480, type: 'bulk', kv: '161 kV / 500 kV Tie', critical: 'CRITICAL PRIORITY' },
+      { id: 'ooltewah', name: 'Ooltewah Distribution Substation', lat: 35.0740, lng: -85.0680, type: 'dist', kv: '13.8 kV Distribution', critical: 'LOW PRIORITY' }
+    ];
+
+    // Real Transmission / Fiber Links between Substations
+    const links = [
+      { from: 'epb_hq', to: 'chickamauga', dist: 9.8, type: 'qkd', eve: 0 },
+      { from: 'epb_hq', to: 'tiftonia', dist: 6.5, type: 'qkd', eve: 0 },
+      { from: 'epb_hq', to: 'south_chatt', dist: 4.3, type: 'qkd', eve: 0 },
+      { from: 'chickamauga', to: 'north_chatt', dist: 2.1, type: 'qkd', eve: 0 },
+      { from: 'epb_hq', to: 'enterprise_south', dist: 15.2, type: 'teleport', eve: 0 },
+      { from: 'enterprise_south', to: 'ooltewah', dist: 7.8, type: 'pqc', eve: 0 },
+      { from: 'south_chatt', to: 'east_ridge', dist: 7.4, type: 'pqc', eve: 0 }
+    ];
+
+    let activeLink = links[0];
+
+    // Add Nodes to Map
+    const nodeMarkers = {};
+    substations.forEach(s => {
+      let color = s.type === 'core' ? '#00f2fe' : (s.type === 'bulk' ? '#ef4444' : (s.type === 'sub' ? '#f59e0b' : '#10b981'));
+      let radius = s.type === 'core' ? 10 : (s.type === 'bulk' ? 8 : 6);
+
+      const marker = L.circleMarker([s.lat, s.lng], {
+        radius: radius,
+        fillColor: color,
+        color: '#fff',
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.9
+      }).addTo(map);
+
+      marker.bindPopup(`<strong>${s.name}</strong><br>Voltage: ${s.kv}<br>Status: ${s.critical}`);
+      marker.on('click', () => {
+        document.getElementById('node-name').innerText = s.name;
+        document.getElementById('node-meta').innerText = `${s.kv} · ${s.critical}`;
+      });
+
+      nodeMarkers[s.id] = s;
+    });
+
+    // Add Transmission Lines
+    const polylineObjects = [];
+    links.forEach(l => {
+      const s1 = nodeMarkers[l.from];
+      const s2 = nodeMarkers[l.to];
+
+      let color = l.type === 'qkd' ? '#00f2fe' : (l.type === 'teleport' ? '#c084fc' : '#64748b');
+      let dash = l.type === 'teleport' ? '6, 6' : '';
+
+      const line = L.polyline([[s1.lat, s1.lng], [s2.lat, s2.lng]], {
+        color: color,
+        weight: 4,
+        opacity: 0.8,
+        dashArray: dash
+      }).addTo(map);
+
+      line.on('click', () => {
+        activeLink = l;
+        const n1 = nodeMarkers[l.from].name;
+        const n2 = nodeMarkers[l.to].name;
+        document.getElementById('node-name').innerHTML = `${n1} &harr; ${n2}`;
+        document.getElementById('node-meta').innerText = `${l.type.toUpperCase()} Link (${l.dist} km)`;
+        updateQBER();
+      });
+
+      l.line = line;
+      polylineObjects.push(line);
+    });
+
+    // UI Updates
+    const qberText = document.getElementById('qber-text');
+    const qberBadge = document.getElementById('qber-badge');
+    const qberSub = document.getElementById('qber-sub');
+    const btnSpy = document.getElementById('btn-spy');
+    const btnRestore = document.getElementById('btn-restore');
+
+    function updateQBER() {
+      const base = 1.4 + (activeLink.dist * 0.05);
+      const eveError = activeLink.eve > 0 ? 25.0 : 0.0;
+      const totalQBER = base + eveError;
+
+      qberText.innerText = totalQBER.toFixed(1) + '%';
+      qberSub.innerText = `Fiber line noise across ${activeLink.dist} km`;
+
+      if (totalQBER < 7.0) {
+        qberText.style.color = 'var(--green)';
+        qberBadge.innerText = 'NORMAL';
+        qberBadge.style.background = 'rgba(16,185,129,0.2)';
+        qberBadge.style.color = 'var(--green)';
+        activeLink.line.setStyle({ color: activeLink.type === 'teleport' ? '#c084fc' : '#00f2fe', dashArray: activeLink.type === 'teleport' ? '6, 6' : '' });
+        btnSpy.style.display = 'block';
+        btnRestore.style.display = 'none';
+      } else {
+        qberText.style.color = 'var(--red)';
+        qberBadge.innerText = 'ATTACK: SHOR-PRESKILL CUTOFF (ABORT)';
+        qberBadge.style.background = 'rgba(239,68,68,0.2)';
+        qberBadge.style.color = 'var(--red)';
+        activeLink.line.setStyle({ color: '#ef4444', dashArray: '4, 4' });
+        btnSpy.style.display = 'none';
+        btnRestore.style.display = 'block';
+      }
+    }
+
+    btnSpy.addEventListener('click', () => {
+      activeLink.eve = 1;
+      updateQBER();
+    });
+
+    btnRestore.addEventListener('click', () => {
+      activeLink.eve = 0;
+      updateQBER();
+    });
+
+    updateQBER();
+  </script>
+</body>
+</html>

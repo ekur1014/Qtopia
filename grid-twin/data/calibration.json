@@ -1,0 +1,64 @@
+{
+  "generated_by": "sim/bb84_reference.py",
+  "qiskit": "2.6.2",
+  "qiskit_aer": "0.18.2",
+  "method": "AerSimulator(method='stabilizer'), one BB84 round per qubit",
+  "scenarios": [
+    {
+      "line_error": 0.0,
+      "eve_fraction": 0.0,
+      "sifted": 5990,
+      "errors": 0,
+      "qber": 0.0,
+      "expected": 0.0
+    },
+    {
+      "line_error": 0.0,
+      "eve_fraction": 1.0,
+      "sifted": 5974,
+      "errors": 1497,
+      "qber": 0.250586,
+      "expected": 0.25
+    },
+    {
+      "line_error": 0.0,
+      "eve_fraction": 0.5,
+      "sifted": 5892,
+      "errors": 734,
+      "qber": 0.124576,
+      "expected": 0.125
+    },
+    {
+      "line_error": 0.033,
+      "eve_fraction": 0.0,
+      "sifted": 6004,
+      "errors": 197,
+      "qber": 0.032811,
+      "expected": 0.033
+    },
+    {
+      "line_error": 0.033,
+      "eve_fraction": 0.25,
+      "sifted": 5924,
+      "errors": 573,
+      "qber": 0.096725,
+      "expected": 0.091375
+    },
+    {
+      "line_error": 0.033,
+      "eve_fraction": 1.0,
+      "sifted": 6043,
+      "errors": 1579,
+      "qber": 0.261294,
+      "expected": 0.2665
+    },
+    {
+      "line_error": 0.08,
+      "eve_fraction": 0.5,
+      "sifted": 5968,
+      "errors": 1137,
+      "qber": 0.190516,
+      "expected": 0.185
+    }
+  ]
+}

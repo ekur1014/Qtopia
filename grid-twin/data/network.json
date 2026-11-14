@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "name": "Stylized city utility network",
+    "note": "A made-up layout in the spirit of the track README (2 control centers, 6-10 substations). Not a real utility's map: real substation locations are sensitive. Positions are in km; fiber length is 1.3 x the straight line unless a link sets km.",
+    "design": "QKD on the backbone between control centers and major substations; post-quantum cryptography (ML-KEM) on the short links to sub-units and on the long rural link, where QKD is impractical."
+  },
+  "nodes": [
+    { "id": "CC1", "name": "Control Center", "type": "control", "pos": [0, 0] },
+    { "id": "CC2", "name": "Backup Control Center", "type": "control", "pos": [16, 2] },
+
+    { "id": "S1", "name": "North Substation", "type": "substation", "pos": [-10, -8] },
+    { "id": "S2", "name": "West Substation", "type": "substation", "pos": [-11, 6] },
+    { "id": "S3", "name": "Downtown Substation", "type": "substation", "pos": [3, 11] },
+    { "id": "S4", "name": "East Substation", "type": "substation", "pos": [15, 13] },
+    { "id": "S5", "name": "Industrial Substation", "type": "substation", "pos": [26, 4] },
+    { "id": "S6", "name": "South Substation", "type": "substation", "pos": [6, -12] },
+    { "id": "S7", "name": "Remote Hydro Substation", "type": "remote", "pos": [36, -14] },
+
+    { "id": "U1", "name": "Feeder Unit N1", "type": "subunit", "pos": [-17, -13] },
+    { "id": "U2", "name": "Feeder Unit W1", "type": "subunit", "pos": [-18, 3] },
+    { "id": "U3", "name": "Feeder Unit W2", "type": "subunit", "pos": [-15, 13] },
+    { "id": "U4", "name": "Feeder Unit D1", "type": "subunit", "pos": [0, 17] },
+    { "id": "U5", "name": "Feeder Unit E1", "type": "subunit", "pos": [19, 19] },
+    { "id": "U6", "name": "Feeder Unit I1", "type": "subunit", "pos": [32, 9] },
+    { "id": "U7", "name": "Feeder Unit S1", "type": "subunit", "pos": [1, -18] },
+    { "id": "U8", "name": "Feeder Unit S2", "type": "subunit", "pos": [12, -17] }
+  ],
+  "links": [
+    { "id": "L1", "a": "CC1", "b": "CC2", "kind": "qkd" },
+    { "id": "L2", "a": "CC1", "b": "S1", "kind": "qkd" },
+    { "id": "L3", "a": "CC1", "b": "S2", "kind": "qkd" },
+    { "id": "L4", "a": "CC1", "b": "S3", "kind": "qkd" },
+    { "id": "L5", "a": "S1", "b": "S2", "kind": "qkd" },
+    { "id": "L6", "a": "S3", "b": "S4", "kind": "qkd" },
+    { "id": "L7", "a": "CC2", "b": "S4", "kind": "qkd" },
+    { "id": "L8", "a": "CC2", "b": "S5", "kind": "qkd" },
+    { "id": "L9", "a": "S4", "b": "S5", "kind": "qkd" },
+    { "id": "L10", "a": "S1", "b": "S6", "kind": "qkd" },
+    { "id": "L11", "a": "CC2", "b": "S6", "kind": "qkd" },
+
+    { "id": "P1", "a": "S1", "b": "U1", "kind": "pqc" },
+    { "id": "P2", "a": "S2", "b": "U2", "kind": "pqc" },
+    { "id": "P3", "a": "S2", "b": "U3", "kind": "pqc" },
+    { "id": "P4", "a": "S3", "b": "U4", "kind": "pqc" },
+    { "id": "P5", "a": "S4", "b": "U5", "kind": "pqc" },
+    { "id": "P6", "a": "S5", "b": "U6", "kind": "pqc" },
+    { "id": "P7", "a": "S6", "b": "U7", "kind": "pqc" },
+    { "id": "P8", "a": "S6", "b": "U8", "kind": "pqc" },
+    { "id": "P9", "a": "U2", "b": "U3", "kind": "pqc" },
+    { "id": "P10", "a": "CC2", "b": "S7", "kind": "pqc", "km": 140, "note": "Long rural route, drawn shorter than scale." }
+  ]
+}
