@@ -15,15 +15,21 @@
   --q-ok: #07a27e;
   --q-warn: #c77700;
   --q-bad: #d22f4b;
-  --q-pqc: #5257e0;
+  --q-pqc: #2d6cdf;
   --q-gold: #b88600;
-  --q-tele: #1189bd;
+  --q-tele: #0b8fb3;
   --q-decoy: #c8358f;
   --q-off: #b3bccb;
   --q-shadow: 0 10px 30px rgba(15, 26, 46, 0.08);
   --q-font: "Space Grotesk", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --q-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --q-bar-h: 46px;
+  --q-bar-h: 50px;
+  /* Motion tokens (tasteskill motion.md): hover in/out, press, entrance; ease-out only, no overshoot */
+  --q-m-in: 150ms;
+  --q-m-out: 120ms;
+  --q-m-press: 90ms;
+  --q-ease: cubic-bezier(.2, .8, .2, 1);
+  --q-ease-enter: cubic-bezier(.22, 1, .36, 1);
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
@@ -40,7 +46,7 @@
   --q-ok: #3ef0c6;
   --q-warn: #ffb547;
   --q-bad: #ff4d6d;
-  --q-pqc: #8a8dff;
+  --q-pqc: #6aa1ff;
   --q-gold: #ffd76a;
   --q-tele: #5ad7ff;
   --q-decoy: #ff5ec7;
@@ -54,13 +60,21 @@
 .qbar__mark { font-family: var(--q-mono); font-size: 11px; letter-spacing: 0.38em; color: var(--q-ok); }
 .qbar__name { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
 .qbar__nav { display: flex; gap: 2px; margin-left: auto; }
+.qbar__step { font-family: var(--q-mono); font-size: 10px; opacity: .55; margin-right: 5px; }
+.qbar__link[aria-current="page"] .qbar__step { opacity: .8; }
+/* Simple / Detailed: one switch for the whole site */
+.qbar__mode { display: flex; padding: 3px; border-radius: 999px; border: 1px solid var(--q-line); background: var(--q-tint); }
+.qbar__mode button { border: 0; background: transparent; color: var(--q-ink-dim); font: 500 12px var(--q-font); padding: 5px 11px; border-radius: 999px; cursor: pointer; transition: background var(--q-m-in) var(--q-ease), color var(--q-m-in) var(--q-ease); }
+.qbar__mode button[aria-pressed="true"] { background: var(--q-surface); color: var(--q-ink); box-shadow: 0 1px 3px rgba(15, 26, 46, .12); }
+.qbar__mode button:focus-visible, .qbar__theme:focus-visible, .qbar__link:focus-visible { outline: 2px solid var(--q-ok); outline-offset: 2px; }
 .qbar__link { padding: 7px 12px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--q-ink-dim); text-decoration: none; white-space: nowrap; transition: background .2s ease, color .2s ease; }
 .qbar__link:hover { color: var(--q-ink); background: var(--q-tint-2); }
 .qbar__link[aria-current="page"] { color: var(--q-surface); background: var(--q-ink); }
 .qbar__theme { width: 32px; height: 32px; display: grid; place-items: center; border: 1px solid var(--q-line); border-radius: 999px; background: transparent; color: var(--q-ink-dim); cursor: pointer; }
 .qbar__theme:hover { color: var(--q-ink); background: var(--q-tint-2); }
 .qbar__theme svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-@media (max-width: 760px) { .qbar__name { display: none; } .qbar__link { padding: 7px 9px; font-size: 12px; } }
+@media (max-width: 1100px) { .qbar__name { display: none; } }
+@media (max-width: 860px) { .qbar__link { padding: 7px 8px; font-size: 12px; } .qbar__step { display: none; } }
 
 /* Shared pieces the pages use */
 .q-pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-family: var(--q-mono); font-size: 11px; font-weight: 600; letter-spacing: .04em; }
@@ -72,3 +86,27 @@
 .q-pill--gold { background: color-mix(in srgb, var(--q-gold) 15%, transparent); color: var(--q-gold); }
 .q-note { font-size: 12px; line-height: 1.5; color: var(--q-ink-dim); }
 .q-label { font-family: var(--q-mono); font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--q-ink-faint); }
+
+/* Simple mode hides what only a detail-minded reader needs. Mark it with class="q-adv". */
+:root[data-mode="simple"] .q-adv { display: none !important; }
+:root[data-mode="detailed"] .q-simple-only { display: none !important; }
+
+/* Hover and press layer (tasteskill motion.md): cards lift 2px, buttons step 1px and press, links draw. */
+.q-card { transition: transform var(--q-m-in) var(--q-ease), border-color var(--q-m-in) var(--q-ease), box-shadow var(--q-m-in) var(--q-ease); }
+a.q-card:hover, .q-card--link:hover { transform: translateY(-2px); }
+.q-btn, button.q-btn, a.q-btn { transition: transform var(--q-m-in) var(--q-ease), background var(--q-m-in) var(--q-ease), color var(--q-m-in) var(--q-ease); }
+.q-btn:hover { transform: translateY(-1px); }
+.q-btn:active { transform: translateY(1px) scale(.985); transition-duration: var(--q-m-press); }
+.q-link { background: linear-gradient(currentColor, currentColor) no-repeat 0 100% / 0 1px; text-decoration: none; transition: background-size var(--q-m-in) var(--q-ease); }
+.q-link:hover { background-size: 100% 1px; }
+
+/* Hero entrance: once on load the h1 rises, then what follows it fades up 12px (about 1.1 s in all). */
+.q-enter-ready [data-enter] h1 { opacity: 0; transform: translateY(28px); }
+.q-enter-ready [data-enter] .q-enter-item { opacity: 0; transform: translateY(12px); }
+.q-entered [data-enter] h1, .q-entered [data-enter] .q-enter-item { opacity: 1; transform: none; transition: opacity 520ms var(--q-ease-enter), transform 700ms var(--q-ease-enter); }
+
+@media (prefers-reduced-motion: reduce) {
+  .q-card, .q-btn, .q-link { transition-property: color, background-color, border-color; }
+  a.q-card:hover, .q-card--link:hover, .q-btn:hover, .q-btn:active { transform: none; }
+  .q-enter-ready [data-enter] h1, .q-enter-ready [data-enter] .q-enter-item { opacity: 1; transform: none; }
+}
