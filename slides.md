@@ -33,7 +33,7 @@ Draft (DONE, from Step 2):
 - Two different risks, and both matter: **read later** (confidentiality of key exchange) and **forge later** (a signature check that a 20-30 year relay or meter trusts for its whole life). We think forge-later on firmware is the higher-consequence risk.
 - How big is the gap? Today's largest machine on qBraid has 107 qubits through the SDK (156 on IBM machines in the web catalog). Gidney's 2025 estimate for RSA-2048 is under 1 million noisy qubits: about **4 orders of magnitude** away. Estimates keep falling (20 million in 2019, under 1 million in 2025, about 22,600 cat qubits claimed in Oct 2026 for one specific architecture). Link: `WRITEUP.md`, Step 2 Part 2.
 - Demo we ran: Shor factors 15 (r = 4, 15 = 3 x 5). The circuit is hard-coded for N = 15, so it shows the idea, not the scale.
-- [TEAM] Step 1: a spy on a fiber link is a separate, present-day threat. Add the BB84 result: error rate without and with an eavesdropper.
+- Step 1: a spy on a fiber link is a separate, present-day threat. BB84 result: QBER 0% without an eavesdropper, 25.8% with one (theory 25%); 4.25% from real-hardware noise alone on Rigetti Cepheus.
 
 ## Slide 2. Ideal Customer Profile
 Questions to answer: What does a utility like EPB run on these links today? How long do field devices stay in service? Who signs off on a change like this, and which rules apply?
@@ -60,9 +60,9 @@ Draft (numbers and where they come from; label guesses):
 Questions to answer: Your network diagram, your working link, your rollout.
 
 Draft:
-- DONE, the design we present (Step 3): **Grid Twin** (`grid-twin/`), a 3D live twin of the network. 2 control centers, 6 major substations, 8 feeder sub-units, 1 remote site. QKD (BB84) on the 11-fiber backbone between control centers and major substations; ML-KEM on the short sub-unit links and the 140 km rural link (QKD there would detect about 537 times fewer photons than on a city fiber). Show it live: tap a fiber, watch the error rate climb, the alarm fire, keys switch to ML-KEM and QKD keys reroute through a trusted relay. See `grid-twin/DEMO.md` for the 60-second script.
+- DONE, the design we present (Step 3): **Grid Twin** (`grid-twin/`), a 3D live twin of the network. It runs on Chattanooga's real grid from OpenStreetMap: 117 sites (2 control centers, assumed; 31 major substations; 84 distribution sub-units) and 145 lines. QKD (BB84) on the 34 backbone fibers (161 kV and up); ML-KEM on the 111 fibers along 46 kV distribution lines. Route search: pick a start, an end and a QBER cutoff (default 11%), and it finds the clean route through the fewest trusted sites, falling back to ML-KEM, then islanding. Notebook 3b runs notebook 2b's Grover circuit to pick a clean route (a demonstration; Dijkstra already solves it exactly). Show it live: tap a fiber, watch the error rate climb, the alarm fire, keys switch to ML-KEM and QKD keys reroute through a trusted relay. See `grid-twin/DEMO.md` for the 60-second script.
 - How the response works: an alarm never takes a fiber down (an attacker could use that to cut comms); the fiber switches to ML-KEM keys and stays up. Only an operator quarantines a fiber. Isolation cuts communication paths, never power. The alarm is statistical (a rise above that fiber's own baseline, about 4.7 to 5.0%), and 11% is the abort line where no key can be made.
-- Evidence: the browser's BB84 engine matches Qiskit Aer circuits on all 7 test scenarios; 15 automated tests pass. Teleportation link (Step 3, Part 3): the teammate's notebook 3.
+- Evidence: the browser's BB84 engine matches Qiskit Aer circuits on all 7 test scenarios; 35 automated tests pass. Teleportation link (Step 3, Part 3): notebook 3, 167 of 200 shots correct on Rigetti Cepheus (real QPU).
 - DONE, our migration ranking (Step 2): 1 crypto inventory and agility; 2 hybrid ML-KEM on every VPN/TLS/SSH edge now; 3 firmware signing and ROM trust anchors (dual-sign, PQC-capable hardware); 4 PKI/CA; 5 AMI procurement; 6 SCADA/DNP3 TLS layer; 7 IEC 61850/GOOSE; 8 ICCP/synchrophasors; 9 DER and APIs; 10 enterprise IT; 11 symmetric keys (AES-256 in new buys). See `WRITEUP.md`, Step 2 Parts 3-5.
 - Results to show side by side (quantum vs classical, simulator vs emulator):
   - Shor factors 15: r = 4, 3 x 5.
@@ -85,7 +85,7 @@ Draft (honest list; add the teammate's failures):
 - Quantum does not help today: Shor cannot break RSA yet (4 orders of magnitude of qubits to go, and no error-corrected machine). Our Grover demo says nothing about breaking AES: Grover only halves the key exponent, and NIST says AES-128 stays secure for decades (we still recommend AES-256 in new buys).
 - What surprised us: IonQ's simulator and Quantinuum's emulator gave very different noise results for the same circuit (71.5% vs 92.5% at N = 8), and the real Rigetti machine did worse than both (45%): noise is a property of the machine, not the algorithm. The Shor circuit as written needs about 13,300 two-qubit gates; we had to cut it to 168 by hand to run it at all.
 - What failed or cost us time: the notebook's device list did not show IBM's 156-qubit machines that the web catalog lists; a package update (openqasm3 1.0.2) broke QASM 2 submission from Python until we pinned 1.0.1; the first job path to the Quantinuum emulator needed Quantinuum's terms accepted. Add anything else that went wrong.
-- From building Grid Twin: a careful spy who taps about 5% of photons hides inside normal fiber noise (QBER 4.5% against a 4.7 to 5.0% warning line). QKD cannot catch her quickly, but privacy amplification makes what she learns worthless. A fixed threshold like 7% would let a much bigger tap hide; the threshold should come from each fiber's own baseline.
+- From building Grid Twin: a careful spy who taps about 5% of photons hides inside normal fiber noise (QBER 4.5% against a 4.7 to 5.0% warning line). QKD cannot catch her quickly, but what she learns is bounded by the errors she causes, and privacy amplification removes it: a small hidden tap costs key rate, not secrecy. A fixed threshold like 7% would let a much bigger tap hide; the threshold should come from each fiber's own baseline.
 - What we would do next: pilot hybrid ML-KEM on the VPN edge, start a crypto inventory, require PQC-capable hardware in the next procurement.
 - Tools we used: AI assistants helped with drafting and checking code and notes. We reviewed the results ourselves, and everyone presenting can explain what is in the deck.
 
@@ -94,7 +94,7 @@ Draft (honest list; add the teammate's failures):
 ## Checklist before Sunday 9:00 AM
 - [ ] Teammate's Step 1 (BB84) and Step 3 (capstone) added to slides 1, 3, 5; names and roles on slide 4.
 - [ ] Open the template .pptx (now in this repo) and fill in its five slides.
-- [x] `WRITEUP.md` is now the single write-up for every Step and Part (14 Nov), with the verified Step 2 and the Chattanooga Step 3. Its **[TEAM]** items (diagram screenshots, rollout plan) still need the team.
+- [x] `WRITEUP.md` is now the single write-up for every Step and Part (14 Nov), with the verified Step 2 and the Chattanooga Step 3. Still needed from the team: diagram screenshots for slide 3, and agreement on the Step 3 rollout plan.
 - [ ] Resolve the remaining VERIFY items (exact protocol crypto per vendor) or remove the claim.
 - [x] Run record complete (job IDs are in `WRITEUP.md`, at the end).
 - [ ] Rehearse: everyone can explain the Shor, Grover, QKD-vs-PQC and migration-ranking choices in plain words.
