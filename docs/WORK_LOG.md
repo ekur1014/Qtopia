@@ -41,6 +41,14 @@ Everything this part of the team built for the Tennessee Quantum Hackathon (Secu
 
 See `docs/AUDIT.md`: what was re-checked, what was found, and what was fixed.
 
+## 7. Expansion (Saturday)
+
+- IEEE 14/30/57/118/300-bus grids as selectable networks; visual pass (bigger nodes, restrained glow, alarm shockwaves, camera glide, key-path packets).
+- Team ideas built: decoy mode (keep a tapped line running on fake traffic to measure the tap) and risk-aware routing.
+- Real-time code runs: the page can re-run any fiber on Qiskit Aer, NVIDIA CUDA-Q and Quantinuum Guppy (Selene).
+- Published as a private artifact: https://claude.ai/artifact/RMHGPbTvUVXPvKpzXgE6pH (share from its Share menu).
+- Every notebook-page technology and chat idea is assessed in `docs/TECH_OPTIONS.md`.
+
 ## Local tools used (not in the repo)
 
 - Python environment with Qiskit 2.6.2, Qiskit Aer 0.18.2, qBraid SDK 0.13.0 (`openqasm3` pinned to 1.0.1).

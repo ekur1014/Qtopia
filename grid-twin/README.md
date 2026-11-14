@@ -1,5 +1,7 @@
 # Grid Twin
 
+Shareable copy (private until shared from its Share menu): https://claude.ai/artifact/RMHGPbTvUVXPvKpzXgE6pH
+
 A 3D twin of a city utility's quantum-secured communication network, built for the Tennessee Quantum Hackathon (Secure the Grid track, Step 3).
 
 Every glowing fiber runs BB84 quantum key distribution. You can tap any fiber with an eavesdropper and watch its error rate (QBER) climb, the alarm fire, and the control center respond. The response cuts **communication paths**, never power.
