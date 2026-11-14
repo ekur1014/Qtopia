@@ -73,6 +73,20 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
   controls.minPolarAngle = 0.15;
   controls.maxPolarAngle = 1.32;
   controls.enabled = false; // until the intro flight ends
+  // Map-style navigation: drag moves the view across the ground, right-drag or Shift/Ctrl-drag rotates and tilts,
+  // scroll zooms, arrow keys move. "Rotate" mode swaps the two drags (for trackpads without a right button).
+  controls.screenSpacePanning = false;
+  controls.keyPanSpeed = 18;
+  renderer.domElement.tabIndex = 0; // click or Tab to the view, then the arrow keys move it
+  renderer.domElement.setAttribute("aria-label", "3D view of the network. Drag to move, right-drag or Shift-drag to rotate, scroll to zoom, arrow keys to move.");
+  controls.listenToKeyEvents(renderer.domElement);
+  let dragMode = "move";
+  function applyDragMode() {
+    const move = dragMode === "move";
+    controls.mouseButtons = { LEFT: move ? THREE.MOUSE.PAN : THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: move ? THREE.MOUSE.ROTATE : THREE.MOUSE.PAN };
+    controls.touches = { ONE: move ? THREE.TOUCH.PAN : THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_ROTATE };
+  }
+  applyDragMode();
 
   // Framing: the panel covers part of the screen (right on desktop, bottom on phones). The view is offset so
   // the network is centered in what is left, and the camera distance is searched so every site fits there.
@@ -346,12 +360,17 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
     return (node ?? hits[0]).object.userData.pick;
   }
 
-  renderer.domElement.addEventListener("pointerdown", (e) => (downAt = { x: e.clientX, y: e.clientY }));
+  renderer.domElement.addEventListener("pointerdown", (e) => {
+    downAt = { x: e.clientX, y: e.clientY };
+    renderer.domElement.focus({ preventScroll: true });
+    renderer.domElement.style.cursor = "grabbing";
+  });
   renderer.domElement.addEventListener("pointerup", (e) => {
+    renderer.domElement.style.cursor = "grab";
     if (!downAt) return;
     const moved = Math.hypot(e.clientX - downAt.x, e.clientY - downAt.y);
     downAt = null;
-    if (moved > 5) return; // that was a drag to orbit, not a click
+    if (moved > 5) return; // that was a drag to move or rotate, not a click
     onPick(pickAt(e.clientX, e.clientY));
   });
   renderer.domElement.addEventListener("pointermove", (e) => {
@@ -383,6 +402,7 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
   // Fly: a timed move of both camera and target (Fit, Focus). Dolly: an eased zoom (+ and − buttons).
   // Cinematic orbit: a slow turn around the target that stops on any interaction and resumes when idle.
   const targetGoal = center.clone();
+  let gliding = false; // easing the target toward a new selection; any drag or key move cancels it
   let fly = null;
   let dollyGoal = null;
   let focusMode = false;
@@ -399,7 +419,10 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
     return linkViews.get(sel.id).mid.clone().setY(0);
   }
   function focusOn(sel) {
-    if (sel) targetGoal.copy(pointOf(sel));
+    if (sel) {
+      targetGoal.copy(pointOf(sel));
+      gliding = true;
+    }
   }
   function flyTo(pos, target, seconds = 1.1) {
     dollyGoal = null;
@@ -414,8 +437,31 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
   controls.addEventListener("start", () => {
     fly = null;
     dollyGoal = null;
+    gliding = false; // the user moves the view now: never pull it back
     noteInteraction();
   });
+  renderer.domElement.addEventListener("keydown", (e) => {
+    if (e.key.startsWith("Arrow")) {
+      e.preventDefault(); // move the view, not the page
+      fly = null;
+      gliding = false;
+      noteInteraction();
+    }
+  });
+  // Keep the view over the network: the point the camera looks at may not leave the grid's area.
+  const nodeXs = [...net.nodes.values()].map((n) => n.pos[0]);
+  const nodeZs = [...net.nodes.values()].map((n) => n.pos[1]);
+  const roam = { minX: Math.min(...nodeXs) - span * 0.15, maxX: Math.max(...nodeXs) + span * 0.15, minZ: Math.min(...nodeZs) - span * 0.15, maxZ: Math.max(...nodeZs) + span * 0.15 };
+  function keepInBounds() {
+    const t = controls.target;
+    const dx = THREE.MathUtils.clamp(t.x, roam.minX, roam.maxX) - t.x;
+    const dz = THREE.MathUtils.clamp(t.z, roam.minZ, roam.maxZ) - t.z;
+    const dy = -t.y; // stay on the ground plane
+    if (dx || dy || dz) {
+      t.x += dx; t.y += dy; t.z += dz;
+      camera.position.x += dx; camera.position.y += dy; camera.position.z += dz;
+    }
+  }
   // Close-up on the selection: a site and its neighbours, or a whole fiber with both ends in view.
   function closeUp(sel) {
     const p = pointOf(sel);
@@ -494,7 +540,7 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
       else if (sel) focusOn(sel);
       else {
         focusMode = false;
-        if (!fly) targetGoal.copy(center);
+        // Clearing the selection leaves the view where it is.
       }
     }
     const focusSite = sel && sel.type === "node" ? view.sites.get(sel.id) : null;
@@ -531,60 +577,6 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
     }
   }
 
-  // Satellite concept layer (off by default) ----------------------------------------------------------
-  // A drawing only: nothing about it is simulated. It shows where a satellite QKD link to the control
-  // centers would sit, for discussion; the team scoped satellites out of the build.
-  const satRadius = span * 0.3;
-  const satHeight = span * 0.3;
-  const centersList = [...net.nodes.values()].filter((n) => n.type === "control");
-  const sat = new THREE.Group();
-  const satBodyMat = new THREE.MeshStandardMaterial({ color: "#d4dae5", metalness: 0.55, roughness: 0.32 });
-  const satPanelMat = new THREE.MeshStandardMaterial({ color: "#1f3f9a", metalness: 0.3, roughness: 0.45, emissive: "#0b1d4d", emissiveIntensity: 0.35 });
-  const satBody = new THREE.Mesh(new THREE.BoxGeometry(1.6 * S, 1.2 * S, 1.2 * S), satBodyMat);
-  const wingL = new THREE.Mesh(new THREE.BoxGeometry(3.4 * S, 0.06 * S, 1.3 * S), satPanelMat);
-  wingL.position.x = -2.6 * S;
-  const wingR = wingL.clone();
-  wingR.position.x = 2.6 * S;
-  const dish = new THREE.Mesh(new THREE.ConeGeometry(0.55 * S, 0.6 * S, 18, 1, true), satBodyMat);
-  dish.position.y = -0.85 * S;
-  sat.add(satBody, wingL, wingR, dish);
-  const satEl = document.createElement("div");
-  satEl.className = "label label--sat";
-  satEl.innerHTML = `SAT<span class="label__name">concept, not simulated</span>`;
-  const satLabel = new CSS2DObject(satEl);
-  satLabel.position.set(0, 2.2 * S, 0);
-  sat.add(satLabel);
-  const ringPts = Array.from({ length: 129 }, (_, i) => {
-    const a = (i / 128) * Math.PI * 2;
-    return new THREE.Vector3(center.x + Math.cos(a) * satRadius, satHeight, center.z + Math.sin(a) * satRadius);
-  });
-  const satRingMat = new THREE.LineDashedMaterial({ color: COLORS.sat.clone(), dashSize: span * 0.02, gapSize: span * 0.015, transparent: true, opacity: 0.45 });
-  const satRing = new THREE.Line(new THREE.BufferGeometry().setFromPoints(ringPts), satRingMat);
-  satRing.computeLineDistances();
-  const beamGeo = new THREE.BufferGeometry();
-  beamGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(centersList.length * 6), 3));
-  const beamMat = new THREE.LineBasicMaterial({ color: glow(COLORS.tele, 1.6), transparent: true, opacity: 0.7, toneMapped: false });
-  const beams = new THREE.LineSegments(beamGeo, beamMat);
-  beams.frustumCulled = false;
-  const satLayer = new THREE.Group();
-  satLayer.add(sat, satRing, beams);
-  satLayer.visible = false;
-  scene.add(satLayer);
-  function setSatellite(on) {
-    satLayer.visible = !!on;
-  }
-  function moveSatellite(t) {
-    const a = t * 0.06;
-    sat.position.set(center.x + Math.cos(a) * satRadius, satHeight, center.z + Math.sin(a) * satRadius);
-    sat.lookAt(center.x, 0, center.z);
-    const arr = beamGeo.attributes.position.array;
-    centersList.forEach((n, i) => {
-      arr.set([sat.position.x, sat.position.y - 0.9 * S, sat.position.z, n.pos[0], 7.7 * S, n.pos[1]], i * 6);
-    });
-    beamGeo.attributes.position.needsUpdate = true;
-    beamMat.opacity = 0.45 + 0.3 * (0.5 + 0.5 * Math.sin(t * 2.4));
-  }
-
   // Theme -----------------------------------------------------------------------------------------
   function setTheme(name) {
     const next = THEMES[name];
@@ -610,8 +602,6 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
     for (const m of halos) m.color.copy(COLORS.ok);
     eveMat.color.copy(glow(COLORS.bad, 2.0));
     eveLineMat.color.copy(COLORS.bad);
-    satRingMat.color.copy(COLORS.sat);
-    beamMat.color.copy(glow(COLORS.tele, 1.6));
     for (const v of linkViews.values()) v.base.copy(linkBase(v.isQkd));
     if (view) update(view);
   }
@@ -645,9 +635,12 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
       controls.update();
     } else {
       // Glide the orbit target toward the selection; the camera moves with it so the view angle is kept.
-      const step = targetGoal.clone().sub(controls.target).multiplyScalar(reduceMotion ? 1 : 0.06);
-      controls.target.add(step);
-      camera.position.add(step);
+      if (gliding) {
+        const step = targetGoal.clone().sub(controls.target).multiplyScalar(reduceMotion ? 1 : 0.06);
+        controls.target.add(step);
+        camera.position.add(step);
+        if (step.lengthSq() < 1e-6) gliding = false;
+      }
       if (dollyGoal != null) {
         const off = camera.position.clone().sub(controls.target);
         const d = off.length();
@@ -657,6 +650,7 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
       }
       controls.autoRotate = orbitOn && !paused && time - lastInteract > ORBIT_IDLE_S;
       controls.update(dt);
+      keepInBounds();
     }
 
     for (const v of linkViews.values()) {
@@ -750,8 +744,6 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
       nv.body.scale.setScalar(1 + 0.14 * nv.hover);
     }
 
-    if (satLayer.visible) moveSatellite(flow);
-
     for (let k = shockwaves.length - 1; k >= 0; k--) {
       const w = shockwaves[k];
       w.age += dt;
@@ -841,6 +833,14 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
       dollyGoal = THREE.MathUtils.clamp(d, controls.minDistance, controls.maxDistance);
       noteInteraction();
     },
+    /** What a one-finger or left-button drag does: "move" (pan across the ground) or "rotate". */
+    setDragMode(mode) {
+      dragMode = mode === "rotate" ? "rotate" : "move";
+      applyDragMode();
+    },
+    get dragMode() {
+      return dragMode;
+    },
     /** Cinematic orbit: turns slowly while nobody is interacting. */
     setOrbit(on) {
       orbitOn = on;
@@ -851,7 +851,6 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
     },
     noteInteraction,
     setTheme,
-    setSatellite,
   };
 
   function endHeight(node) {

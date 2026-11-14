@@ -430,6 +430,7 @@
     function select(l, byUser) {
       if (byUser && !hintGone) { hintGone = true; $("hint").classList.add("is-gone"); }
       if (selected) { var s = baseStyle(selected.link); selected.line.setStyle({ weight: s.weight, opacity: s.opacity }); }
+      if (byUser && (!selected || selected.link !== l)) tap = 0; // each fiber starts with no spy
       selLayer.clearLayers();
       selected = { link: l, line: l._line };
       var colour = css(l.kind === "qkd" ? "--q-ok" : "--q-pqc");
@@ -485,7 +486,8 @@
               '<div class="gauge__mark" id="g-base"><span>normal</span></div>' +
               '<div class="gauge__mark gauge__mark--limit" style="left:' + (ABORT / 0.3) * 100 + '%"><span>11% limit</span></div></div>' +
             '<div class="status" id="status" aria-live="polite"></div>' +
-            '<div class="spy">' +
+            '<a class="btn q-btn" id="open-live" href="' + openUrl + '">Open this fiber in the live grid' + ICON.arrow + "</a>" +
+            '<div class="spy" style="margin-top:16px">' +
               '<label for="tap">Send a spy onto this fiber <output id="tapv" for="tap"></output></label>' +
               '<input type="range" min="0" max="100" step="1" value="' + Math.round(tap * 100) + '" id="tap" aria-describedby="spy-what" />' +
               '<div class="scale" aria-hidden="true"><span>No spy</span><span>Reads every photon</span></div>' +
@@ -508,7 +510,7 @@
               "<dt>To</dt><dd>" + esc(nameOf(b)) + (b.kv ? " · " + b.kv + " kV" : "") + "</dd>" +
               "<dt>Length along the line</dt><dd>" + l.km + " km</dd>" +
               "<dt>Keys</dt><dd>ML-KEM (FIPS 203)</dd></dl>") +
-        '<a class="btn q-btn" href="' + openUrl + '">' + (isQkd ? "Open this fiber in the live grid" : "Open this link in the live grid") + ICON.arrow + "</a>" +
+        (isQkd ? "" : '<a class="btn q-btn" href="' + openUrl + '">Open this link in the live grid' + ICON.arrow + "</a>") +
         '<label class="pick">Or pick a fiber from the list<select id="pick">' + (isQkd ? "" : '<option value="" selected>Choose a quantum fiber</option>') + options + "</select></label>";
       var slider = $("tap");
       if (slider) slider.addEventListener("input", function () { tap = Number(slider.value) / 100; update(); runPhotons(); });
@@ -573,6 +575,12 @@
       $("tapv").textContent = tap === 0 ? "off" : "reads " + Math.round(tap * 100) + "% of photons";
       $("tap").setAttribute("aria-valuetext", tap === 0 ? "No spy" : "Spy reads " + Math.round(tap * 100) + "% of photons. " + st.t);
       $("d-key").textContent = pct(secretFraction(q), 0);
+      // The live-grid link carries the spy setting, so the fiber opens there already tapped.
+      var live = $("open-live");
+      if (live) {
+        live.href = "grid-twin/index.html?net=" + region + "&select=link:" + l.id + (tap > 0 ? "&tap=" + tap.toFixed(2) : "");
+        live.firstChild.textContent = tap > 0 ? "Open this tapped fiber in the live grid" : "Open this fiber in the live grid";
+      }
       var fill = $("g-fill");
       fill.style.width = Math.min(100, (q / 0.3) * 100) + "%";
       fill.style.background = c;
@@ -586,6 +594,16 @@
     window.addEventListener("qrypt:theme", function () { var keep = selected && selected.link.id; setTiles(); draw(keep); });
     setTiles();
     draw();
+
+    // Page keys: R recenters, G switches between the city and the Tennessee grid. Arrows and + / − move and zoom
+    // the map once it has focus (Leaflet's own keys).
+    document.addEventListener("keydown", function (e) {
+      if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented || (e.target.closest && e.target.closest("input, select, textarea, dialog"))) return;
+      var k = e.key.toLowerCase();
+      if (k === "r" && homeBounds) { e.preventDefault(); map.fitBounds(homeBounds, { padding: [32, 32] }); }
+      else if (k === "g") { e.preventDefault(); region = region === "chattanooga" ? "tennessee500" : "chattanooga"; tap = 0; draw(); }
+    });
+    if (window.qrypt) window.qrypt.addShortcuts([["R", "Recenter on the whole grid"], ["G", "Switch between Chattanooga and Tennessee"], ["Arrows / + / −", "Move and zoom the map (click it first)"]]);
   </script>
 </body>
 </html>

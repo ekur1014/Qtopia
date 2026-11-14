@@ -146,6 +146,8 @@
       .sphere-label .m { font-size: 17px; margin-top: 2px; }
     }
     @media (max-width: 480px) { .figs { grid-template-columns: 1fr; } .panel { padding: 18px 16px 28px; } }
+      #tab-engines.show-code .q-adv { display: revert !important; }
+    #tab-engines.show-code .q-simple-only { display: revert !important; }
   </style>
 </head>
 <body class="lab">
@@ -279,7 +281,7 @@
           <label class="step" for="spy"><span>3. Share of photons a spy reads on the first fiber</span><b id="spyv">0%</b></label>
           <input type="range" id="spy" min="0" max="100" value="0" />
           <div class="ends" aria-hidden="true"><span>no spy</span><span>every photon</span></div>
-          <div class="actions"><button class="btn q-btn" id="run-tele">Teleport 1,024 times</button><a class="btn btn--ghost q-btn" id="open-route" href="grid-twin/index.html">Open this route in the live grid</a></div>
+          <div class="actions"><button class="btn q-btn" id="run-tele">Teleport 1,024 times</button><a class="btn btn--ghost q-btn" id="open-route" href="grid-twin/index.html">Open this site in the live grid</a></div>
         </div>
         <div class="card result" id="tele-result">
           <h3>What Bob receives</h3>
@@ -455,7 +457,11 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
         selectTab(tabs[(j + tabs.length) % tabs.length].dataset.tab, true);
       });
     });
-    $("show-code").addEventListener("click", function () { if (window.qrypt) window.qrypt.setMode("detailed"); });
+    // Reveal the code on this tab only; the rest of the site keeps its Simple or Detailed setting.
+    $("show-code").addEventListener("click", function () {
+      var on = $("tab-engines").classList.toggle("show-code");
+      this.textContent = on ? "Hide the code" : "Show the code";
+    });
 
     // ---------------------------------------------------------------- 3D: two Bloch spheres
     var stage = $("stage");
@@ -812,7 +818,7 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
         row("Classical bits sent per qubit", "2", true);
       $("tele-hops").innerHTML = "<tr><th>Fiber</th><th class=\"n\">Length</th><th class=\"n\">Error on this hop</th></tr>" +
         r.hops.map(function (l, i) { return "<tr><td>" + l.id + (i === 0 && spy > 0 ? " (spy here)" : "") + "</td><td class=\"n\">" + l.km + " km</td><td class=\"n\">" + pct(r.qs[i]) + "</td></tr>"; }).join("");
-      $("open-route").href = "grid-twin/index.html?net=chattanooga&select=node:" + routeTo;
+      $("open-route").href = "grid-twin/index.html?net=chattanooga&teleport=1&select=node:" + routeTo;
       if (opt.why) {
         $("tele-changed").textContent = opt.why + (lastTele != null && Math.abs(lastTele - avgFid) > 5e-4 ? " Average fidelity was " + pct(lastTele, 1) + ", now " + pct(avgFid, 1) + "." : " Average fidelity " + pct(avgFid, 1) + ".");
         flash($("tele-result"));
@@ -937,5 +943,20 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
     var first = (location.hash || "").slice(1);
     selectTab(STAGE[first] ? first : "bb84");
   </script>
+<script>
+  // Page keys: the left and right arrows step through the experiments (also when no tab has focus).
+  (function () {
+    function skip(e) { return e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented || (e.target.closest && e.target.closest("input, select, textarea, dialog")); }
+    document.addEventListener("keydown", function (e) {
+      if (skip(e) || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+      if (e.target.closest && e.target.closest('[role="tab"]')) return; // the tab list handles its own arrows
+      var tabs = Array.prototype.slice.call(document.querySelectorAll('[role="tab"]'));
+      var i = tabs.findIndex(function (t) { return t.getAttribute("aria-selected") === "true"; });
+      var next = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
+      if (next) { e.preventDefault(); next.click(); next.focus(); }
+    });
+    if (window.qrypt) window.qrypt.addShortcuts([["← / →", "Previous or next experiment"], ["Enter", "Run the focused button"]]);
+  })();
+</script>
 </body>
 </html>

@@ -59,7 +59,10 @@
 .qbar__brand { display: flex; align-items: baseline; gap: 10px; text-decoration: none; color: inherit; white-space: nowrap; }
 .qbar__mark { font-family: var(--q-mono); font-size: 11px; letter-spacing: 0.38em; color: var(--q-ok); }
 .qbar__name { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
-.qbar__nav { display: flex; gap: 2px; margin-left: auto; }
+.qbar__nav { display: flex; gap: 2px; margin-left: auto; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.qbar__nav::-webkit-scrollbar { display: none; }
+.qbar__link { flex: none; }
+.qbar__mode, .qbar__theme, .qbar__keys { flex: none; }
 .qbar__step { font-family: var(--q-mono); font-size: 10px; opacity: .55; margin-right: 5px; }
 .qbar__link[aria-current="page"] .qbar__step { opacity: .8; }
 /* Simple / Detailed: one switch for the whole site */
@@ -110,3 +113,18 @@ a.q-card:hover, .q-card--link:hover { transform: translateY(-2px); }
   a.q-card:hover, .q-card--link:hover, .q-btn:hover, .q-btn:active { transform: none; }
   .q-enter-ready [data-enter] h1, .q-enter-ready [data-enter] .q-enter-item { opacity: 1; transform: none; }
 }
+
+/* Keyboard shortcuts: the ? button in the bar and its dialog */
+.qbar__keys { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--q-line); background: transparent; color: var(--q-ink); font: 600 15px var(--q-font); cursor: pointer; }
+.qbar__keys:hover { background: var(--q-tint); }
+.qbar__keys:focus-visible { outline: 2px solid var(--q-ok); outline-offset: 2px; }
+.qkeys { width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 64px); padding: 22px 24px; border-radius: 16px; border: 1px solid var(--q-line); background: var(--q-surface); color: var(--q-ink); font-family: var(--q-font); box-shadow: var(--q-shadow); }
+.qkeys::backdrop { background: rgba(8, 12, 20, 0.45); }
+.qkeys__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.qkeys h2 { margin: 0; font-size: 20px; font-weight: 600; }
+.qkeys h3 { margin: 16px 0 8px; font-size: 14px; font-weight: 600; color: var(--q-ink-dim); }
+.qkeys dl { display: grid; grid-template-columns: max-content 1fr; gap: 8px 16px; margin: 0; font-size: 14.5px; }
+.qkeys dt { white-space: nowrap; } .qkeys dd { margin: 0; color: var(--q-ink-dim); line-height: 1.45; }
+.qkeys kbd { display: inline-block; min-width: 24px; padding: 2px 7px; margin-right: 2px; border-radius: 6px; border: 1px solid var(--q-line); border-bottom-width: 2px; background: var(--q-tint); font: 600 12.5px var(--q-mono); text-align: center; }
+.qkeys__close { min-height: 34px; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--q-line); background: transparent; color: var(--q-ink); font: 500 14px var(--q-font); cursor: pointer; }
+input[type="range"]:focus-visible { outline: 2px solid var(--q-ok); outline-offset: 4px; border-radius: 4px; }

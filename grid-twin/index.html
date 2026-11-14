@@ -35,20 +35,25 @@
   </div>
 
   <nav class="toolbar" aria-label="Tools">
-    <button class="tool is-active" data-tool="inspect"><span class="tool__key">1</span>Inspect</button>
-    <button class="tool" data-tool="eve"><span class="tool__key">2</span>Eavesdrop</button>
+    <button class="tool is-active" data-tool="inspect"><span class="tool__key">I</span>Inspect</button>
+    <button class="tool" data-tool="eve"><span class="tool__key">E</span>Eavesdrop</button>
   </nav>
 
   <div class="dock" role="toolbar" aria-label="View">
-    <button class="dock__btn" data-view="zoom-in" title="Zoom in (+)" aria-label="Zoom in"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
-    <button class="dock__btn" data-view="zoom-out" title="Zoom out (−)" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+    <div class="dock__group" role="group" aria-label="What dragging does">
+      <button class="dock__btn is-on" data-drag="move" aria-pressed="true" title="Drag moves the view across the map (M switches)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></svg><span>Move</span></button>
+      <button class="dock__btn" data-drag="rotate" aria-pressed="false" title="Drag turns and tilts the view (M switches)"><svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="12" rx="9" ry="4"/><path d="M15.5 6.4l2.3 1.6-2.6 1"/><path d="M12 3v18"/></svg><span>Rotate</span></button>
+    </div>
     <div class="dock__sep"></div>
-    <button class="dock__btn" data-view="fit" title="Fit the whole network (H)" aria-label="Fit the whole network"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></button>
-    <button class="dock__btn" data-view="focus" title="Focus on the selection (F)" aria-label="Focus on the selection" aria-pressed="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
-    <button class="dock__btn" data-view="orbit" title="Cinematic orbit: turns slowly until you interact (O)" aria-label="Cinematic orbit" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/></svg></button>
+    <button class="dock__btn" data-view="zoom-in" title="Zoom in (+)" aria-label="Zoom in"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Zoom in</span></button>
+    <button class="dock__btn" data-view="zoom-out" title="Zoom out (−)" aria-label="Zoom out"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg><span>Zoom out</span></button>
     <div class="dock__sep"></div>
-    <button class="dock__btn" data-view="theme" title="Light or dark (T)" aria-label="Switch light or dark"><svg viewBox="0 0 24 24" data-icon="theme"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg></button>
+    <button class="dock__btn" data-view="fit" title="Recenter: show the whole network (H)" aria-label="Recenter: show the whole network"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg><span>Recenter</span></button>
+    <button class="dock__btn" data-view="focus" title="Focus on the selection (F)" aria-label="Focus on the selection" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg><span>Focus</span></button>
+    <button class="dock__btn" data-view="orbit" title="Cinematic orbit: turns slowly until you interact (O)" aria-label="Cinematic orbit" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/></svg><span>Auto-turn</span></button>
   </div>
+
+  <button class="paused" id="paused" type="button" hidden>Paused · press Space or click here to resume</button>
 
   <div class="incidents" id="incidents" aria-live="polite" aria-label="Incidents"></div>
 
@@ -56,14 +61,16 @@
 
   <div class="tooltip" id="tooltip" role="status"></div>
 
-  <div class="legend" aria-label="Legend">
+  <details class="legend" id="legend" open>
+    <summary>Map key and controls</summary>
+    <div class="legend__nav" id="nav-help"><b>Drag</b> to move · <b>right-drag</b> or <b>Shift-drag</b> to rotate · <b>scroll</b> to zoom · <b>H</b> to recenter</div>
     <div><i class="sw sw--ok"></i>QKD fiber, healthy</div>
     <div><i class="sw sw--warn"></i>Error rate above baseline</div>
     <div><i class="sw sw--bad"></i>Above 11%: no key possible</div>
     <div><i class="sw sw--pqc"></i>Post-quantum link (ML-KEM)</div>
     <div><i class="sw sw--decoy"></i>Decoy traffic (real traffic rerouted)</div>
     <div><i class="sw sw--off"></i>Quarantined</div>
-  </div>
+  </details>
 
   <div class="credit">Map data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors, ODbL</div>
 
@@ -72,6 +79,7 @@
       <div class="gate__mark">QRYPT</div>
       <h2>Needs a bigger screen</h2>
       <p>The 3D grid and its control panel need a window at least <b>1024 × 600</b> pixels: a laptop, desktop or projector. Make this window larger, or open the page on a computer.</p>
+      <p class="gate__links"><a href="../chattanooga_quantum_map.html">Open the real map instead</a> · <a href="../index.html">Back to home</a></p>
     </div>
   </div>
 

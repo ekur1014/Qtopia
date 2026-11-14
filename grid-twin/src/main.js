@@ -87,7 +87,6 @@ async function boot() {
     paused: false,
     autoResponse: true, // detect, switch keys, reroute, decoy, measure, recommend: all without a click
     teleportView: false,
-    satellite: false,
     route: null, // { from, to, cutoff } while a route is shown
     selected: null,
     links: new Map(),
@@ -113,9 +112,13 @@ async function boot() {
     });
   }
 
-  // Warm-up: collect a few seconds of evidence on every fiber before the first frame (the loader's
-  // "calibrating fibers"), so no fiber starts on probation.
-  for (let i = 0; i < 6; i++) for (const s of sim.links.values()) if (s.detector) s.last = s.detector.push(runRounds({ rounds: s.perTick, lineError: s.baseline }));
+  // Warm-up: collect evidence on every fiber before the first frame (the loader's "calibrating fibers"), so no
+  // fiber starts on probation. Long fibers at the 90-detections floor need up to a full 16-tick window.
+  for (let i = 0; i < 16; i++) {
+    let all = true;
+    for (const s of sim.links.values()) if (s.detector) (s.last = s.detector.push(runRounds({ rounds: s.perTick, lineError: s.baseline }))), (all &&= s.last.enough);
+    if (all && i >= 5) break;
+  }
   let response = computeResponse(net, alarmStates());
 
   const ui = createUI({
@@ -184,11 +187,6 @@ async function boot() {
         ui.log({ level: "info", text: on ? "Automatic response on: an alarmed fiber switches to decoy traffic, its tap is measured and an inspection is recommended." : "Automatic response off: alarms still switch keys to ML-KEM and reroute traffic; decoy traffic is left to the operator." });
         refresh();
       },
-      onSatellite: (on) => {
-        sim.satellite = on;
-        scene.setSatellite(on);
-        if (on) ui.log({ level: "info", text: "Satellite concept shown. It is a drawing for discussion: nothing about it is simulated." });
-      },
       onIncident: (action, n) => {
         const inc = incidents.find((i) => i.n === n);
         if (!inc) return;
@@ -211,6 +209,23 @@ async function boot() {
         }
         sim.selected = { type: "link", id };
         scene.setOrbit(false);
+        refresh();
+      },
+      // One button puts the demo back to its start for the next visitor.
+      onResetDemo: () => {
+        for (const [id, s] of sim.links) {
+          s.eve = null;
+          if (s.quarantined) restore(id);
+          if (s.decoy) setDecoy(id, false, false);
+        }
+        incidents.length = 0;
+        sim.route = null;
+        sim.selected = null;
+        if (sim.paused) ((sim.paused = false), scene.setPaused(false));
+        setTool("inspect");
+        scene.frameAll();
+        ui.log({ level: "ok", text: "Demo reset: every tap removed, every fiber back in service." });
+        ui.resetRoute?.();
         refresh();
       },
       onRestoreAll: () => {
@@ -283,6 +298,28 @@ async function boot() {
     s.quarantined = true;
     s.detector?.reset();
     s.last = freshReading(s.baseline);
+    releaseDecoysNeededAfter(id);
+  }
+  // Taking a fiber out of service can leave a site whose only remaining route is a fiber on decoy traffic.
+  // Real traffic must never be stranded to keep a decoy running, so that decoy ends and the site's traffic
+  // goes back on that fiber, protected by ML-KEM keys.
+  function releaseDecoysNeededAfter(quarantinedId) {
+    for (const [id, s] of sim.links) {
+      if (!s.decoy) continue;
+      const now = computeResponse(net, alarmStates());
+      const islanded = [...now.sites].filter(([, site]) => site.islanded).map(([sid]) => sid);
+      if (!islanded.length) return;
+      const trial = alarmStates();
+      trial.set(id, { ...trial.get(id), decoy: false });
+      const after = computeResponse(net, trial);
+      const rescued = islanded.filter((sid) => !after.sites.get(sid).islanded);
+      if (!rescued.length) continue;
+      s.decoy = false;
+      s.autoDecoy = false;
+      const text = `Decoy traffic on ${id} ended: with ${quarantinedId} quarantined, ${list(rescued)} ${rescued.length > 1 ? "have" : "has"} no other route. Real traffic is back on ${id}, protected by ML-KEM keys.`;
+      if (s.incident) setStage(s.incident, "decoy", "skipped", `<b>Decoy traffic ended</b>: ${text.slice(text.indexOf(":") + 2)}`);
+      ui.log({ level: "warn", text });
+    }
   }
   function restore(id) {
     // A restored fiber starts on probation: it carries traffic on ML-KEM keys until it has collected enough
@@ -531,6 +568,8 @@ async function boot() {
         engineRuns: engineRuns.get(id) ?? null,
         keySource: response.links.get(id).keySource,
         history: s.history,
+        // Only for the selected fiber (it costs two response computations): sites decoy mode would cut off.
+        decoyBlocked: sim.selected?.type === "link" && sim.selected.id === id && net.links.get(id).kind === "qkd" && !s.decoy && !s.quarantined ? sitesStrandedWithout(net, alarmStates(), id) : [],
       });
     }
     // Teleportation view: each quantum fiber's current error rate, and the selected site's swapping route.
@@ -548,6 +587,7 @@ async function boot() {
     ui.render(view);
     ui.renderIncidents(incidents);
     document.body.classList.toggle("has-incidents", incidents.length > 0);
+    document.getElementById("paused").hidden = !sim.paused;
     lastView = view;
   }
   let lastView = null;
@@ -617,30 +657,55 @@ async function boot() {
   }
 
   // Tools, hints and keyboard ----------------------------------------------------------------
-  const toolButtons = [...document.querySelectorAll(".tool")];
+  const toolButtons = [...document.querySelectorAll(".tool[data-tool]")];
   function setTool(tool) {
     sim.tool = tool;
     for (const b of toolButtons) b.classList.toggle("is-active", b.dataset.tool === tool);
     setHint();
   }
   for (const b of toolButtons) b.addEventListener("click", () => setTool(b.dataset.tool));
+  // What a drag does: Move (pan across the map, the default) or Rotate. The other one stays on right-drag and
+  // Shift-drag, and the legend line says so.
+  const dragButtons = [...document.querySelectorAll("[data-drag]")];
+  const navHelp = document.getElementById("nav-help");
+  function setDragMode(mode) {
+    scene.setDragMode(mode);
+    for (const b of dragButtons) {
+      const on = b.dataset.drag === scene.dragMode;
+      b.classList.toggle("is-on", on);
+      b.setAttribute("aria-pressed", String(on));
+    }
+    navHelp.innerHTML = scene.dragMode === "move"
+      ? "<b>Drag</b> to move · <b>right-drag</b> or <b>Shift-drag</b> to rotate · <b>scroll</b> to zoom · <b>H</b> to recenter"
+      : "<b>Drag</b> to rotate · <b>right-drag</b> or <b>Shift-drag</b> to move · <b>scroll</b> to zoom · <b>H</b> to recenter";
+  }
+  for (const b of dragButtons) b.addEventListener("click", () => setDragMode(b.dataset.drag));
+  // The map key starts closed on smaller screens so it does not cover the network; its summary line stays.
+  const legendEl = document.getElementById("legend");
+  if (legendEl && (window.innerWidth < 1320 || window.innerHeight < 780)) legendEl.open = false;
+  document.getElementById("paused").addEventListener("click", () => {
+    sim.paused = false;
+    scene.setPaused(false);
+    refresh();
+  });
   window.addEventListener("keydown", (e) => {
     if (e.target instanceof Element && e.target.closest("input, textarea")) return;
     if (e.target instanceof Element && e.target.closest("select")) return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     const k = e.key.toLowerCase();
-    if (k === "1") setTool("inspect");
-    else if (k === "2") setTool("eve");
+    if (k === "i") setTool("inspect");
+    else if (k === "e") setTool("eve");
     else if (k === "+" || k === "=") viewAction("zoom-in");
     else if (k === "-" || k === "_") viewAction("zoom-out");
     else if (k === "f") viewAction("focus");
-    else if (k === "h" || k === "0") viewAction("fit");
+    else if (k === "h") viewAction("fit");
     else if (k === "o") viewAction("orbit");
-    else if (k === "t") viewAction("theme");
+    else if (k === "m") setDragMode(scene.dragMode === "move" ? "rotate" : "move");
     else if (e.key === "Escape") {
       sim.selected = null;
       refresh();
     } else if (e.key === " ") {
+      if (e.target instanceof Element && e.target.closest("button, a, summary")) return; // Space presses a focused button
       e.preventDefault();
       sim.paused = !sim.paused;
       scene.setPaused(sim.paused);
@@ -665,6 +730,7 @@ async function boot() {
         b.setAttribute("aria-pressed", String(scene.focusMode));
       } else if (v === "theme") {
         b.querySelector("svg").innerHTML = theme === "dark" ? SUN : MOON;
+        b.querySelector("span").textContent = theme === "dark" ? "Light" : "Dark";
         b.title = theme === "dark" ? "Switch to light (T)" : "Switch to dark (T)";
       }
     }
@@ -709,6 +775,19 @@ async function boot() {
     else hint.innerHTML = `Click a fiber to tap it. The tap intercepts <b>${Math.round(sim.eveStrength * 100)}%</b> of photons (set it in the panel). Click it again to remove the tap.`;
   }
 
+  // Keys for the ? list in the top bar (1-4, 0, T and D are handled there for every page).
+  window.qrypt?.addShortcuts([
+    ["I / E", "Inspect tool or Eavesdrop tool"],
+    ["M", "Swap what dragging does: move or rotate"],
+    ["Arrows", "Move the view (click the map first)"],
+    ["+ / −", "Zoom in or out"],
+    ["H", "Recenter on the whole network"],
+    ["F", "Focus on the selection"],
+    ["O", "Auto-turn on or off"],
+    ["Space", "Pause or resume the simulation"],
+    ["Esc", "Clear the selection"],
+  ]);
+
   // A small handle for scripted demos and browser tests, e.g. gridTwin.tap("L11"); gridTwin.select("node", "S6").
   window.gridTwin = {
     tap: (id, fraction = sim.eveStrength) => {
@@ -725,11 +804,11 @@ async function boot() {
     autoDecoy: (on = true) => window.gridTwin.autoResponse(on), // older name
     incidents: () => incidents.map((i) => ({ n: i.n, link: i.link, state: i.state, estimate: i.estimate, stages: i.stages.map((st) => ({ key: st.key, state: st.state, at: st.at, text: st.html.replace(/<[^>]+>/g, "") })) })),
     theme: (t) => setTheme(t === "dark" ? "dark" : "light"),
+    dragMode: (mode) => (mode ? setDragMode(mode) : scene.dragMode),
     orbit: (on = true) => (scene.setOrbit(on), syncDock()),
     focus: () => viewAction("focus"),
     fit: () => viewAction("fit"),
     zoom: (factor) => scene.zoom(factor),
-    satellite: (on = true) => ((document.getElementById("satellite").checked = on), scene.setSatellite(on)),
     restore: (id) => (restore(id), refresh()),
     select: (type, id) => ((sim.selected = type ? { type, id } : null), refresh()),
     // Route search, e.g. gridTwin.route("T1", "T4", 0.11); gridTwin.route(null) clears it.
@@ -763,7 +842,21 @@ async function boot() {
   const deep = params.get("select")?.split(":");
   if (deep && (deep[0] === "link" ? net.links.has(deep[1]) : deep[0] === "node" && net.nodes.has(deep[1]))) {
     sim.selected = { type: deep[0], id: deep[1] };
+    // ?tap=0.4 with a selected fiber: the spy setting carried over from the real map.
+    const tapF = Number(params.get("tap"));
+    if (deep[0] === "link" && tapF > 0 && tapF <= 1) {
+      const keep = sim.eveStrength;
+      sim.eveStrength = tapF;
+      placeEve(deep[1]);
+      sim.eveStrength = keep;
+    }
     scene.setOrbit(false);
+  }
+
+  if (params.get("teleport") === "1") {
+    sim.teleportView = true;
+    const box = document.getElementById("teleport");
+    if (box) box.checked = true;
   }
 
   // Start -----------------------------------------------------------------------------------------

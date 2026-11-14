@@ -68,12 +68,6 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
         <option value="backbone"${coverage === "backbone" ? " selected" : ""}>Backbone only: control centers and major substations (our design)</option>
         <option value="all"${coverage === "all" ? " selected" : ""}>Every fiber (early team sketch)</option>
       </select>
-      <label class="field" for="jump">Find a fiber or site</label>
-      <select class="select" id="jump" data-input="jump" aria-label="Select a fiber or site">
-        <option value="">Choose…</option>
-        <optgroup label="Sites">${[...net.nodes.values()].map((n) => `<option value="node:${n.id}">${n.id} · ${n.name}</option>`).join("")}</optgroup>
-        <optgroup label="Fibers">${[...net.links.values()].map((l) => `<option value="link:${l.id}">${l.id} · ${l.a}–${l.b} · ${l.kind === "qkd" ? "QKD" : "ML-KEM"} · ${l.km} km</option>`).join("")}</optgroup>
-      </select>
       </div>
     </section>
     <section class="section try">
@@ -81,6 +75,17 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
       <p class="try__text"><b>Green fibers</b> carry keys sent as single photons (QKD). Choose <b>Eavesdrop</b> at the bottom of the screen and click a green fiber, or let us do it:</p>
       <button class="btn btn--try q-btn" data-action="demo">Tap a fiber for me</button>
       <p class="try__after">Then watch the incident card: the network notices the spy in under a second of simulated time and protects itself, with no one at the controls.</p>
+      <button class="btn btn--reset q-btn" data-action="reset-demo">Reset the demo</button>
+    </section>
+    <section class="section" data-selected>
+      <h2>Selected</h2>
+      <label class="field field--first" for="jump">Find a fiber or site</label>
+      <select class="select" id="jump" data-input="jump" aria-label="Select a fiber or site">
+        <option value="">Choose…</option>
+        <optgroup label="Sites">${[...net.nodes.values()].map((n) => `<option value="node:${n.id}">${n.id} · ${n.name}</option>`).join("")}</optgroup>
+        <optgroup label="Fibers">${[...net.links.values()].map((l) => `<option value="link:${l.id}">${l.id} · ${l.a}–${l.b} · ${l.kind === "qkd" ? "QKD" : "ML-KEM"} · ${l.km} km</option>`).join("")}</optgroup>
+      </select>
+      <div data-inspector></div>
     </section>
     <section class="section route">
       <h2>Find a route</h2>
@@ -111,17 +116,13 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
         <div class="stat stat--bad"><div class="stat__v" data-s="islanded">–</div><div class="stat__l">Sites cut off (power still on)</div></div>
       </div>
     </section>
-    <section class="section">
-      <h2>Selected</h2>
-      <div data-inspector></div>
-    </section>
 
     <section class="section">
       <h2>Eavesdropper</h2>
       <div class="control">
         <div class="control__row"><span>Share of photons intercepted</span><span class="control__val" data-v="eve">100%</span></div>
         <input type="range" min="2" max="100" step="1" value="100" data-input="eve" aria-label="Share of photons the eavesdropper intercepts" />
-        <div class="control__note">Applies to new taps, and to the selected fiber's tap. A careful spy taps only a few percent to hide in the fiber's normal noise.</div>
+        <div class="control__note">How many photons the next tap reads. If a tapped fiber is selected, this changes its tap too. A careful spy reads only a few percent to hide in the fiber's normal noise. (<b>Tap a fiber for me</b> always reads 100%.)</div>
       </div>
       <h2 class="q-adv">Detection</h2>
       <div class="control q-adv">
@@ -132,7 +133,6 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
       <label class="check" for="autoresponse"><input type="checkbox" id="autoresponse" data-input="autoresponse" checked aria-label="Automatic response" /> <span><b>Automatic response.</b> When a fiber alarms, the network switches its keys to ML-KEM, reroutes data, measures the tap and calls a crew, on its own. Only you can take a fiber offline.</span></label>
       <h2 class="q-adv">Layers</h2>
       <label class="check q-adv" for="teleport"><input type="checkbox" id="teleport" data-input="teleport" aria-label="Teleportation view" /> <span><b>Teleportation view (future).</b> Shows which fibers are clean enough (under 11% errors) for teleportation, and the path each site would use. Relay sites on that path never see the key.</span></label>
-      <label class="check q-adv" for="satellite"><input type="checkbox" id="satellite" data-input="satellite" aria-label="Satellite concept" /> <span><b>Satellite (concept)</b>: draw where a satellite QKD link to the control centers would sit. A drawing for discussion only, not simulated. <b>Likely to be removed</b> unless we find a quantum application only a satellite can serve; the mentors placed it on the roadmap, for statewide distances.</span></label>
       <div class="btns">
         <button class="btn btn--danger" data-action="clear-eves">Remove all taps</button>
         <button class="btn btn--ok" data-action="restore-all">Restore all fibers</button>
@@ -154,6 +154,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
   const inspector = $("[data-inspector]");
   const logEl = $("[data-log]");
   let inspectorKey = null;
+  let lastSelShown = null;
   let chart = null;
 
   // Controls
@@ -164,7 +165,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     const z = Number(zInput.value);
     $('[data-v="z"]').textContent = `${z.toFixed(1)} σ`;
     const p = normalTail(z);
-    $('[data-v="znote"]').innerHTML = `Higher means fewer false alarms, but a careful spy hides longer. False-alarm chance per check with nobody listening: <b>${p < 1e-4 ? p.toExponential(1) : pct(p, 2)}</b>. (The alarm fires when a fiber's error rate is ${z.toFixed(1)} standard deviations above its own normal level.)`;
+    $('[data-v="znote"]').innerHTML = `Higher means fewer false alarms, but a careful spy hides longer. False-alarm chance per check with nobody listening: at most <b>${p < 1e-4 ? p.toExponential(1) : pct(p, 2)}</b>. (The alarm fires when a fiber's error rate is ${z.toFixed(1)} standard deviations above its own normal level.)`;
     fill(zInput);
   };
   eveInput.addEventListener("input", () => {
@@ -180,7 +181,6 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
   showZ();
   $('[data-input="network"]').addEventListener("change", (e) => handlers.onNetwork(e.target.value));
   $('[data-input="autoresponse"]').addEventListener("change", (e) => handlers.onAutoResponse(e.target.checked));
-  $('[data-input="satellite"]').addEventListener("change", (e) => handlers.onSatellite(e.target.checked));
   $('[data-input="teleport"]').addEventListener("change", (e) => handlers.onTeleportView(e.target.checked));
   $('[data-input="coverage"]').addEventListener("change", (e) => handlers.onCoverage(e.target.value));
   // Route search inputs: the cutoff and the two sites update a shown route live.
@@ -213,9 +213,11 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     else if (action === "clear-eves") handlers.onClearEves();
     else if (action === "restore-all") handlers.onRestoreAll();
     else if (action === "demo") handlers.onDemo();
+    else if (action === "reset-demo") handlers.onResetDemo?.();
     else if (action === "route-show") {
       routeOn = true;
       handlers.onRoute?.(routeArgs(), true);
+      requestAnimationFrame(() => $("[data-route]").scrollIntoView({ block: "nearest", behavior: "smooth" }));
     } else if (action === "route-clear") {
       routeOn = false;
       handlers.onRoute?.(routeArgs(), false);
@@ -275,6 +277,8 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
   }
   function decoyButton(link, s) {
     if (link.kind !== "qkd" || s.quarantined) return "";
+    if (!s.decoy && s.decoyBlocked?.length)
+      return `<button class="btn btn--decoy" disabled title="Not possible on this fiber">Decoy traffic</button><p class="btn-why">Not possible here: ${s.decoyBlocked.join(", ")} would have no other route, so real traffic must stay on this fiber (on ML-KEM keys).</p>`;
     return s.decoy
       ? `<button class="btn btn--ok" data-action="decoy-off" data-id="${link.id}">End decoy mode</button>`
       : `<button class="btn btn--decoy" data-action="decoy-on" data-id="${link.id}">Decoy traffic</button>`;
@@ -466,8 +470,8 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
       const M = g.marked.length;
       groverHtml = `<div class="route__grover">
         <div class="route__grover-title">Grover check (quantum search)</div>
-        <p>${g.routes.length} candidate QKD routes, <b>${M} clean</b>. ${M ? `${g.iterations ? `After ${g.iterations} Grover round${g.iterations === 1 ? "" : "s"}, a` : "With most routes clean no Grover round is needed: a"} clean route comes out ${pct(g.success, 0)} of the time${g.iterations ? `, against ${pct(M / g.N, 0)} for a random pick` : ""}.` : "None is clean, so Grover's output stays random and every check fails: fall back to ML-KEM."}</p>
-        <p class="q-adv">Notebook 2b's oracle marks every route whose fibers are all under the cutoff; its diffuser amplifies them. ${g.N} slots (${Math.log2(g.N)} qubits), ${g.iterations} iteration${g.iterations === 1 ? "" : "s"}, the best count for ${M || 1} marked in ${g.N}${M > g.N / 2 ? " (with most routes clean, a plain random draw already wins, so Grover adds no rounds)" : ""}. This draw: candidate ${g.pick + 1}, ${g.pickClean ? "clean, checked hop by hop" : "not clean, so it is rejected and Grover runs again"}. Classical search already finds the exact answer quickly; this shows the same circuit working on the grid problem, not a speed-up.</p>
+        <p>${g.routes.length} candidate QKD routes, <b>${M} clean</b>. ${M ? `${g.iterations ? `After ${g.iterations} Grover round${g.iterations === 1 ? "" : "s"}, a` : "With most routes clean no Grover round is needed: a"} clean route comes out ${pct(g.success, 0)} of the time${g.iterations ? `, against ${pct(M / g.N, 0)} for a random pick` : ""}.` : r.mode === "qkd" ? "None of these candidates is clean, so Grover's output stays random and every check fails. The classical search above still found a clean route: it lies outside the shortest candidates, and Grover only searches the list it is given." : "None is clean, so Grover's output stays random and every check fails: fall back to ML-KEM."}</p>
+        <p class="q-adv">Notebook 2b's oracle marks every route whose fibers are all under the cutoff; its diffuser amplifies them. ${g.N} slots (${Math.log2(g.N)} qubits), ${g.iterations} iteration${g.iterations === 1 ? "" : "s"}, the best count for ${M || 1} marked in ${g.N}${M > g.N / 2 ? " (with most routes clean, a plain random draw already wins, so Grover adds no rounds)" : ""}. This draw: ${g.pick < g.routes.length ? `candidate ${g.pick + 1}, ${g.pickClean ? "clean, checked hop by hop" : "not clean, so it is rejected and Grover runs again"}` : `an empty slot (only ${g.routes.length} routes exist), so it is rejected and Grover runs again`}. Classical search already finds the exact answer quickly; this shows the same circuit working on the grid problem, not a speed-up.</p>
         <p class="q-adv">Recorded run: notebook 3b ran this circuit on Qiskit Aer for Falling Water to Oglethorpe with one fiber tapped (3 of 8 routes clean). 172 of 200 draws were clean, against 84.4% exact and 37.5% for a random pick.</p>
       </div>`;
     }
@@ -516,10 +520,13 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     $('[data-action="pause"]').textContent = state.paused ? "Resume" : "Pause";
 
     const sel = state.selected;
+    const selNow = sel ? `${sel.type}:${sel.id}` : null;
+    if (selNow && selNow !== lastSelShown) requestAnimationFrame(() => $("[data-selected]").scrollIntoView({ block: "nearest", behavior: "smooth" }));
+    lastSelShown = selNow;
     if (!sel) {
       if (inspectorKey !== "none") {
         inspector.innerHTML = `<p class="inspector__empty">Click a fiber to see its error rate, or a site to see where its keys come from.</p>
-          <dl class="keys q-adv"><dt>Drag / scroll</dt><dd>orbit / zoom</dd><dt>1 · 2</dt><dd>inspect · eavesdrop</dd><dt>F · H</dt><dd>focus · fit</dd><dt>O · T</dt><dd>orbit · light/dark</dd><dt>Space · Esc</dt><dd>pause · clear</dd></dl>`;
+          <dl class="keys q-adv"><dt>Drag · right-drag</dt><dd>move · rotate</dd><dt>Scroll · arrows</dt><dd>zoom · move</dd><dt>M</dt><dd>swap move and rotate</dd><dt>I · E</dt><dd>inspect · eavesdrop</dd><dt>F · H</dt><dd>focus · recenter</dd><dt>O · T</dt><dd>auto-turn · light/dark</dd><dt>1–4 · ?</dt><dd>pages · all keys</dd><dt>Space · Esc</dt><dd>pause · clear</dd></dl>`;
         inspectorKey = "none";
         chart = null;
       }
@@ -528,7 +535,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     if (sel.type === "link") {
       const link = net.links.get(sel.id);
       const s = state.links.get(sel.id);
-      const keyNow = `link:${sel.id}:${s.eve != null}:${s.quarantined}:${s.decoy}`;
+      const keyNow = `link:${sel.id}:${s.eve != null}:${s.quarantined}:${s.decoy}:${(s.decoyBlocked ?? []).length}`;
       if (keyNow !== inspectorKey) {
         inspector.innerHTML = buildLinkInspector(link, s);
         inspectorKey = keyNow;
@@ -553,6 +560,13 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
   const INCIDENT_STATE = { active: "Responding", contained: "Contained", closed: "Resolved" };
   let incidentSig = "";
   const latestStage = (stages) => stages.filter((st) => st.state !== "pending").at(-1);
+  // While an incident is open, show its two latest steps and the next one, so the card and its buttons fit
+  // on a projector; the full history stays in the event log.
+  function shortStages(stages) {
+    const done = stages.filter((st) => st.state !== "pending");
+    const next = stages.find((st) => st.state === "pending");
+    return [...done.slice(-2), ...(next ? [next] : [])];
+  }
   function renderIncidents(list) {
     if (!incidentsEl) return;
     const shown = list.slice(0, 4);
@@ -569,7 +583,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
               : `<button class="btn" data-iaction="dismiss" data-n="${i.n}">Dismiss</button>`;
         return `<article class="incident incident--${i.state}" data-link="${i.link}" title="Select ${i.link}">
           <div class="incident__head"><div class="incident__title"><span>#${i.n}</span>${i.link} · ${i.a}–${i.b}</div><div class="incident__state">${INCIDENT_STATE[i.state]}</div></div>
-          <ol class="stages">${(i.state === "active" ? i.stages : i.stages.slice(-1))
+          <ol class="stages">${(i.state === "active" ? shortStages(i.stages) : i.stages.slice(-1))
             .map((st, k, arr) => `<li class="stage stage--${st.state}${st === latestStage(arr) ? " stage--latest" : ""}"><i class="stage__dot"></i><span>${st.html}</span><time>${st.at != null ? `+${(st.at - i.openedAt).toFixed(1)} s` : ""}</time></li>`)
             .join("")}</ol>
           <div class="btns">${btns}</div>
@@ -594,5 +608,9 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     while (logEl.children.length > 80) logEl.lastChild.remove();
   }
 
-  return { render, log, renderIncidents };
+  function resetRoute() {
+    routeOn = false;
+  }
+
+  return { render, log, renderIncidents, resetRoute };
 }

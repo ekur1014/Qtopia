@@ -57,6 +57,7 @@
       '<a class="qbar__brand" href="' + root + 'index.html"><span class="qbar__mark">QRYPT</span><span class="qbar__name">Tennessee Quantum Grid</span></a>' +
       '<nav class="qbar__nav" aria-label="Project pages">' + links + "</nav>" +
       '<div class="qbar__mode" role="group" aria-label="How much detail"><button type="button" data-mode="simple">Simple</button><button type="button" data-mode="detailed">Detailed</button></div>' +
+      '<button class="qbar__keys" type="button" aria-label="Keyboard shortcuts" title="Keyboard shortcuts (?)">?</button>' +
       '<button class="qbar__theme" type="button" aria-label="Switch light or dark"></button>';
     document.body.prepend(bar);
     bar.querySelector(".qbar__theme").addEventListener("click", function () {
@@ -67,8 +68,51 @@
       b.addEventListener("click", function () { applyMode(b.dataset.mode, true); });
     });
     applyMode(document.documentElement.dataset.mode, false);
+    bar.querySelector(".qbar__keys").addEventListener("click", function () { toggleKeys(); });
     enter();
   }
+
+  // Keyboard: the same keys on every page. 1-4 open the four steps, 0 the home page, T light/dark,
+  // D Simple/Detailed, ? the list of keys (each page adds its own with window.qrypt.addShortcuts).
+  var pageKeys = [];
+  var keysDialog = null;
+  function typing(e) {
+    var el = e.target;
+    return el && el.closest && el.closest('input, select, textarea, [contenteditable="true"]');
+  }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function rows(list) { return list.map(function (k) { return "<dt>" + k[0].split(" / ").map(function (x) { return "<kbd>" + esc(x) + "</kbd>"; }).join(" ") + "</dt><dd>" + esc(k[1]) + "</dd>"; }).join(""); }
+  function toggleKeys(open) {
+    if (!keysDialog) {
+      keysDialog = document.createElement("dialog");
+      keysDialog.className = "qkeys";
+      keysDialog.setAttribute("aria-labelledby", "qkeys-h");
+      document.body.appendChild(keysDialog);
+      keysDialog.addEventListener("click", function (e) { if (e.target === keysDialog || e.target.closest("[data-close]")) keysDialog.close(); });
+    }
+    var want = open == null ? !keysDialog.open : open;
+    if (!want) { if (keysDialog.open) keysDialog.close(); return; }
+    var global = [["1 / 2 / 3 / 4", "Open step 1 to 4: real map, live grid, photon line, quantum lab"], ["0", "Home"], ["T", "Light or dark"], ["D", "Simple or Detailed"], ["?", "Show or hide this list"]];
+    keysDialog.innerHTML =
+      '<div class="qkeys__head"><h2 id="qkeys-h">Keyboard shortcuts</h2><button type="button" class="qkeys__close" data-close aria-label="Close">Close</button></div>' +
+      (pageKeys.length ? '<h3>On this page</h3><dl>' + rows(pageKeys) + "</dl>" : "") +
+      '<h3>On every page</h3><dl>' + rows(global) + "</dl>";
+    keysDialog.showModal();
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
+    if (e.key === "?") { e.preventDefault(); toggleKeys(); return; }
+    if (typing(e) || (keysDialog && keysDialog.open)) return;
+    var k = e.key.toLowerCase();
+    if (/^[0-9]$/.test(k)) {
+      var target = k === "0" ? PAGES[0] : PAGES.filter(function (p) { return p.step === Number(k); })[0];
+      if (target && target.id !== page) { e.preventDefault(); location.href = root + target.href; }
+    } else if (k === "t") {
+      applyTheme(document.documentElement.dataset.theme === "dark" ? "light" : "dark", true);
+    } else if (k === "d") {
+      applyMode(document.documentElement.dataset.mode === "detailed" ? "simple" : "detailed", true);
+    }
+  });
 
   // Simple / Detailed, shared by every page (key "qrypt-mode"), announced as "qrypt:mode".
   function readMode() {
@@ -98,5 +142,8 @@
     setTheme: function (t) { applyTheme(t, true); },
     setMode: function (m) { applyMode(m, true); },
     get mode() { return document.documentElement.dataset.mode; },
+    /** Add this page's keys to the ? list: [["S", "Send one photon"], ...]. */
+    addShortcuts: function (list) { pageKeys = pageKeys.concat(list); },
+    showShortcuts: function () { toggleKeys(true); },
   };
 })();

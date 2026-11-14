@@ -50,7 +50,7 @@ code, .mono { font-family: var(--f-mono); font-size: 0.9em; }
 /* ---------- the stage: the 3D fiber, the hero ---------- */
 .stage {
   position: relative; background: var(--q-surface); border: 1px solid var(--line);
-  border-radius: 16px; overflow: hidden; height: clamp(340px, 46vw, 520px); box-shadow: var(--q-shadow);
+  border-radius: 16px; overflow: hidden; height: clamp(280px, min(40vw, 38vh), 420px); box-shadow: var(--q-shadow);
 }
 :root[data-theme="dark"] .stage { background: var(--q-bg); }
 .stage canvas { display: block; width: 100%; height: 100%; }
@@ -657,9 +657,33 @@ if basis == 1:
   $("btnReset").onclick = () => { Object.assign(st, { sent: 0, kept: 0, err: 0, n: 0 }); rows.length = 0; render(); setBeat(null); cap("Results cleared. Press <b>Send one photon</b> to start again."); };
   const eveText = () => { $("eveState").textContent = eveOn.checked ? `On: Eve grabs ${eveFrac.value}% of photons` : "Off: nobody on the line"; };
   eveFrac.addEventListener("input", eveText);
-  eveOn.onchange = () => { eveText(); cap(eveOn.checked ? `<span class="e">Eve is now on the fiber</span>, grabbing ${eveFrac.value}% of photons. Clear the results, then send 200 to compare the error rate.` : "Eve is off the line."); };
+  const syncFrac = () => { eveFrac.disabled = !eveOn.checked; eveFrac.title = eveOn.checked ? "" : "Turn Eve on first"; };
+  eveOn.addEventListener("change", syncFrac);
+  syncFrac();
+  // Turning Eve on or off starts a fresh count, so results with and without her never mix.
+  eveOn.onchange = () => {
+    eveText();
+    const had = st.sent > 0;
+    Object.assign(st, { sent: 0, kept: 0, err: 0, n: 0 }); rows.length = 0; render(); setBeat(null);
+    cap((eveOn.checked ? `<span class="e">Eve is now on the fiber</span>, grabbing ${eveFrac.value}% of photons.` : "Eve is off the line.") + (had ? " Results cleared so the count starts fresh." : "") + " Press <b>Send 200 at once</b> to see the error rate.");
+  };
   eveText();
 })();
+</script>
+<script>
+  // Page keys (the ? list in the top bar shows them): send, keep sending, batch, spy, clear.
+  (function () {
+    function skip(e) { return e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented || (e.target.closest && e.target.closest("input, select, textarea, dialog")); }
+    var buttons = { s: "btnOne", k: "btnAuto", b: "btn200", c: "btnReset", e: "eveOn" };
+    document.addEventListener("keydown", function (e) {
+      if (skip(e)) return;
+      var id = buttons[e.key.toLowerCase()];
+      if (!id) return;
+      e.preventDefault();
+      document.getElementById(id).click();
+    });
+    if (window.qrypt) window.qrypt.addShortcuts([["S", "Send one photon"], ["K", "Keep sending, or stop"], ["B", "Send 200 at once"], ["E", "Turn the spy (Eve) on or off"], ["C", "Clear all results"]]);
+  })();
 </script>
 </body>
 </html>
