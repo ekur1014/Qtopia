@@ -8,11 +8,11 @@ Ranked by what each adds to **our pitch by Sunday 9 AM**, given the mentors' adv
 |---|---|---|---|---|
 | 1 | **Three.js** | Done | The 3D hero: Tennessee Quantum Grid (real Chattanooga EPB/TVA grid), live BB84 on every QKD fiber, taps, automatic response | Already the centerpiece |
 | 2 | **OpenInfraMap / OpenStreetMap data** (mentor tip) | Done | Real substations and lines (117 sites around Chattanooga, 33 on Tennessee's 500 kV backbone), real line lengths, imported with `grid-twin/tools/import_osm.mjs` | Yes: the mentors said a real map overlay is what EPB will care about |
-| 3 | **Visualization linked with real-time code runs** | Done | Any fiber re-runs as real quantum code from the page: Qiskit Aer, CUDA-Q, Guppy/Selene, qBraid's IonQ simulator, and the team's notebook 1 | Yes: it is the proof that the picture is real physics |
+| 3 | **Visualization linked with real-time code runs** | Done | Any fiber re-runs as real quantum code from the page: Qiskit Aer, CUDA-Q, Guppy/Selene, qBraid's IonQ and QIR simulators, and the team's notebook 1 (locally and on qBraid) | Yes: it is the proof that the picture is real physics |
 | 4 | **Make an artifact** | Done | A private link to the whole app; share it from its Share menu. Plus `grid_twin.html`, one file teammates double-click | Yes, share it with the team |
 | 5 | **CUDA-Q on a GPU** | CPU done; GPU not yet | See "GPU" below: run the network's entanglement-swapping routes as circuits, and many fibers in parallel | Only if a GPU machine is available tonight (we have no NVIDIA GPU locally) |
 | 6 | **Guppy (Quantinuum)** | Done | BB84 in Guppy on the Selene emulator, the Helios software stack. Next: Selene's noise models, or a Nexus job | Done is enough; mention it on the technology slide |
-| 7 | **Next.js + Vercel** | Not done | A public URL. Note: Vercel also hosts plain static sites, so `grid-twin/` could go up **without** porting to Next.js in about 10 minutes | Only if the team wants a public URL; needs a Vercel account (yours) |
+| 7 | **Next.js + Vercel** | Vercel set up (static site, no Next.js) | A public URL: `vercel.json` builds the whole site with `tools/build_site.sh`; no environment variables needed | Deploy from the team's Vercel account |
 | 8 | **Vector search / GraphQL (AI)** | Not done | "Ask the grid": which substations depend on a relay, what changed in the last minute, which sites a fiber cut would strand | Stretch only: it widens scope, which the mentors warned against |
 | 9 | **TanStack** | Not needed | Data fetching, tables and routing for a React app. We have no React app | No |
 
@@ -30,12 +30,12 @@ Ranked by what each adds to **our pitch by Sunday 9 AM**, given the mentors' adv
 - **ML-KEM:** the 46 kV lines to EPB distribution substations, following the mentors' advice of no QKD to neighborhoods.
 **What it shows that a made-up map cannot:**
 - **Chattanooga:** real line lengths (median 3.5 km, longest 22 km) are all far inside fiber QKD's reach.
-- **Statewide:** 8 of 38 spans are longer than 80 km. That is exactly where trusted relays, repeaters or (on the roadmap) satellites come in.
+- **Statewide:** 8 of 38 spans are longer than 80 km. That is exactly where trusted relays or repeaters come in; satellites would only matter here, and will probably be dropped.
 **Caveat:** real control-center locations are not public, so the two key hubs (Chickamauga and Oglethorpe) are our assumption. Fiber is assumed to run along every power line (OPGW).
 
 ### 3. Visualization linked with real-time code runs
 **What it is:** `grid-twin/sim/live_server.py` serves the page and runs a fiber's current noise and tap as real quantum programs.
-**Measured** (one fiber, 40% tap, theory 12.64%): Qiskit 13.52%, CUDA-Q 12.11%, Guppy 11.15%, qBraid IonQ simulator 12.55% (job `ionq:ionq:sim:simulator-a7ae-qjob-6af89d21c8f5265fb3f1dcf7`; corrected 14 Nov, see BUILD_LOG).
+**Measured** (one fiber, 40% tap, theory 12.64%): Qiskit 13.52%, CUDA-Q 12.11%, Guppy 11.15%, qBraid IonQ simulator 12.55% (job `ionq:ionq:sim:simulator-a7ae-qjob-6af89d21c8f5265fb3f1dcf7`; corrected 14 Nov, see BUILD_LOG), qBraid QIR simulator 12.96%, team notebook 1 on qBraid QIR 12.48%.
 **Further options:** run on the hero's real fibers (it already works for any fiber); add the GPU target below.
 
 ### 4. Make an artifact

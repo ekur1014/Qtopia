@@ -83,11 +83,11 @@
       <!-- Teleportation (notebook 3) -->
       <section class="panel is-on" id="tab-tele" role="tabpanel">
         <h2>Teleport a qubit across the grid</h2>
-        <p class="sub">Alice and Bob share an entangled pair built over real fibers. Alice measures two qubits and sends Bob <b>two classical bits</b> over the network; Bob fixes his qubit. Nothing travels faster than the fiber, and the swapping nodes on the way never hold a key. This is a roadmap capability, not part of the live grid.</p>
+        <p class="sub">Alice and Bob share an entangled pair built over real fibers. Alice measures two qubits and sends Bob <b>two classical bits</b> over the network; Bob fixes his qubit. Nothing travels faster than the fiber, and the swapping nodes on the way never hold a key. A future capability: in the live grid, Layers → Teleportation view shows where it would work.</p>
         <div class="card">
           <span class="q-label">1 · State to send</span>
           <div class="chips" id="states"></div>
-          <label class="f" for="target">2 · Route: from the key hub to</label>
+          <label class="f" for="target">2 · Route: from the control center to</label>
           <select id="target"></select>
           <label class="f" for="spy">3 · A spy on the first hop intercepts <b id="spyv">0%</b> of photons</label>
           <input type="range" id="spy" min="0" max="100" value="0" />
@@ -114,7 +114,7 @@
           <dl id="bb-dl"></dl>
         </div>
         <div class="card">
-          <span class="q-label">The same fiber in real quantum code</span>
+          <span class="q-label">The same fiber on quantum simulators</span>
           <p class="sub" style="margin:8px 0 6px">One fiber, 3.3% normal error, 40% tap: theory 12.64%.</p>
           <table>
             <tr><th>Engine</th><th>Kind</th><th style="text-align:right">QBER</th></tr>
@@ -125,7 +125,7 @@
             <tr><td>qBraid · QIR simulator</td><td>cloud simulator</td><td class="n">12.96%</td></tr>
             <tr><td>Team notebook 1 on qBraid QIR</td><td>cloud simulator</td><td class="n">12.48%</td></tr>
           </table>
-          <p class="note">Each on about 1,000 to 12,000 sifted bits; spread about ±0.3 to ±0.7 points. Notebook 1's runs use the team's own finished <code>encode()</code>. All of these are simulators or emulators, not hardware. Run them yourself from a fiber in the live grid (served by <code>python3 grid-twin/start.py</code>).</p>
+          <p class="note">Each uses 1,000 to 12,000 bits, so results can differ from theory by about 1 to 2 points. Notebook 1's runs use the team's own finished <code>encode()</code>. All of these are simulators or emulators, not hardware. Run them yourself from a fiber in the live grid (served by <code>python3 grid-twin/start.py</code>).</p>
         </div>
       </section>
 
@@ -139,7 +139,7 @@
           <dl id="g-dl"></dl>
         </div>
         <div class="card">
-          <span class="q-label">Measured, 200 shots each</span>
+          <span class="q-label">Measured (200 shots each; Qiskit Aer 1,024)</span>
           <table>
             <tr><th>Machine</th><th style="text-align:right">N = 4</th><th style="text-align:right">N = 8</th><th style="text-align:right">N = 16</th></tr>
             <tr><td>Theory</td><td class="n">100%</td><td class="n">94.5%</td><td class="n">96.1%</td></tr>
@@ -154,7 +154,7 @@
 
       <!-- Frameworks -->
       <section class="panel" id="tab-engines" role="tabpanel">
-        <h2>Real code behind the grid</h2>
+        <h2>The simulator code behind the grid</h2>
         <p class="sub">When the project runs with <code>python3 grid-twin/start.py</code>, every QKD fiber in the live grid can be re-run as real quantum programs. These are excerpts of the code that runs.</p>
         <div class="card">
           <span class="q-label">NVIDIA CUDA-Q · one BB84 round</span>
@@ -217,7 +217,7 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
       tele: ["Teleportation over Chattanooga's fibers", "Left: the state Alice sends. Right: the state Bob ends up with after the entangled pair has crossed real fibers. Noise from the fibers shrinks Bob's arrow."],
       bb84: ["What a spy does to a photon", "Left: Alice's photon. Right: Bob's photon on average. Each time the spy guesses the wrong basis she scrambles it, so the arrow shrinks and Bob's results turn into coin flips."],
       grover: ["Grover's search on the Bloch sphere", "Top: the right key. Bottom: every other key. Left: the start, almost all wrong. Right: after about √N Grover steps, almost all right."],
-      engines: ["Real quantum code", "The same physics runs in Qiskit, CUDA-Q, Guppy and on qBraid's cloud simulators."],
+      engines: ["Quantum simulator code", "The same physics runs in Qiskit, CUDA-Q, Guppy and on qBraid's cloud simulators."],
       next: ["Roadmap", "What we would build next, and what we deliberately did not."],
     };
     var SPHERES = {
@@ -479,7 +479,7 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
         "<dt>Measured QBER</dt><dd>" + pct(q, 2) + " ± " + pct(se, 2) + "</dd>" +
         "<dt>Theory p + f(¼ − p/2)</dt><dd>" + pct(theory, 2) + "</dd>" +
         "<dt>Secret key left</dt><dd>" + pct(Math.max(0, 1 - 2 * h2(q)), 0) + "</dd>" +
-        "<dt>Verdict</dt><dd><span class=\"q-pill q-pill--" + (q > 0.11 ? "bad" : q - p > 0.014 ? "warn" : "ok") + "\">" + (q > 0.11 ? "above 11%: no key" : q - p > 0.014 ? "spy detected" : "normal noise") + "</span></dd>";
+        "<dt>Verdict</dt><dd><span class=\"q-pill q-pill--" + (q > 0.11 ? "bad" : q - p > 0.014 ? "warn" : "ok") + "\">" + (q > 0.11 ? "above 11%: no key" : q - p > 0.014 ? "spy detected (quick estimate)" : "normal noise") + "</span></dd>";
       // Spheres: Alice's photon |0> and Bob's photon on average. A spy who guesses the wrong basis (half the time)
       // leaves a random X-basis state, and the fiber flips the bit with probability p: length (1 - f/2)(1 - 2p).
       setVec(alice, [0, 0, 1]);

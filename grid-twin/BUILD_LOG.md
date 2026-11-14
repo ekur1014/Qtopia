@@ -1,5 +1,7 @@
 # Grid Twin: build log
 
+> This is a running log, oldest first. Older sections are kept as history; when a later section corrects one (for example the IonQ simulator figure, notebook 1's TODOs, the pitch deck link), the later one is right.
+
 What was built, in order, and how each step was checked. Times are Saturday 14 November 2026 (Eastern).
 
 ## Decisions taken before building

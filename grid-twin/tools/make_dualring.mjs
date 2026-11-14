@@ -44,7 +44,7 @@ const out = {
   meta: {
     name: "Dual ring: command center and nine supernodes (team design)",
     nodeScale: 1.1,
-    design: true,
+    teamDesign: true, // the team's own design (not real data, not a test network)
     note: "The team's design (whiteboard, 14 Nov): nine supernodes in a ring around the command center, with two fibers per span so traffic can go either way round. Distances are illustrative; the real ring's layout is not public.",
     design_detail: "Every ring fiber runs QKD. Tap one fiber of a span and traffic moves to its twin; tap both and it goes the other way round.",
   },

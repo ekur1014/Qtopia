@@ -72,7 +72,7 @@
       <div class="stats" id="stats"></div>
 
       <div class="card" id="selected">
-        <span class="q-label">Selected fiber</span>
+        <span class="q-label">Selected link</span>
         <p class="sub" style="margin:8px 0 0">Click any line on the map. Green lines run quantum key distribution (BB84); indigo lines use post-quantum keys (ML-KEM).</p>
       </div>
 
@@ -80,7 +80,7 @@
         <span class="q-label">Legend</span>
         <div><i style="background:var(--q-ok)"></i>QKD fiber (BB84), 161 kV and up</div>
         <div><i style="background:var(--q-pqc)"></i>Post-quantum link (ML-KEM)</div>
-        <div><i class="dot" style="background:var(--q-gold)"></i>Key hub (assumed)</div>
+        <div><i class="dot" style="background:var(--q-gold)"></i>Control center (location assumed)</div>
         <div><i class="dot" style="background:var(--q-ok)"></i>Transmission substation</div>
         <div><i class="dot" style="background:var(--q-pqc)"></i>Distribution substation</div>
       </div>
@@ -90,7 +90,7 @@
         <p class="sub" style="margin:8px 0 0" id="reach"></p>
       </div>
 
-      <p class="foot">Substations and lines: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a>, ODbL, via the same data as <a href="https://openinframap.org/#11.68/35.0463/-85.2892/A,B,L,P" target="_blank" rel="noopener">OpenInfraMap</a>. Basemap: OpenStreetMap tiles. Assumed: fiber runs along every power line (OPGW), and which two substations hold the keys. Fiber model: 0.21 dB/km, 4.5% detector efficiency, 1.7e-6 dark counts, 3.3% detector error (Ma, Qi, Zhao, Lo, Table 1). No cost figures here: we found no published QKD prices, so a cost model is future work.</p>
+      <p class="foot">Map data: <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a> (ODbL), the same data as <a href="https://openinframap.org/#11.68/35.0463/-85.2892/A,B,L,P" target="_blank" rel="noopener">OpenInfraMap</a>. Assumed: fiber along every power line, and which two sites are control centers. Fiber and detector values come from published lab data (Ma, Qi, Zhao and Lo, Table 1). "Would alarm" is a quick estimate (1.4 points above normal); the live grid uses a stricter statistical test. No cost figures: we found no published QKD prices.</p>
     </aside>
   </div>
 
@@ -175,8 +175,8 @@
         '<div class="stat' + (over80 ? " stat--warn" : "") + '"><b>' + longest.toFixed(1) + ' km</b><span>longest link' + (over80 ? " · " + over80 + " over 80 km" : "") + '</span></div>';
       document.getElementById("reach").innerHTML = region === "chattanooga"
         ? "Fiber QKD works to roughly 80 to 100 km before it needs trusted relays. Every link here is at most <b>" + longest.toFixed(1) + " km</b>, so the whole city backbone fits on fiber, with no repeaters and no satellite."
-        : "<b>" + over80 + " of " + net.links.length + "</b> spans are longer than 80 km. Those would need trusted relay stations (China's 2,000 km Beijing–Shanghai backbone uses 32, about 70 km apart). That is the only scale where a satellite could ever make sense, and it stays on our roadmap.";
-      document.getElementById("selected").innerHTML = '<span class="q-label">Selected fiber</span><p class="sub" style="margin:8px 0 0">Click any line on the map. Green lines run quantum key distribution (BB84); indigo lines use post-quantum keys (ML-KEM).</p>';
+        : "<b>" + over80 + " of " + net.links.length + "</b> spans are longer than 80 km. Those would need trusted relay stations (China's 2,000 km Beijing–Shanghai backbone uses 32, about 70 km apart). That is the only scale where a satellite could ever make sense, and we will probably drop the idea unless a quantum application needs one.";
+      document.getElementById("selected").innerHTML = '<span class="q-label">Selected link</span><p class="sub" style="margin:8px 0 0">Click any line on the map. Green lines run quantum key distribution (BB84); indigo lines use post-quantum keys (ML-KEM).</p>';
       document.querySelectorAll("[data-region]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.region === region)); });
       // Open straight on a fiber that is good for the demo.
       var demo = net.links.find(function (l) { return l.id === (region === "chattanooga" ? "L6" : "L11"); });
@@ -198,7 +198,7 @@
       var p = baselineQber(l.km);
       var q = expectedQber(p, tap);
       var isQkd = l.kind === "qkd";
-      var status = !isQkd ? ["no quantum signal", "pqc"] : q > ABORT ? ["above 11%: no key possible", "bad"] : q - p > 0.014 ? ["would alarm", "warn"] : ["within normal noise", "ok"];
+      var status = !isQkd ? ["no quantum signal", "pqc"] : q > ABORT ? ["above 11%: no key possible", "bad"] : q - p > 0.014 ? ["would alarm (quick estimate)", "warn"] : ["within normal noise", "ok"];
       var openUrl = "grid-twin/index.html?net=" + region + "&select=link:" + l.id;
       var max = 0.3;
       var gauge = isQkd
@@ -207,7 +207,7 @@
           '<div class="gauge__mark" style="left:' + (ABORT / max) * 100 + '%;background:var(--q-bad)"><span style="color:var(--q-bad)">11%</span></div></div>'
         : "";
       document.getElementById("selected").innerHTML =
-        '<span class="q-label">Selected fiber · ' + l.id + "</span>" +
+        '<span class="q-label">Selected link · ' + l.id + "</span>" +
         '<div class="sel-title">' + nameOf(a) + " – " + nameOf(b) + "</div>" +
         '<div class="sel-meta">' + (isQkd ? "QKD fiber (BB84)" : "Post-quantum link (ML-KEM)") + " · " + l.km + " km" + (l.kv ? " · " + l.kv + " kV line" : "") + "</div>" +
         "<dl>" +
@@ -215,7 +215,7 @@
           ? "<dt>Normal error rate (no spy)</dt><dd>" + pct(p, 2) + "</dd>" +
             "<dt>With the tap below</dt><dd>" + pct(q, 2) + "</dd>" +
             "<dt>Secret key left after privacy amplification</dt><dd>" + pct(secretFraction(q), 0) + "</dd>" +
-            "<dt>Photons reaching Bob vs a 10 km fiber</dt><dd>" + (transmittance(l.km) / transmittance(10)).toFixed(2) + "×</dd>" +
+            "<dt>Photons that arrive, vs a 10 km fiber</dt><dd>" + (transmittance(l.km) / transmittance(10)).toFixed(2) + "×</dd>" +
             '<dt>Status</dt><dd><span class="q-pill q-pill--' + status[1] + '">' + status[0] + "</span></dd>"
           : "<dt>Why not QKD</dt><dd>" + (l.kv && l.kv < 161 ? "distribution line" : "over 80 km") + "</dd><dt>Keys</dt><dd>ML-KEM (FIPS 203)</dd>") +
         "</dl>" +

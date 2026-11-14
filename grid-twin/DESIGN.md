@@ -18,7 +18,7 @@ A utility already sees its fiber links. A quantum-secured link adds a new signal
 
 6. **PQC first, QKD where it is worth it.** QKD runs on the backbone (control centers and major substations). Sub-units and the long rural link use ML-KEM: short, numerous links are cheapest with software, and a 140 km fiber detects about 537 times fewer photons than a 10 km city fiber, so its key rate would be tiny (its error baseline would still be about 4.8%, workable on its own; at 200 km it would be 21%, past the abort line). Lo, Ma and Chen report a maximum secure distance of a little over 140 km for these parameters even with decoy states. This matches NSA, UK NCSC and the ANSSI/BSI/NLNCSA/Swedish joint paper, which all put post-quantum cryptography first.
 
-7. **Stylized map.** Real substation locations are sensitive infrastructure data, so the layout is invented: 2 control centers (primary and backup), 6 major substations, 8 feeder sub-units, 1 remote site.
+7. **Stylized map (Simulation lab only).** The first network was invented, before we moved to public OpenStreetMap data for the real grid: 2 control centers (primary and backup), 6 major substations, 8 feeder sub-units, 1 remote site.
 
 8. **No key is trusted before evidence.** A fiber that has just been restored (or has just started) runs on ML-KEM keys until it has collected enough sifted bits to judge its error rate ("Measuring"). Real QKD works the same way: the error rate is estimated before any key is used. This fixed a bug the audit found, where a restored fiber reused its old alarm state.
 
@@ -93,7 +93,7 @@ The default view is Chattanooga's real grid from OpenStreetMap, and a statewide 
 
 **What the real data shows:**
 - **Chattanooga:** every link is between 0.2 and 22 km, comfortably inside fiber QKD's reach.
-- **Statewide:** 8 of 38 spans exceed 80 km and would need trusted relays or repeaters. That is the only place a satellite argument could start, and it stays on the roadmap.
+- **Statewide:** 8 of 38 spans exceed 80 km and would need trusted relays or repeaters. That is the only place a satellite argument could start. It will probably be taken out unless we find a quantum application only a satellite can serve.
 
 **Long fibers:** they detect fewer photons. Each fiber gets at least 90 detections per tick (about 45 sifted bits), so one 16-tick window always reaches the detector's 600-bit minimum. Before this floor, fibers over about 50 km stayed in "Measuring" forever.
 

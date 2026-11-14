@@ -20,11 +20,18 @@ const KEY_LABEL = {
   pqc: ["ML-KEM (post-quantum)", "pqc"],
   none: ["Out of service", "off"],
   decoy: ["Decoy traffic only", "decoy"],
-  local: ["Key authority", "gold"],
+  local: ["Control center (holds the keys)", "gold"],
 };
 
 const pct = (x, d = 1) => `${(100 * x).toFixed(d)}%`;
 const pill = ([text, tone]) => `<span class="pill pill--${tone}">${text}</span>`;
+
+// Footer: what is real and what is simulated, per kind of network.
+const FOOT = {
+  real: "<b>What is real.</b> Substations, lines and their lengths (OpenStreetMap). <b>Simulated:</b> the photons, the fiber noise and the spy, checked against Qiskit, CUDA-Q, Guppy and qBraid. Assumed: fiber along every power line, and which sites hold the keys. Only data links are ever cut, never power.",
+  design: "<b>What this is.</b> The team's dual-ring design, with illustrative distances. <b>Simulated:</b> the photons, the fiber noise and the spy, checked against Qiskit, CUDA-Q, Guppy and qBraid. Only data links are ever cut, never power.",
+  lab: "<b>What this is.</b> A test network: the layout is made up. <b>Simulated:</b> the photons, the fiber noise and the spy, checked against Qiskit, CUDA-Q, Guppy and qBraid. Only data links are ever cut, never power.",
+};
 
 export function createUI({ panel, incidentsEl = null, net, networks = [], currentNetwork, coverage = "backbone", engines = {}, handlers }) {
   const engineIds = Object.keys(engines);
@@ -33,7 +40,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
   const netOptions =
     `<optgroup label="Real grid">${networks.filter((m) => m.real).map(opt).join("")}</optgroup>` +
     `<optgroup label="Team design">${networks.filter((m) => m.design).map(opt).join("")}</optgroup>` +
-    `<optgroup label="Simulation lab">${networks.filter((m) => !m.real && !m.design).map(opt).join("")}</optgroup>`;
+    `<optgroup label="Test networks (not real)">${networks.filter((m) => !m.real && !m.design).map(opt).join("")}</optgroup>`;
   panel.innerHTML = `
     <section class="section">
       <h2>Network</h2>
@@ -42,7 +49,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
       <label class="field" for="coverage">QKD coverage</label>
       <select class="select" id="coverage" data-input="coverage" aria-label="Which fibers run QKD">
         <option value="backbone"${coverage === "backbone" ? " selected" : ""}>Backbone only: control centers and major substations (our design)</option>
-        <option value="all"${coverage === "all" ? " selected" : ""}>Every fiber (the whiteboard sketch)</option>
+        <option value="all"${coverage === "all" ? " selected" : ""}>Every fiber (early team sketch)</option>
       </select>
       <label class="field" for="jump">Find a fiber or site</label>
       <select class="select" id="jump" data-input="jump" aria-label="Select a fiber or site">
@@ -57,7 +64,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
         <div class="stat stat--ok"><div class="stat__v" data-s="healthy">–</div><div class="stat__l">QKD fibers healthy</div></div>
         <div class="stat stat--warn"><div class="stat__v" data-s="alerts">–</div><div class="stat__l">Fibers in alarm</div></div>
         <div class="stat"><div class="stat__v" data-s="qkdsites">–</div><div class="stat__l">Substations on QKD keys</div></div>
-        <div class="stat stat--bad"><div class="stat__v" data-s="islanded">–</div><div class="stat__l">Sites without comms</div></div>
+        <div class="stat stat--bad"><div class="stat__v" data-s="islanded">–</div><div class="stat__l">Sites cut off (power still on)</div></div>
       </div>
     </section>
 
@@ -66,7 +73,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
       <div class="control">
         <div class="control__row"><span>Share of photons intercepted</span><span class="control__val" data-v="eve">100%</span></div>
         <input type="range" min="2" max="100" step="1" value="100" data-input="eve" aria-label="Share of photons the eavesdropper intercepts" />
-        <div class="control__note">Sets the next tap you place, and changes the selected fiber's tap live if it has one. A careful spy taps only a few percent to hide inside the fiber's normal noise.</div>
+        <div class="control__note">Applies to new taps, and to the selected fiber's tap. A careful spy taps only a few percent to hide in the fiber's normal noise.</div>
       </div>
       <h2>Detection</h2>
       <div class="control">
@@ -74,9 +81,9 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
         <input type="range" min="2" max="6" step="0.5" value="4.5" data-input="z" aria-label="Alarm sensitivity in standard deviations" />
         <div class="control__note" data-v="znote"></div>
       </div>
-      <label class="check" for="autoresponse"><input type="checkbox" id="autoresponse" data-input="autoresponse" checked aria-label="Automatic response" /> <span><b>Automatic response</b>: when a fiber alarms, the network acts on its own: keys switch to ML-KEM, real traffic reroutes, the fiber switches to decoy traffic to measure the tap, and a crew inspection is recommended. Quarantine stays the operator's decision.</span></label>
+      <label class="check" for="autoresponse"><input type="checkbox" id="autoresponse" data-input="autoresponse" checked aria-label="Automatic response" /> <span><b>Automatic response.</b> When a fiber alarms, the network switches its keys to ML-KEM, reroutes data, measures the tap and calls a crew, on its own. Only you can take a fiber offline.</span></label>
       <h2>Layers</h2>
-      <label class="check" for="teleport"><input type="checkbox" id="teleport" data-input="teleport" aria-label="Teleportation view" /> <span><b>Teleportation view</b>: show which fibers are under 11% error (usable entanglement if run entanglement-based) and each substation's entanglement-swapping route, which needs no trusted relays</span></label>
+      <label class="check" for="teleport"><input type="checkbox" id="teleport" data-input="teleport" aria-label="Teleportation view" /> <span><b>Teleportation view (future).</b> Shows which fibers are clean enough (under 11% errors) for teleportation, and the path each site would use. Relay sites on that path never see the key.</span></label>
       <label class="check" for="satellite"><input type="checkbox" id="satellite" data-input="satellite" aria-label="Satellite concept" /> <span><b>Satellite (concept)</b>: draw where a satellite QKD link to the control centers would sit. A drawing for discussion only, not simulated. <b>Likely to be removed</b> unless we find a quantum application only a satellite can serve; the mentors placed it on the roadmap, for statewide distances.</span></label>
       <div class="btns">
         <button class="btn btn--danger" data-action="clear-eves">Remove all taps</button>
@@ -96,7 +103,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     </section>
 
     <section class="section foot" data-foot>
-      <b>What is simulated.</b> BB84 runs on every QKD fiber with an exact intercept-resend model, cross-checked against Qiskit Aer. Fiber loss and detector noise use published lab parameters. The layout is made up. The response cuts communication paths only; power is never switched off. Details in README.md and DESIGN.md.
+      ${FOOT[net.meta?.real ? "real" : net.meta?.teamDesign ? "design" : "lab"]}
     </section>`;
 
   const $ = (sel) => panel.querySelector(sel);
@@ -113,7 +120,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     const z = Number(zInput.value);
     $('[data-v="z"]').textContent = `${z.toFixed(1)} σ`;
     const p = normalTail(z);
-    $('[data-v="znote"]').innerHTML = `Warn when a fiber's error rate is ${z.toFixed(1)} standard deviations above its own baseline. Chance of a false alarm on one check with nobody listening: <b>${p < 1e-4 ? p.toExponential(1) : pct(p, 2)}</b>. Lower is touchier; higher lets a quiet spy hide longer.`;
+    $('[data-v="znote"]').innerHTML = `Higher means fewer false alarms, but a careful spy hides longer. False-alarm chance per check with nobody listening: <b>${p < 1e-4 ? p.toExponential(1) : pct(p, 2)}</b>. (The alarm fires when a fiber's error rate is ${z.toFixed(1)} standard deviations above its own normal level.)`;
     fill(zInput);
   };
   eveInput.addEventListener("input", () => {
@@ -162,7 +169,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
           <dt>Tap on this link</dt><dd>${s.eve != null ? '<span class="pill pill--bad">Yes</span>' : "None"}</dd>
           <dt>If it were QKD: baseline error</dt><dd>${pct(s.baseline)}</dd>
         </dl>
-        <p class="explain">This link carries no quantum signal, so <b>physics cannot detect a tap here</b>. Its traffic stays secret because it is encrypted with keys from ML-KEM (FIPS 203), a post-quantum algorithm. ${link.km > 60 ? "At this length QKD would lose most photons, which is why it uses post-quantum cryptography instead." : "Short, numerous links to sub-units are where post-quantum cryptography is cheapest."}</p>
+        <p class="explain">This link carries no quantum signal, so <b>physics cannot detect a tap here</b>. Its traffic stays secret because it is encrypted with keys from ML-KEM (post-quantum). ${link.km > 80 ? "At this length QKD would lose most photons, which is why it uses post-quantum cryptography instead." : "Short, numerous links to sub-units are where post-quantum cryptography is cheapest."}</p>
         <div class="btns">${tapButton(link, s)}</div>
         <div class="overrides"><div class="overrides__title">Operator override</div><div class="btns">${quarantineButton(link, s)}</div></div>`;
     }
@@ -185,7 +192,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
       <div class="btns">${tapButton(link, s)}</div>
       <div class="overrides"><div class="overrides__title">Operator overrides</div><div class="btns">${decoyButton(link, s)}${quarantineButton(link, s)}</div></div>
       ${engineIds.length ? `<div class="frameworks">
-        <div class="frameworks__title">Run this fiber as real quantum code</div>
+        <div class="frameworks__title">Re-run this fiber on quantum simulators</div>
         <div class="btns">${engineIds.map((e) => `<button class="btn" data-action="engine:${e}" data-id="${link.id}">${engines[e]}</button>`).join("")}<button class="btn btn--ok" data-action="engine:all" data-id="${link.id}">All</button></div>
         <div class="frameworks__table" data-f="frameworks"></div>
       </div>` : ""}
@@ -247,7 +254,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     f("sf").textContent = pct(sf, 0);
     f("sfbar").style.width = pct(sf, 1);
     let text;
-    if (s.decoy) text = `<b>Decoy mode.</b> Real traffic has been rerouted; this fiber keeps running on fake traffic and quantum photons, so the tapper keeps tapping and every photon she disturbs tells us more: how much she intercepts, and that the pattern matches intercept-resend. Nothing she captures is real.`;
+    if (s.decoy) text = `<b>Decoy mode.</b> Real data now takes another route. This fiber carries fake data, so the spy keeps tapping, captures nothing real, and every photon she disturbs helps us measure her.`;
     else if (s.quarantined) text = "Out of service. Traffic that used this fiber has been rerouted. Restore it to resume key exchange.";
     else if (s.status === "pending") text = "Measuring. This fiber has just come into service, so it carries traffic on ML-KEM keys until it has enough fresh measurements to judge its error rate. No QKD key is trusted before then.";
     else if (s.status === "abort") text = `The error rate is above 11%. Error correction would leak more than the key is worth, so <b>no secret key can come from this fiber</b>. Its traffic now uses ML-KEM keys and stays up. Someone should inspect the fiber.`;
@@ -378,7 +385,8 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
     const sel = state.selected;
     if (!sel) {
       if (inspectorKey !== "none") {
-        inspector.innerHTML = `<p class="inspector__empty">Click a fiber to see its live error rate, or a site to see where its keys come from. Drag to orbit, scroll or <b>+</b>/<b>−</b> to zoom. <b>1</b> inspect, <b>2</b> eavesdrop; <b>F</b> focus on the selection, <b>H</b> fit the network, <b>O</b> cinematic orbit, <b>T</b> light or dark; <b>Esc</b> clears the selection.</p>`;
+        inspector.innerHTML = `<p class="inspector__empty">Click a fiber to see its error rate, or a site to see where its keys come from.</p>
+          <dl class="keys"><dt>Drag / scroll</dt><dd>orbit / zoom</dd><dt>1 · 2</dt><dd>inspect · eavesdrop</dd><dt>F · H</dt><dd>focus · fit</dd><dt>O · T</dt><dd>orbit · light/dark</dd><dt>Space · Esc</dt><dd>pause · clear</dd></dl>`;
         inspectorKey = "none";
         chart = null;
       }

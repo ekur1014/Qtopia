@@ -59,7 +59,7 @@ A fiber's inspector then shows **Run this fiber as real quantum code**: Qiskit A
 | Alarm sensitivity | How many standard deviations above a fiber's own baseline counts as an alarm, with the false-alarm chance per check. |
 | Find a fiber or site | Picker in the panel: selects anything without clicking in 3D (keyboard and projector friendly). |
 | QKD coverage | **Backbone only** (our design) or **Every fiber** (the team's whiteboard sketch); also `?qkd=all`. |
-| Satellite (concept) | Off by default. Draws a satellite and its beams to the control centers, labeled *concept, not simulated*: for discussion only, since the team scoped satellites out. |
+| Satellite (concept) | Off by default. Draws a satellite and its beams to the control centers, labeled *concept, not simulated*: for discussion only. It will probably be taken out unless we find a quantum application only a satellite can serve. |
 | Teleportation view | Fibers under 11% error light up as usable for entanglement; select a substation to see its entanglement-swapping route and end-to-end error. Swapping nodes are shown in blue: unlike trusted relays (gold), they never hold the key. |
 | View dock (bottom right of the 3D view) | **+** / **−** zoom; **Fit** (H) flies back to the whole network; **Focus** (F) flies close to the selection and fades everything unrelated; **Cinematic orbit** (O) turns the view slowly, stops the moment you drag, scroll or click, and resumes after 20 s idle; **Light/dark** (T). |
 | Space / Esc | Pause and resume / clear the selection. Drag to orbit, scroll to zoom. |
@@ -97,7 +97,7 @@ The IEEE grids are public test systems (MATPOWER, UW Power Systems Test Case Arc
 | Cross-check against Qiskit | `sim/bb84_reference.py` runs the same scenarios as real circuits on Qiskit Aer and writes `data/calibration.json`; `tests/engine.test.mjs` checks the browser engine against it. All 7 scenarios agree. |
 | Fiber loss and detector noise | A standard model (Eq. (8) of Lo, Ma and Chen, PRL 94, 230504, 2005) with published lab parameters: the GYS 2004 row of Table 1 in Ma, Qi, Zhao and Lo, arXiv quant-ph/0503005: 0.21 dB/km loss, 4.5% detection efficiency, 1.7e-6 dark counts, 3.3% detector error, 1550 nm. Assumptions for a generic metro fiber, not measurements of any utility. |
 | Abort line at 11% | Where the secret-key fraction 1 − 2h(Q) reaches zero (Shor and Preskill, PRL 85, 441, 2000). |
-| The network layout | Made up, in the spirit of the README (2 control centers, 6 major substations, 8 feeder sub-units, 1 remote site). Real substation locations are sensitive, so none are used. |
+| The network layout | Real for Chattanooga and the Tennessee 500 kV view (OpenStreetMap, public data); the team's design for the dual ring (illustrative distances); made up for the Simulation lab's city (2 control centers, 6 major substations, 8 feeder sub-units, 1 remote site). Which substations hold the keys is our assumption. |
 | The response policy | Our design (`src/response.js`). See DESIGN.md. |
 | Key rates in bits per second | Not shown: the tool shows the *fraction* of sifted bits that become secret key, which does not depend on hardware we do not have. |
 
@@ -105,7 +105,7 @@ The IEEE grids are public test systems (MATPOWER, UW Power Systems Test Case Arc
 
 ```bash
 cd grid-twin
-node --test tests/*.test.mjs                       # 15 tests: physics, detector, network, response policy
+node --test tests/*.test.mjs                       # 27 tests: physics, detector, networks, response policy
 ~/vscode/qrypt-venv/bin/python sim/bb84_reference.py # regenerate the Qiskit Aer reference (about 20 s)
 ```
 

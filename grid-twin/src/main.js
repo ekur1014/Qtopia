@@ -67,11 +67,11 @@ async function boot() {
   const net = buildNetwork(raw);
   // Hero framing: the real grid gets the Tennessee title and the map-data credit the ODbL licence requires.
   const real = !!net.meta?.real;
-  const design = !!net.meta?.design;
+  const design = !!net.meta?.teamDesign;
   document.body.classList.toggle("is-real", real); // shows the OpenStreetMap credit
   document.body.classList.toggle("is-design", design);
   document.querySelector(".brand__title").textContent = real ? "Tennessee Quantum Grid" : design ? "The Dual Ring" : "Grid Twin";
-  document.querySelector(".brand__mark").textContent = real ? "QRYPT · REAL GRID" : design ? "QRYPT · TEAM DESIGN" : "QRYPT · SIMULATION LAB";
+  document.querySelector(".brand__mark").textContent = real ? "QRYPT · REAL GRID" : design ? "QRYPT · TEAM DESIGN" : "QRYPT · TEST NETWORK";
   document.querySelector(".brand__sub").textContent = real
     ? `${net.meta.name.replace(" (real)", "")}: real substations and lines. Every green fiber runs BB84 live; tap one and the network defends itself.`
     : design
@@ -542,7 +542,7 @@ async function boot() {
     } else {
       const n = net.nodes.get(pick.id);
       const site = lastView.sites.get(pick.id);
-      html = `<b>${n.id}</b> · ${n.name}<br>${site.islanded ? "No comms path · power on" : site.keySource === "qkd" ? "Keys: QKD" : site.keySource === "local" ? "Key authority" : "Keys: ML-KEM"}`;
+      html = `<b>${n.id}</b> · ${n.name}<br>${site.islanded ? "No comms path · power on" : site.keySource === "qkd" ? "Keys: QKD" : site.keySource === "local" ? "Control center (holds the keys)" : "Keys: ML-KEM"}`;
     }
     tooltip.innerHTML = html;
     tooltip.style.left = `${x}px`;

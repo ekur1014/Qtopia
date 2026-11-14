@@ -9,21 +9,21 @@ Saturday 14 November 2026. Sources checked: the four team recordings and their t
 | 1 | Interactive graph of the network | Lead, latest recording | 3D network of control centers, substations and sub-units | Met |
 | 2 | Show QBER live, "based on the simulation it's running" | Lead | Every QKD fiber runs BB84 4 times a second; inspector shows QBER, error bar, chart, warning and abort lines | Met |
 | 3 | Button to put an eavesdropper on a link "and see what happens" | Lead | Eavesdrop tool (click a fiber) or "Place tap here"; share of photons adjustable live | Met |
-| 4 | "Just use notebook 1" | Lead | Same model as notebook 1 (encode X then H; Eve measures in a random basis and re-encodes; QBER on sifted bits), verified against Qiskit. New: the page can also run **the team's own notebook 1 code** (`Team notebook 1` engine) | Met once notebook 1 is finished (its two TODOs are still open on GitHub; the engine says so) |
-| 5 | Model existing infrastructure: fiber to every substation, keys already exchanged; "a tool to visualize a system that already exists" | Lead | Stylized city network and real IEEE test grids; fiber assumed along every power line (OPGW) | Met. Wording kept honest: EPB ran QKD field tests, but "every substation already exchanged keys" is not verified |
+| 4 | "Just use notebook 1" | Lead | Same model as notebook 1 (encode X then H; Eve measures in a random basis and re-encodes; QBER on sifted bits), verified against Qiskit. New: the page can also run **the team's own notebook 1 code** (`Team notebook 1` engine) | Met: notebook 1 is finished, and its own code runs from the page, locally and on qBraid |
+| 5 | Model existing infrastructure: fiber to every substation, keys already exchanged; "a tool to visualize a system that already exists" | Lead | Chattanooga's real grid from OpenStreetMap (the hero), the Tennessee 500 kV backbone, and the Simulation lab (stylized city, IEEE grids); fiber assumed along every power line (OPGW) | Met. Wording kept honest: EPB ran QKD field tests, but "every substation already exchanged keys" is not verified |
 | 6 | QBER below about 11% means good entanglement; teleport between any nodes where QBER is low; entanglement swapping | Lead | **New teleportation view**: fibers under 11% light up as usable; each substation gets its entanglement-swapping route with the end-to-end error; swapping nodes are shown as not trusted | Met, with the assumption stated: the same fibers would run an entanglement-based protocol (BBM92) |
 | 7 | Teleportation does not beat the speed of the fiber; needs a classical link | Disclaimer recording | Stated in the view and the FAQ: two classical bits per teleported qubit | Met |
 | 8 | When a QKD link breaks, central command decides what to cut: "this part, or this part, or everything" | Lead, first recording | Response policy: alarmed fibers switch to ML-KEM and stay up; real traffic reroutes by risk; quarantine by operator; sites with no path keep power and run on local protection | Met. "Cut" means communication paths only, as decided |
 | 9 | PQC over the existing fiber, QKD only where it is worth it (trusted-node problem) | Late-night recording | Backbone-only QKD design; trusted relays drawn as gold rings | Met |
 | 10 | Whiteboard: QKD also on substation-to-sub-unit links | Whiteboard photo | **New QKD coverage switch**: "Backbone only" (design) or "Every fiber" (whiteboard); in the latter, sub-units get QKD keys | Met; the team picks which to present |
-| 11 | Satellites | First recordings | Out of scope, as the lead decided. An optional drawing (off by default, labeled "concept, not simulated") exists for discussion | Not simulated |
+| 11 | Satellites | First recordings | Out of scope, as the lead decided. An optional drawing (off by default, labeled "concept, not simulated") exists for discussion; it will probably be removed unless a quantum application needs it | Not simulated |
 | 12 | Three.js, artifact, real-time code runs, CUDA-Q, Guppy | Notebook page | All built (see TECH_OPTIONS.md) | Met |
 | 13 | Data set import, more and bigger nodes, less glow | Chat | IEEE 14 to 300-bus grids; visual pass | Met |
 | 14 | Decoy traffic instead of cutting a line | Chat | Decoy traffic runs automatically when a fiber alarms (if no site would be stranded), with an estimate of the tap | Met |
 | 15 | Route real traffic with a decision model | Chat | Risk-weighted shortest path | Met; the named tools ("jev or laya") are unidentified |
 | 16 | Build and run one link on qBraid | Track README, Step 3 Part 3 | **New qBraid engine**: a fiber's photons run as a real job on qBraid's free IonQ simulator from the page | Met (job IDs are logged) |
 | 17 | Address distance limits, number of substations, trusted nodes, **timing synchronization** | Track README, Step 3 Part 1 | Distance (fiber baseline and photon loss), sites and trusted nodes are shown. Timing synchronization is not modeled | Partly: timing sync belongs in the write-up |
-| 18 | Teammates not working on the same thing | Lead | The team chose Grid Twin; the teammate's 2D `interactive_grid_monitor.html` overlaps it | Team decision pending on the 2D monitor |
+| 18 | Teammates not working on the same thing | Lead | The team chose Grid Twin; the teammate's 2D `interactive_grid_monitor.html` overlaps it | Decided: Grid Twin is the main tool; the 2D monitor is kept as the first prototype, with its physics fixed |
 
 ## 2. Usability walkthrough (real clicks and keyboard)
 
@@ -51,13 +51,13 @@ Every control was operated: the four tools, the network and coverage selectors, 
 | Teleportation route | (1 − 2Q_end) = product of (1 − 2Q_i); usable under 11% | Monte Carlo test of the composition |
 | Long fibers | 140 km detects about 537 times fewer photons, so it takes longer to build evidence (S7 shows "Measuring" for several seconds in every-fiber mode) | Browser |
 
-Live engine results for one fiber (p = 3.3%, tap 40%, theory 12.64%): Qiskit Aer 13.52%, CUDA-Q 12.11%, Guppy/Selene 11.15%, qBraid IonQ simulator 12.55% (job `ionq:ionq:sim:simulator-a7ae-qjob-6af89d21c8f5265fb3f1dcf7`; corrected 14 Nov, see BUILD_LOG). Team notebook 1 code, tested on a scratch copy with `encode()` filled as its hint says: 3.6%, 24.4%, 14.5% for taps of 0%, 100%, 40% (theory 3.3%, 26.7%, 12.6%), all within about 1σ.
+Live engine results for one fiber (p = 3.3%, tap 40%, theory 12.64%): Qiskit Aer 13.52%, CUDA-Q 12.11%, Guppy/Selene 11.15%, qBraid IonQ simulator 12.55% (job `ionq:ionq:sim:simulator-a7ae-qjob-6af89d21c8f5265fb3f1dcf7`; corrected 14 Nov, see BUILD_LOG). Team notebook 1 code, finished by the teammate: 12.48% on qBraid's QIR simulator and 11.26% locally at a 40% tap. (Before it was finished, a scratch copy with `encode()` filled as its hint says gave 3.6%, 24.4%, 14.5% for taps of 0%, 100%, 40%; theory 3.3%, 26.7%, 12.6%), all within about 1σ.
 
 ## 4. What the team still needs to do
 
 1. ~~Finish notebook 1~~ Done (14 Nov): the **Team notebook 1** buttons now run the team's own finished code, locally and on qBraid's QIR simulator.
 2. Run notebook 3 once and save its outputs (it is filled in but has never been executed on GitHub).
-3. Decide the 2D monitor's fate, and fix its "IonQ Forte Verified" label if kept (that run was on a simulator).
+3. ~~Decide the 2D monitor's fate~~ Done: kept as the first prototype, Forte label removed, alarm now per-fiber (baseline + 1.4 points, as on the map and in the lab).
 4. Fix `WRITEUP.md` (Step 2 numbers, Step 3 design), and add a sentence on timing synchronization (Step 3 Part 1).
 5. Pick which coverage to present: backbone only (our design) or every fiber (the whiteboard).
 
@@ -68,7 +68,7 @@ Live engine results for one fiber (p = 3.3%, tap 40%, theory 12.64%): Qiskit Aer
 | Light mode (stations hard to see on dark) | Light theme is the default; dark one key away |
 | Focus mode, zoom in and out, center, like a real 3D viewer | View dock and keys: + − Fit (H) Focus (F) |
 | Cinematic orbit until interaction | Orbit (O), stops on interaction, resumes after 20 s idle |
-| Satellite? | Optional concept drawing only (see row 11) |
+| Satellite? | Optional concept drawing only (see row 11); likely to be removed |
 | The response should happen automatically when a tap is placed, not through separate Quarantine and Decoy tools | Automatic response with an incident card; quarantine and decoy became operator overrides |
 
 ## 6. Team decision of 14 Nov, 12:48 (New Chat Grid)

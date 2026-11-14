@@ -229,7 +229,7 @@
       <!-- Selected link -->
       <div class="card">
         <div class="card-title"><span class="q-label">Selected link</span><span class="q-pill q-pill--ok" id="link-kind-pill">QKD</span></div>
-        <div class="link-title" id="selected-link-title">Central Grid EMS &harr; North Regional Substation</div>
+        <div class="link-title" id="selected-link-title">Control center &harr; North Regional Substation</div>
         <div class="link-sub" id="selected-link-type">QKD fiber (BB84), 12.4 km</div>
         <div class="net-row">
           <span class="status-dot" id="global-dot"></span>
@@ -305,7 +305,7 @@
     const ETA_BOB = 0.045;   // Bob's detector efficiency
     const Y0 = 1.7e-6;       // dark-count yield per pulse
     const E_DET = 0.033;     // detector misalignment error
-    const WARN_MARGIN = 0.015; // prototype alarm: baseline + 1.5 percentage points
+    const WARN_MARGIN = 0.014; // simple alarm: baseline + 1.4 points, the same rule as the map and the lab
     const ABORT_Q = 0.11;    // Shor-Preskill: above this no secret key can be distilled
     const BAR_MAX = 0.30;    // gauge scale
 
@@ -362,7 +362,7 @@
 
     // Topology from the team whiteboard
     const nodes = [
-      { id: 'center', label: 'Central Grid EMS', x: 0.5, y: 0.52, type: 'core', radius: 22 },
+      { id: 'center', label: 'Control center', x: 0.5, y: 0.52, type: 'core', radius: 22 },
       { id: 'north', label: 'North Regional Substation', x: 0.32, y: 0.30, type: 'primary', radius: 16 },
       { id: 'south', label: 'South Regional Substation', x: 0.32, y: 0.74, type: 'primary', radius: 16 },
       { id: 'east', label: 'East Regional Substation', x: 0.68, y: 0.30, type: 'primary', radius: 16 },
@@ -403,10 +403,10 @@
       { id: 'p8', from: 'west', to: 'f8', dist: 6.4, type: 'pqc', eve: 0 }
     ];
 
-    // Teleportation routes: source -> swapping node -> EMS
+    // Teleportation routes: source -> swapping node -> control center
     const routes = [
-      { name: 'Source → North → EMS', via: 'North Regional Substation', ids: ['t1', 'l1'] },
-      { name: 'Source → East → EMS', via: 'East Regional Substation', ids: ['t2', 'l3'] }
+      { name: 'Source → North → control center', via: 'North Regional Substation', ids: ['t1', 'l1'] },
+      { name: 'Source → East → control center', via: 'East Regional Substation', ids: ['t2', 'l3'] }
     ];
 
     const TYPE_LABEL = { qkd: 'QKD fiber (BB84)', teleport: 'Teleportation route fiber (roadmap)', pqc: 'Post-quantum link (ML-KEM)' };
@@ -495,7 +495,7 @@
         if (st === 'ok') {
           setPill(qberEval, 'NORMAL', 'ok');
           policyText.innerHTML = `Within this fiber's normal noise (warning above ${pct(warnAt, 1)}). Keys for this link come from <strong>QKD (BB84)</strong>.` +
-            '<br><span class="q-note">The live grid uses a 4.5&sigma; test against each fiber\'s own baseline (about 4.6&ndash;5.0% on city fibers); this prototype uses baseline + 1.5 points.</span>';
+            '<br><span class="q-note">The live grid uses a 4.5&sigma; test against each fiber\'s own baseline (about 4.7&ndash;5.0% on city fibers); this prototype, the map and the lab use the simple stand-in baseline + 1.4 points.</span>';
         } else if (st === 'warn') {
           setPill(qberEval, 'WARNING', 'warn');
           policyText.innerHTML = `<strong>Warning: above this fiber's normal noise</strong> (${pct(q)} vs. baseline ${pct(p)}). ` + KEEP_UP;
@@ -524,7 +524,7 @@
           `<strong style="color:${ok ? T.ok : T.bad}">${ok ? 'usable' : 'not usable'}</strong>. ${route.via} swaps entanglement but never holds the key.`;
         teleportRoute.style.display = '';
       } else {
-        teleportRoute.textContent = 'This link is not on a teleportation route. Routes run from the entangled-pair source through North or East to the EMS.';
+        teleportRoute.textContent = 'This link is not on a teleportation route. Routes run from the entangled-pair source through North or East to the control center.';
         teleportRoute.style.display = '';
       }
 

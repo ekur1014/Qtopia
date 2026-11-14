@@ -6,7 +6,7 @@ Saturday 14 November 2026. Scope: everything this part of the team produced (not
 
 | Check | Result |
 |---|---|
-| Grid Twin tests (`node --test tests/*.test.mjs`) | 21 pass (15 at the start of the audit; 6 added for new behavior) |
+| Grid Twin tests (`node --test tests/*.test.mjs`) | 21 pass at the time of this audit (15 at its start; 6 added). Now 27, see grid-twin/BUILD_LOG.md |
 | `check_grover.py` | 0 mismatches, N = 2 to 32 |
 | Notebooks 2 and 2b, fresh clone of `main`, re-executed | No errors, no leftover TODOs, outputs present |
 | Every job ID in `WRITEUP_step2.md` (8) re-queried on qBraid | All COMPLETED; counts match the write-up exactly |
@@ -51,7 +51,7 @@ The team chose Grid Twin's design. These need the teammates' attention before su
 
 1. **`WRITEUP.md`, Step 2**: says RSA-2048 needs 4 to 20 million qubits and lists Rigetti "Aspen". Our verified `WRITEUP_step2.md` has the current figure (under 1 million, Gidney 2025) and the live device list. Replace their Step 2 with ours.
 2. **`WRITEUP.md`, Step 3**: describes a design with QKD only between control centers and PQC on all substation links. Make it match Grid Twin (QKD backbone to major substations, ML-KEM to sub-units and long links).
-3. **`interactive_grid_monitor.html`**: says "IonQ Forte Verified: 98.5% (197/200)", but its own run log shows that job ran on IonQ's simulator with a noise model, not the Forte QPU. Its alarm is a fixed 7% threshold, which a careful tap can hide under; Grid Twin's is per-fiber and statistical (about 4.7 to 5.0%). Decide whether to keep it; if kept, fix the label.
+3. **`interactive_grid_monitor.html`**: says "IonQ Forte Verified: 98.5% (197/200)", but its own run log shows that job ran on IonQ's simulator with a noise model, not the Forte QPU. Its alarm is a fixed 7% threshold, which a careful tap can hide under; Grid Twin's is per-fiber and statistical (about 4.7 to 5.0%). Decide whether to keep it; if kept, fix the label. *Update 14 Nov: kept as the first prototype; the label is removed and the alarm is now per-fiber.*
 4. Small overclaims in `WRITEUP.md`: AES-256 called "unbreakable"; the monitor's title uses the EPB name, which could read as an official EPB tool.
 
 ## Not verified

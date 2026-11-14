@@ -6,7 +6,7 @@ Short answers anyone on the team can give, with the reasoning behind them. Numbe
 The BB84 statistics are computed, not drawn: every 250 ms each quantum fiber runs a few hundred simulated photons with random bits and bases, an optional eavesdropper, fiber noise, and sifting. Because BB84 only uses single qubits in two bases, this simulation is exact. We checked it against real Qiskit Aer circuits on 7 scenarios and they agree (`sim/bb84_reference.py`, `tests/engine.test.mjs`). It is a simulation, not hardware: we say so on the page.
 
 **Why not run Qiskit live?**
-One Qiskit job per photon takes seconds per fiber; 11 fibers at 4 updates a second would need a server and would lag. The math is identical, and Qiskit is how we proved it.
+One Qiskit job per photon takes seconds per fiber; the 34 QKD fibers on the real grid at 4 updates a second would need a server and would lag. The math is identical, and Qiskit is how we proved it.
 
 **Why does a full tap give about 25%?**
 Eve guesses the wrong basis half the time; then her resent photon makes Bob's result random, wrong half of those times: 1/2 × 1/2 = 1/4. With fiber noise p, the error rate is p + f(1/4 − p/2) for a tap on a fraction f of photons.
@@ -24,7 +24,7 @@ That's why an alarm never takes a fiber down. The fiber stops trusting quantum k
 Cutting a communication path. Never power: switching off power is the harm we're protecting against. If a site loses every path, it keeps running on its own local protection and a crew is sent.
 
 **Why not QKD everywhere?**
-QKD needs dedicated fiber and costly hardware at both ends, gets weaker with distance (the 140 km rural link would detect about 537 times fewer photons than a city fiber), and still needs classical authentication. Post-quantum cryptography protects every link in software. NSA, the UK NCSC and the French, German, Dutch and Swedish agencies all say to prioritize post-quantum cryptography. We use QKD where it adds something: an eavesdropping alarm on the backbone.
+QKD needs dedicated fiber and costly hardware at both ends, gets weaker with distance (in the Simulation lab, a 140 km rural link detects about 537 times fewer photons than a city fiber), and still needs classical authentication. Post-quantum cryptography protects every link in software. NSA, the UK NCSC and the French, German, Dutch and Swedish agencies all say to prioritize post-quantum cryptography. We use QKD where it adds something: an eavesdropping alarm on the backbone.
 
 **What is decoy mode?**
 When a fiber looks tapped, real traffic moves to another route but the fiber keeps running on fake traffic. The spy keeps tapping, and we keep measuring: the error rate tells us what share of photons she intercepts (about ±3% after a few seconds). Nothing she captures is real. It's refused where a site would lose its only route. (Different from decoy-state QKD, which uses weak pulses against photon-number-splitting attacks.)
@@ -33,19 +33,19 @@ When a fiber looks tapped, real traffic moves to another route but the fiber kee
 Each fiber costs its length times (1 + 4 × risk), with risk from its live error rate. Real traffic takes the cheapest path, so it moves off a fiber that is getting suspicious even before the alarm. It's a weighted shortest-path decision: exact, fast and easy to explain.
 
 **Does the visualization talk to real quantum code?**
-Yes, when served by `sim/live_server.py`: a fiber's current noise and tap can be re-run as 4,000 photons on Qiskit Aer, NVIDIA CUDA-Q and Quantinuum Guppy (Selene emulator), and the error rates appear next to the browser's and the theory.
+Yes, when served by `grid-twin/start.py` (or `sim/live_server.py`): a fiber's current noise and tap can be re-run on Qiskit Aer, NVIDIA CUDA-Q, Quantinuum Guppy (Selene emulator), the team's notebook 1, and qBraid's cloud simulators. The error rates appear next to the browser's and the theory.
 
 **What does the teleportation view show?**
 The team lead's idea: a fiber under 11% error could supply usable entangled pairs if run with an entanglement-based protocol. Select a substation and the view finds the entanglement-swapping route from a control center with the lowest end-to-end error (errors combine as (1 − 2Q_end) = ∏(1 − 2Q_i)). The swapping nodes never hold the key, unlike trusted relays. It still needs two ordinary bits per teleported qubit, so nothing is faster than the fiber.
 
 **Can the visualization run on qBraid?**
-Yes, with the live server: the **qBraid · IonQ simulator** button sends that fiber's photons as a real job to qBraid's free IonQ simulator and logs the job ID.
+Yes, with the live server: the **qBraid · IonQ simulator**, **qBraid · QIR simulator** and **Team notebook 1 on qBraid** buttons send that fiber's photons as real jobs to qBraid's free simulators and log the job IDs. At a 40% tap (theory 12.64%) they read 12.55%, 12.96% and 12.48%.
 
 **What is the trusted-node problem?**
 QKD keys only cross one fiber. To reach a far substation, the key is relayed through intermediate sites, and each relay holds the key in the clear for a moment. Every relay must be trusted and physically secured. Select a substation whose direct fiber is tapped to see its relays (gold rings).
 
 **Is this a real utility's network?**
-No. The layout is invented (real substation locations are sensitive). The fiber parameters come from a published experiment (GYS 2004, as tabulated by Ma, Qi, Zhao and Lo).
+The main view is: Chattanooga's real EPB and TVA substations and lines from OpenStreetMap (public data). The stylized city in the Simulation lab is invented, and the dual ring is the team's design with illustrative distances. The fiber parameters come from a published experiment (GYS 2004, as tabulated by Ma, Qi, Zhao and Lo).
 
 **What does it not model?**
 Attacks beyond intercept-resend (for example photon-number splitting or detector attacks), key rates in bits per second, finite-key effects, and real network traffic. See the limits section of DESIGN.md.
@@ -57,7 +57,7 @@ The eavesdropping alarm is the part only physics can give: a classical link can 
 No. Detection, the switch to ML-KEM, rerouting, decoy traffic, the tap measurement and the inspection recommendation all run on their own; the incident card shows each step and its time. The one thing left to a person is quarantine, because an automatic quarantine would let an attacker cut communications just by tapping.
 
 **Is there a satellite?**
-Only as a drawing, and it will probably be taken out unless we find a quantum application only a satellite can serve. The mentors put satellites on the roadmap for statewide distances. Our real Chattanooga links are all under 22 km, well within fiber QKD; only the statewide 500 kV view has spans over 80 km.
+Only as a drawing, and it will probably be taken out unless we find a quantum application only a satellite can serve. The mentors put satellites on the roadmap for statewide distances. Our real Chattanooga links are all at most 22.2 km, well within fiber QKD; only the statewide 500 kV view has spans over 80 km.
 
 **Is the map real?**
 Yes. Substations and lines are public OpenStreetMap data, the same data OpenInfraMap draws. Two things are our assumptions: which two substations hold the keys, and that fiber runs along every power line.

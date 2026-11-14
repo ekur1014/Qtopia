@@ -22,7 +22,7 @@ const REGIONS = {
     backboneKv: 161,
     qkdMaxKm: 80,
     nodeScale: 0.6, // substations here can be a few hundred metres apart
-    note: "Real substations and power lines of the Chattanooga area from OpenStreetMap (the data behind OpenInfraMap), © OpenStreetMap contributors, ODbL. Fiber is assumed to run along every power line (OPGW), with the line's real length. Which substations hold the keys is our assumption: real control-center locations are not public.",
+    note: "Real Chattanooga substations and power lines (OpenStreetMap, the data behind OpenInfraMap). We assume fiber runs along every line. Which two sites are control centers is our guess: the real locations are not public.",
     design: "QKD on the 161 kV and 500 kV transmission network (TVA and EPB transmission substations); ML-KEM on the 46 kV lines to EPB distribution substations, as the mentors advised (no QKD to neighborhoods or homes). Key hubs: the two transmission substations with the most QKD fibers (assumed).",
   },
   tennessee500: {
@@ -32,7 +32,7 @@ const REGIONS = {
     backboneKv: 500,
     qkdMaxKm: 80,
     nodeScale: 4,
-    note: "TVA's 500 kV transmission backbone across Tennessee from OpenStreetMap, © OpenStreetMap contributors, ODbL. Fiber assumed along every line with its real length. At this scale many spans are longer than fiber QKD reaches without trusted relays: that is where the satellite question comes in.",
+    note: "TVA's 500 kV backbone across Tennessee (OpenStreetMap). We assume fiber runs along every line. Eight spans are longer than about 80 km, past what fiber QKD reaches without relay stations.",
     design: "QKD only on 500 kV spans under 80 km; longer spans would need trusted relay stations (or, as a roadmap idea, satellite links) and run on ML-KEM here. Key hubs: the two substations with the most QKD fibers (assumed).",
   },
 };
@@ -225,7 +225,7 @@ const label = (s) => {
 };
 const nodes = sorted.map((s) => ({
   id: s.id,
-  name: hubs.includes(s) ? `${label(s)} · key hub (assumed)` : label(s),
+  name: hubs.includes(s) ? `${label(s)} · control center (assumed)` : label(s),
   type: hubs.includes(s) ? "control" : backbone(s) ? "substation" : "subunit",
   pos: P(s.c),
   // A short on-map name for named transmission sites and plants (the rest show their id until focused).

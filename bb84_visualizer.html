@@ -214,7 +214,7 @@ body { padding-top: calc(var(--q-bar-h) + 28px); }
           <div class="scale">
             <span style="left:0;transform:none">0%</span>
             <span style="left:36.67%">11%<br>BB84 gives up</span>
-            <span style="left:83.33%">25%<br>Eve on every photon</span>
+            <span style="left:83.33%">25%<br>Eve on every photon (perfect line)</span>
           </div>
           <p class="verdict" id="verdict">No kept bits yet.</p>
         </div>
@@ -251,7 +251,7 @@ if basis == 1:
 
   <section class="step">
     <div class="head"><span class="num">STEP 3</span><h2>Sift the key and count the errors</h2><span class="cellref">notebook cell 6 · qber()</span></div>
-    <p class="read">Afterwards Alice and Bob say out loud which basis they used for each photon, but never the bits. They keep only the rounds where the bases matched, which is about half. Then they compare some of the kept bits. The share that disagree is the <b>quantum bit error rate</b>, or QBER. With nobody on the line it is 0. Your notebook got QBER 0.0 for 200 photons.</p>
+    <p class="read">Afterwards Alice and Bob say out loud which basis they used for each photon, but never the bits. They keep only the rounds where the bases matched, which is about half. Then they compare some of the kept bits. The share that disagree is the <b>quantum bit error rate</b>, or QBER. On a perfect line with nobody listening it is 0: our notebook measured QBER 0.0 for 200 photons. Real fiber adds about 3% of its own, which the live grid includes.</p>
   </section>
 
   <section class="step">
@@ -259,7 +259,7 @@ if basis == 1:
     <p class="read">Eve can't copy a photon (the no-cloning theorem), so to learn the bit she has to measure it, then send Bob a new photon with what she saw. Like Bob, she has to guess the basis.</p>
     <div class="two">
       <div class="card"><p class="math">½ × ½ = 25%</p><p>Half the time Eve guesses the wrong basis and sends the wrong kind of photon. Bob's result on that photon is then a coin flip, wrong half the time.</p></div>
-      <div class="card"><p class="math">QBER 0.247</p><p>Your notebook's result with Eve on every photon, against 0.0 without her. Turn on “Eve taps the fiber” above to see the jump yourself.</p></div>
+      <div class="card"><p class="math">QBER 0.247</p><p>Our notebook's result with Eve on every photon, against 0.0 without her (a perfect line). Turn on “Eve taps the fiber” above to see the jump yourself.</p></div>
     </div>
   </section>
 

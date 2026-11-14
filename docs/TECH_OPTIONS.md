@@ -16,13 +16,13 @@ From the team's notebook page (`Idea/tech-ideas-notebook.jpg`) and Saturday's ch
 | Import the network from a data set; more and bigger nodes | **Done** | IEEE 14/30/57/118/300-bus public test grids, selectable in the page | `grid-twin/tools/import_ieee.mjs` |
 | Decoy traffic instead of cutting a line | **Done** | Runs automatically as part of the incident response, with an estimate of the tap's strength | `grid-twin/src/main.js`, `DESIGN.md` (Automatic response) |
 | Route real traffic with a decision model | **Done** (weighted shortest path) | Real traffic avoids suspicious fibers before they alarm | `DESIGN.md` §10 |
-| Next.js + Vercel | Not done; optional | A public URL and a React app structure | see below |
+| Next.js + Vercel | Vercel set up for the static site (no Next.js needed) | A public URL | `vercel.json`, `tools/build_site.sh`, README "Deploying to Vercel" |
 | TanStack | Not needed | Data fetching and tables for a React app | see below |
 | Vector search / GraphQL (AI) | Not done; possible stretch | Ask the network questions in plain language | see below |
 
 ## The live-code bridge in practice
 
-Run `python sim/live_server.py 8000` (Python with Qiskit, CUDA-Q and Guppy installed) and open the page. In a fiber's inspector, **Run this fiber as real quantum code** sends the fiber's current noise and tap to each framework. Measured on Saturday, L11 at a 40% tap (theory 12.64%): Qiskit Aer 13.52% in 20 ms, CUDA-Q 12.11% in 154 ms, Guppy on Selene 11.15% in 1.3 s, each on about 2,000 sifted bits (±0.7%).
+Run `python grid-twin/sim/live_server.py 8000` from the repo root (Python with Qiskit, CUDA-Q and Guppy installed) and open the page. In a fiber's inspector, **Run this fiber as real quantum code** sends the fiber's current noise and tap to each framework. Measured on Saturday, L11 at a 40% tap (theory 12.64%): Qiskit Aer 13.52% in 20 ms, CUDA-Q 12.11% in 154 ms, Guppy on Selene 11.15% in 1.3 s, each on about 2,000 sifted bits (±0.7%).
 
 How each framework models the tap, for anyone asked:
 
