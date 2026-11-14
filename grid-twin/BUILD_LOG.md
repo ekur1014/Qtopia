@@ -225,3 +225,26 @@ Fixed from its findings (each checked by hand first):
 - **New test:** one tapped fiber moves to its twin; with both fibers tapped, the key goes the other way round. 27 tests passing.
 - **Checked in the browser:** with both fibers between supernodes 3 and 4 tapped, two incident cards fire and supernode 4's key path runs via 7, 6, 5.
 - **Opus reviewers** (qBraid gateway) audited readability, faithfulness to the plan, and consistency of numbers. Fixes follow below.
+
+### Audit results and what changed
+
+- **Consistency audit** (Opus, $1.89): 30 stale or inconsistent spots, mostly old docs from before the real-grid hero. All fixed, except unfilled placeholders in the teammates' `WRITEUP_step1.md`.
+- **Readability audit** (Opus, $2.86): 40 items. Fixed the high-impact ones:
+  - One name for the key site: control center.
+  - A plain-language home page.
+  - "Quantum simulators" instead of "real quantum code".
+  - A footer for each kind of network: real, team design, test.
+  - "Test networks (not real)" instead of "Simulation lab".
+  - Shorter labels and a shortcut list.
+  - The same quick alarm rule on the map, lab and monitor.
+- **Faithfulness audit** (Opus, $1.44; a first try died on a PDF, $0.39): found the teammate's own dual ring (`dual_ring_quantum_routing.html`, `dual_ring_router.py`). Grid Twin's dual ring now uses its model: one fiber pair per 8.5 km span, 6 km gateway links, and a tapped span going the other way round.
+  - Its other findings concern `WRITEUP.md` (the team's write-up) and are listed for the team. Examples: Step 1 Part 3 hardware run missing, a Forte claim without a run, Step 3 Parts 2 and 4 missing, notebook 3 outputs not saved.
+- **The teammate's router page joins the site** (restyled by Opus in edit mode, $1.21, then checked in the browser):
+  - Shared look and top bar, "Dual ring" in the bar and on the home page.
+  - Removed: "EPB" in the title, the unmeasured "<12 ms" failover claim.
+  - Its simplified 8%/11% rule is labelled.
+  - Its routing logic is unchanged and checked: a ring partition falls back to ML-KEM.
+  - The legend moved off the ring.
+- **Bug found while checking:** test networks were titled as the dual ring, because their `meta.design` text field was read as a flag. Fixed with `meta.teamDesign`.
+- **The pitch deck is no longer published** by the Vercel build (the team removed it).
+
