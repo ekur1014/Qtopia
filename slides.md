@@ -31,7 +31,7 @@ Questions to answer: Which of the utility's data or keys must stay secret for 10
 Draft (DONE, from Step 2):
 - "Harvest now, decrypt later": an attacker records encrypted grid traffic today and decrypts it when a large enough quantum computer exists. Shor's algorithm breaks RSA and elliptic-curve cryptography, which protect VPNs, TLS, certificates and firmware signing.
 - Two different risks, and both matter: **read later** (confidentiality of key exchange) and **forge later** (a signature check that a 20-30 year relay or meter trusts for its whole life). We think forge-later on firmware is the higher-consequence risk.
-- How big is the gap? Today's largest machine on qBraid has 107 qubits through the SDK (156 on IBM machines in the web catalog). Gidney's 2025 estimate for RSA-2048 is under 1 million noisy qubits: about **4 orders of magnitude** away. Estimates keep falling (20 million in 2019, under 1 million in 2025, about 22,600 cat qubits claimed in Oct 2026 for one specific architecture). Link: `WRITEUP_step2.md` Part 2.
+- How big is the gap? Today's largest machine on qBraid has 107 qubits through the SDK (156 on IBM machines in the web catalog). Gidney's 2025 estimate for RSA-2048 is under 1 million noisy qubits: about **4 orders of magnitude** away. Estimates keep falling (20 million in 2019, under 1 million in 2025, about 22,600 cat qubits claimed in Oct 2026 for one specific architecture). Link: `WRITEUP.md`, Step 2 Part 2.
 - Demo we ran: Shor factors 15 (r = 4, 15 = 3 x 5). The circuit is hard-coded for N = 15, so it shows the idea, not the scale.
 - [TEAM] Step 1: a spy on a fiber link is a separate, present-day threat. Add the BB84 result: error rate without and with an eavesdropper.
 
@@ -63,7 +63,7 @@ Draft:
 - DONE, the design we present (Step 3): **Grid Twin** (`grid-twin/`), a 3D live twin of the network. 2 control centers, 6 major substations, 8 feeder sub-units, 1 remote site. QKD (BB84) on the 11-fiber backbone between control centers and major substations; ML-KEM on the short sub-unit links and the 140 km rural link (QKD there would detect about 537 times fewer photons than on a city fiber). Show it live: tap a fiber, watch the error rate climb, the alarm fire, keys switch to ML-KEM and QKD keys reroute through a trusted relay. See `grid-twin/DEMO.md` for the 60-second script.
 - How the response works: an alarm never takes a fiber down (an attacker could use that to cut comms); the fiber switches to ML-KEM keys and stays up. Only an operator quarantines a fiber. Isolation cuts communication paths, never power. The alarm is statistical (a rise above that fiber's own baseline, about 4.7 to 5.0%), and 11% is the abort line where no key can be made.
 - Evidence: the browser's BB84 engine matches Qiskit Aer circuits on all 7 test scenarios; 15 automated tests pass. Teleportation link (Step 3, Part 3): the teammate's notebook 3.
-- DONE, our migration ranking (Step 2): 1 crypto inventory and agility; 2 hybrid ML-KEM on every VPN/TLS/SSH edge now; 3 firmware signing and ROM trust anchors (dual-sign, PQC-capable hardware); 4 PKI/CA; 5 AMI procurement; 6 SCADA/DNP3 TLS layer; 7 IEC 61850/GOOSE; 8 ICCP/synchrophasors; 9 DER and APIs; 10 enterprise IT; 11 symmetric keys (AES-256 in new buys). See `WRITEUP_step2.md` Parts 3-5.
+- DONE, our migration ranking (Step 2): 1 crypto inventory and agility; 2 hybrid ML-KEM on every VPN/TLS/SSH edge now; 3 firmware signing and ROM trust anchors (dual-sign, PQC-capable hardware); 4 PKI/CA; 5 AMI procurement; 6 SCADA/DNP3 TLS layer; 7 IEC 61850/GOOSE; 8 ICCP/synchrophasors; 9 DER and APIs; 10 enterprise IT; 11 symmetric keys (AES-256 in new buys). See `WRITEUP.md`, Step 2 Parts 3-5.
 - Results to show side by side (quantum vs classical, simulator vs emulator):
   - Shor factors 15: r = 4, 3 x 5.
   - Grover on Aer: N = 4, 8, 16 find the key with 100%, 95.5%, 96.0% success (theory 100%, 94.5%, 96.1%).
@@ -94,9 +94,9 @@ Draft (honest list; add the teammate's failures):
 ## Checklist before Sunday 9:00 AM
 - [ ] Teammate's Step 1 (BB84) and Step 3 (capstone) added to slides 1, 3, 5; names and roles on slide 4.
 - [ ] Open the template .pptx (now in this repo) and fill in its five slides.
-- [ ] A teammate created `WRITEUP.md` (the README's required name). Before submitting, replace its Step 2 with our verified `WRITEUP_step2.md` (theirs says RSA-2048 needs 4 to 20 million qubits; the current estimate is under 1 million, Gidney 2025) and make its Step 3 match Grid Twin's design. See `docs/AUDIT.md`.
+- [x] `WRITEUP.md` is now the single write-up for every Step and Part (14 Nov), with the verified Step 2 and the Chattanooga Step 3. Its **[TEAM]** items (diagram screenshots, rollout plan) still need the team.
 - [ ] Resolve the remaining VERIFY items (exact protocol crypto per vendor) or remove the claim.
-- [ ] Run record complete (job IDs are in `WRITEUP_step2.md`).
+- [x] Run record complete (job IDs are in `WRITEUP.md`, at the end).
 - [ ] Rehearse: everyone can explain the Shor, Grover, QKD-vs-PQC and migration-ranking choices in plain words.
 - [ ] Make the ZIP of the track folder; test every shared link in a private window; bring the deck on a USB stick.
 - [ ] Optional: qBraid Award entry (video link + 3 slides) via the form in the root README.
