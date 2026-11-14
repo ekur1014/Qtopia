@@ -19,6 +19,10 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="grid-twin/data/networks/chattanooga.js"></script>
   <script src="grid-twin/data/networks/tennessee500.js"></script>
+  <!-- Our own vector basemap (state lines, the Tennessee River and its lakes, main roads, towns), drawn under the
+       street tiles: the grid always sits on the real geography, even where tile images cannot load. -->
+  <script src="grid-twin/data/basemap/chattanooga.js"></script>
+  <script src="grid-twin/data/basemap/tennessee500.js"></script>
   <style>
     * { box-sizing: border-box; }
     html, body { margin: 0; height: 100%; }
@@ -27,10 +31,19 @@
 
     /* The stage: the map, with the hint chip over it */
     .stage { position: relative; min-height: 0; }
-    #map { position: absolute; inset: 0; background: var(--q-bg); }
+    :root { --map-land: #eef0ec; --map-water: #a9c9e2; --map-road: #c4c9d1; --map-road-major: #aab1bc; --map-border: #6b7385; --map-place: #3a4252; }
+    :root[data-theme="dark"] { --map-land: #121822; --map-water: #1c3550; --map-road: #2a3241; --map-road-major: #3a4558; --map-border: #8a93a8; --map-place: #c3cad8; }
+    #map { position: absolute; inset: 0; background: var(--map-land); }
+    .map-place { font: 600 12.5px var(--q-font); color: var(--map-place); white-space: nowrap; transform: translate(-50%, -50%); text-shadow: 0 0 3px var(--map-land), 0 0 3px var(--map-land), 0 0 6px var(--map-land); pointer-events: none; }
+    .map-place--city { font-size: 14px; font-weight: 700; letter-spacing: .01em; }
+    .map-place--suburb { font-weight: 500; font-size: 12px; opacity: .85; }
+    .recenter { display: flex; align-items: center; gap: 6px; min-height: 34px; padding: 6px 12px; border: 0; border-radius: 4px; background: var(--q-surface); color: var(--q-ink); font: 600 13px var(--q-font); cursor: pointer; }
+    .recenter:hover { background: var(--q-tint); }
+    .recenter svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .leaflet-bar a, .leaflet-bar a:hover { background: var(--q-surface); color: var(--q-ink); border-color: var(--q-line); }
     .leaflet-container { font-family: var(--q-font); }
-    .leaflet-tile-pane { filter: grayscale(0.9) contrast(0.9) brightness(1.04); opacity: 0.85; }
-    :root[data-theme="dark"] .leaflet-tile-pane { filter: grayscale(1) invert(1) contrast(0.85) brightness(0.8); opacity: 0.7; }
+    .leaflet-tile-pane { filter: saturate(0.55) contrast(0.95); opacity: 0.92; }
+    :root[data-theme="dark"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) saturate(0.45) brightness(0.8) contrast(0.95); opacity: 0.85; }
     .leaflet-tooltip.tip { font: 13px/1.4 var(--q-font); color: var(--q-ink); background: var(--q-surface); border: 1px solid var(--q-line); box-shadow: var(--q-shadow); border-radius: 8px; padding: 6px 10px; }
     .leaflet-tooltip.tip::before { display: none; }
     .tip small { display: block; color: var(--q-ink-dim); font-size: 12px; }
@@ -52,7 +65,7 @@
 
     /* Side panel */
     aside { overflow-y: auto; padding: 24px 24px 28px; background: var(--q-glass-strong); border-left: 1px solid var(--q-line); }
-    aside .q-label { font-size: 11px; color: var(--q-ink-dim); }
+    aside .q-label { font-size: 14px; color: var(--q-ink); }
     .head h1 { margin: 8px 0 8px; font-size: 28px; font-weight: 600; letter-spacing: -0.025em; line-height: 1.1; }
     .lead { margin: 0 0 16px; font-size: 14.5px; line-height: 1.55; color: var(--q-ink-dim); max-width: 62ch; }
     .lead b { color: var(--q-ink); font-weight: 600; }
@@ -94,8 +107,8 @@
     .spy .scale { display: flex; justify-content: space-between; font-size: 12px; color: var(--q-ink-dim); margin-bottom: 8px; }
     .spy p { font-size: 14px; }
 
-    dl { display: grid; grid-template-columns: 1fr auto; gap: 8px 14px; margin: 4px 0 12px; font-size: 14px; }
-    dt { color: var(--q-ink-dim); line-height: 1.4; } dd { margin: 0; text-align: right; font: 500 13px var(--q-mono); }
+    dl { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 8px 16px; margin: 6px 0 14px; font-size: 14px; }
+    dt { color: var(--q-ink-dim); line-height: 1.4; } dd { margin: 0; text-align: right; font: 600 14px/1.4 var(--q-font); font-variant-numeric: tabular-nums; }
     .formula { font: 12.5px/1.5 var(--q-mono); color: var(--q-ink-dim); padding: 10px 12px; border-radius: 8px; background: var(--q-tint); margin: 0 0 12px; }
 
     .btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 11px 18px; border-radius: 999px; border: 1px solid transparent; background: var(--q-ink); color: var(--q-surface); font: 600 14px var(--q-font); text-decoration: none; cursor: pointer; }
@@ -112,6 +125,20 @@
     .stat span { display: block; font-size: 13px; line-height: 1.35; color: var(--q-ink-dim); margin-top: 2px; }
     .stat--ok b { color: var(--q-ok); } .stat--pqc b { color: var(--q-pqc); } .stat--warn b { color: var(--q-warn); }
 
+    .volt { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 4px 0 10px; }
+    .volt th { text-align: left; font-weight: 600; font-size: 12.5px; color: var(--q-ink-dim); padding: 4px 6px 6px 0; border-bottom: 1px solid var(--q-line); }
+    .volt td { padding: 7px 6px 7px 0; border-bottom: 1px solid var(--q-line); vertical-align: top; font-variant-numeric: tabular-nums; }
+    .volt td:not(:first-child), .volt th:not(:first-child) { text-align: right; white-space: nowrap; }
+    .volt tr:last-child td { border-bottom: 0; }
+    .volt i { display: inline-block; width: 18px; border-radius: 3px; margin-right: 8px; vertical-align: middle; }
+    .jobs { font-size: 12.5px !important; word-break: break-all; }
+    .jobs code { font: 11.5px var(--q-mono); }
+    .neighbors { list-style: none; margin: 4px 0 12px; padding: 0; font-size: 14px; }
+    .neighbors li { display: flex; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--q-line); }
+    .neighbors li:last-child { border-bottom: 0; }
+    .neighbors button { all: unset; cursor: pointer; color: var(--q-ink); text-decoration: underline; text-decoration-color: var(--q-line); text-underline-offset: 3px; }
+    .neighbors button:hover { text-decoration-color: currentColor; }
+    .neighbors small { color: var(--q-ink-dim); font: 12.5px var(--q-mono); white-space: nowrap; }
     .legend div { display: flex; align-items: center; gap: 10px; font-size: 14px; color: var(--q-ink-dim); margin: 7px 0; }
     .legend div[hidden] { display: none; }
     .legend i { display: inline-block; width: 24px; flex: none; border-radius: 3px; }
@@ -145,8 +172,7 @@
     </div>
     <aside>
       <div class="head" data-enter>
-        <span class="q-label">Step 1 · Real map</span>
-        <h1 id="title">Chattanooga's real grid, on the map</h1>
+        <h1 id="title">Chattanooga's power grid on a street map</h1>
         <p class="lead q-enter-item" id="subtitle"></p>
         <div class="seg q-enter-item" role="group" aria-label="Which grid">
           <button type="button" data-region="chattanooga" aria-pressed="true">Chattanooga city</button>
@@ -156,7 +182,25 @@
 
       <section class="card card--sel" id="selected" aria-label="Selected line"></section>
 
-      <div class="stats" id="stats"></div>
+      <section class="card" aria-labelledby="volt-h">
+        <span class="q-label" id="volt-h">The grid by voltage</span>
+        <p style="margin-top:8px" id="volt-lead"></p>
+        <table class="volt" id="volt"></table>
+      </section>
+
+      <section class="card" aria-labelledby="nb-h">
+        <span class="q-label" id="nb-h">What notebook 1 measured</span>
+        <p style="margin-top:8px">The error rates on this map come from a fiber model (published lab values, cited below). Notebook 1 ran the same BB84 protocol for real: 16 rounds packed into one circuit, 200 shots, 1,200 measured key bits.</p>
+        <table class="volt nb">
+          <tr><th>Where it ran</th><th>Bits wrong</th><th>Error rate</th></tr>
+          <tr><td><b>Rigetti Cepheus-1, a real quantum computer</b>, no spy</td><td>51 / 1,200</td><td><b>4.25%</b></td></tr>
+          <tr><td>Quantinuum H2 emulator, no spy</td><td>1 / 1,200</td><td>0.08%</td></tr>
+          <tr><td>IonQ cloud simulator (Aria noise model), no spy</td><td>0 / 1,200</td><td>0%</td></tr>
+          <tr><td>Qiskit simulator, spy on every photon</td><td>93 sifted bits</td><td><b>25.8%</b></td></tr>
+        </table>
+        <p>With a spy reading every photon the error rate jumps to about 25% (theory: 25%), far past the 11% limit. The real machine's 4.25% is its own hardware noise, still well under it.</p>
+        <p class="q-adv jobs">Job IDs: Rigetti <code>aws:rigetti:qpu:cepheus-1-108q-a7ae-qjob-6af8baa6c8f5265fb3f203f7</code>; Quantinuum <code>quantinuum:quantinuum:sim:h2-emulator-a7ae-qjob-6af8bac2c8f5265fb3f2041d</code>; IonQ <code>ionq:ionq:sim:simulator-a7ae-qjob-6af8bac1c8f5265fb3f20417</code>. Full run record: <a class="q-link" href="WRITEUP.md">WRITEUP.md</a>.</p>
+      </section>
 
       <section class="card" aria-labelledby="route-h">
         <span class="q-label" id="route-h">Route search</span>
@@ -220,6 +264,51 @@
     map.getPane("photons").style.zIndex = 450;
     map.getPane("photons").style.pointerEvents = "none";
     var svgR = L.svg({ pane: "photons" });
+    // Basemap pane sits under the tile pane (z 200): where tiles load they cover it, where they cannot it shows.
+    map.createPane("base");
+    map.getPane("base").style.zIndex = 150;
+    map.getPane("base").style.pointerEvents = "none";
+    map.createPane("places");
+    map.getPane("places").style.zIndex = 420; // town names stay readable above the grid lines
+    map.getPane("places").style.pointerEvents = "none";
+    var baseR = L.canvas({ pane: "base" });
+    var baseLayer = L.layerGroup().addTo(map);
+    var placeLayer = L.layerGroup(); // our town names: shown only when the street tiles (which carry their own) fail
+    var tileLoads = 0;
+    function showPlaces(on) { if (on) placeLayer.addTo(map); else map.removeLayer(placeLayer); }
+    function drawBase() {
+      baseLayer.clearLayers();
+      placeLayer.clearLayers();
+      var B = (window.QRYPT_BASEMAP || {})[region];
+      if (!B) return;
+      var opt = function (o) { o.renderer = baseR; o.pane = "base"; o.interactive = false; return o; };
+      var city = region === "chattanooga";
+      B.water.forEach(function (r) { L.polygon(r, opt({ stroke: false, fillColor: css("--map-water"), fillOpacity: 1 })).addTo(baseLayer); });
+      B.rivers.forEach(function (r) { L.polyline(r, opt({ color: css("--map-water"), weight: city ? 2.5 : 2, opacity: 1 })).addTo(baseLayer); });
+      [["primary", 1, "--map-road"], ["trunk", 1.8, "--map-road-major"], ["motorway", city ? 2.6 : 1.4, "--map-road-major"]].forEach(function (k) {
+        (B.roads[k[0]] || []).forEach(function (r) { L.polyline(r, opt({ color: css(k[2]), weight: k[1], opacity: 1 })).addTo(baseLayer); });
+      });
+      B.borders.forEach(function (r) { L.polyline(r, opt({ color: css("--map-border"), weight: 1.6, opacity: 0.9, dashArray: "7 5" })).addTo(baseLayer); });
+      B.places.forEach(function (p) {
+        L.marker(p.ll, { pane: "places", interactive: false, keyboard: false, icon: L.divIcon({ className: "", html: '<div class="map-place map-place--' + p.kind + '">' + esc(p.name) + "</div>", iconSize: [0, 0] }) }).addTo(placeLayer);
+      });
+    }
+    // Recenter: back to the whole grid after panning or zooming around.
+    var homeBounds = null;
+    var Recenter = L.Control.extend({
+      options: { position: "topleft" },
+      onAdd: function () {
+        var bar = L.DomUtil.create("div", "leaflet-bar");
+        var b = L.DomUtil.create("button", "recenter", bar);
+        b.type = "button";
+        b.title = "Show the whole grid again";
+        b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>Recenter';
+        L.DomEvent.disableClickPropagation(bar);
+        L.DomEvent.on(b, "click", function () { if (homeBounds) map.fitBounds(homeBounds, { padding: [32, 32] }); });
+        return bar;
+      },
+    });
+    new Recenter().addTo(map);
     var tiles = null;
     function setTiles() {
       if (tiles) map.removeLayer(tiles);
@@ -227,6 +316,11 @@
       tiles = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
         maxZoom: 19, attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
+      // Where tile images are blocked (offline, or a preview that only allows its own images), the vector basemap
+      // underneath carries the map on its own, town names included.
+      tiles.on("tileload", function () { tileLoads++; showPlaces(false); });
+      tiles.on("tileerror", function () { if (!tileLoads) showPlaces(true); });
+      setTimeout(function () { if (!tileLoads) showPlaces(true); }, 3000);
       tiles.bringToBack();
     }
 
@@ -293,31 +387,37 @@
       net.nodes.forEach(function (n) {
         var color = n.type === "control" ? css("--q-gold") : n.type === "substation" ? css("--q-ok") : css("--q-pqc");
         var m = L.circleMarker(ll(net, n.pos), { renderer: canvasR, radius: n.type === "control" ? 8 : n.type === "substation" ? 5.5 : 3.5, color: css("--q-surface"), weight: 1.5, fillColor: color, fillOpacity: 0.95 });
-        m.bindTooltip("<b>" + esc(n.name) + "</b><small>" + (n.kv ? n.kv + " kV · " : "") + "click to open it in the live grid</small>", { className: "tip" });
-        m.on("click", function () { window.open("grid-twin/index.html?net=" + region + "&select=node:" + n.id, "_self"); });
+        m.bindTooltip("<b>" + esc(n.name) + "</b><small>" + (n.kv ? n.kv + " kV · " : "") + "click for details</small>", { className: "tip" });
+        m.on("click", function () { selectNode(n); });
         m.addTo(layer);
       });
-      if (keepId == null) map.fitBounds(bounds, { padding: [32, 32] });
+      homeBounds = L.latLngBounds(bounds);
+      if (keepId == null) map.fitBounds(homeBounds, { padding: [32, 32] });
+      drawBase();
 
       var qkd = net.links.filter(function (l) { return l.kind === "qkd"; });
       var longest = Math.max.apply(null, net.links.map(function (l) { return l.km; }));
       var over80 = net.links.filter(function (l) { return l.km > 80; }).length;
-      $("title").textContent = region === "chattanooga" ? "Chattanooga's real grid, on the map" : "Tennessee's 500 kV backbone, on the map";
+      $("title").textContent = region === "chattanooga" ? "Chattanooga's power grid on a street map" : "Tennessee's 500 kV backbone on the map";
       $("subtitle").innerHTML = (region === "chattanooga"
-        ? "Real EPB and TVA substations and power lines from OpenStreetMap. "
+        ? "Real substations and power lines (mostly EPB and TVA) from OpenStreetMap. "
         : "TVA's 500 kV transmission lines across Tennessee, from OpenStreetMap. ") +
         "<b>Green lines</b> carry quantum keys (QKD: keys sent as single photons). <b>Blue lines</b> use ML-KEM, post-quantum backup encryption.";
-      $("stats").innerHTML =
-        '<div class="stat"><b>' + net.nodes.length + '</b><span>real substations</span></div>' +
-        '<div class="stat stat--ok"><b>' + qkd.length + '</b><span>fibers with quantum keys</span></div>' +
-        '<div class="stat stat--pqc"><b>' + (net.links.length - qkd.length) + '</b><span>links on post-quantum keys</span></div>' +
-        '<div class="stat' + (over80 ? " stat--warn" : "") + '"><b>' + longest.toFixed(1) + ' km</b><span>longest link' + (over80 ? ", " + over80 + " over 80 km" : "") + '</span></div>';
+      var byKv = {};
+      net.links.forEach(function (l) { var k = l.kv || 0; (byKv[k] = byKv[k] || { n: 0, km: 0, qkd: 0 }); byKv[k].n++; byKv[k].km += l.km; if (l.kind === "qkd") byKv[k].qkd++; });
+      $("volt-lead").innerHTML = "<b>" + net.nodes.length + "</b> substations and <b>" + net.links.length + "</b> lines, " +
+        Math.round(net.links.reduce(function (s, l) { return s + l.km; }, 0)) + " km in all. The longest line is " + longest.toFixed(1) + " km" + (over80 ? ", and " + over80 + " are over 80 km" : "") + ".";
+      $("volt").innerHTML = "<tr><th>Voltage</th><th>Lines</th><th>Length</th><th>Keys</th></tr>" +
+        Object.keys(byKv).map(Number).sort(function (x, y) { return y - x; }).map(function (k) {
+          var r = byKv[k], q = r.qkd === r.n;
+          return "<tr><td><i style=\"height:" + (q ? 5 : 2) + "px;background:var(--q-" + (q ? "ok" : "pqc") + ")\"></i>" + (k ? k + " kV" : "unknown") + "</td><td>" + r.n + "</td><td>" + Math.round(r.km) + " km</td><td>" + (q ? "QKD" : r.qkd ? r.qkd + " QKD" : "ML-KEM") + "</td></tr>";
+        }).join("");
       if (region === "chattanooga") {
         $("reach").innerHTML = "Fiber QKD works to roughly 80 to 100 km before it needs a trusted relay (a site that briefly holds the key). The longest link here is <b>" + longest.toFixed(1) + " km</b>, so the whole city backbone fits on plain fiber.";
         $("reach-more").textContent = "No repeaters and no satellite are needed at city scale.";
       } else {
         $("reach").innerHTML = "<b>" + over80 + " of " + net.links.length + "</b> spans are longer than 80 km. Those would need trusted relays: sites that briefly hold the key.";
-        $("reach-more").textContent = "China's 2,000 km Beijing–Shanghai backbone uses 32 relays, about 70 km apart. This is the only scale where a satellite could ever make sense, and we will probably drop the idea unless a quantum application needs one.";
+        $("reach-more").textContent = "China's Beijing–Shanghai fiber backbone, about 2,000 km long, uses 32 trusted relays (arXiv:2212.10820). This is the only scale where a satellite could ever make sense, and we will probably drop the idea unless a quantum application needs one.";
       }
       document.querySelectorAll("[data-region]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.region === region)); });
 
@@ -390,8 +490,13 @@
               '<input type="range" min="0" max="100" step="1" value="' + Math.round(tap * 100) + '" id="tap" aria-describedby="spy-what" />' +
               '<div class="scale" aria-hidden="true"><span>No spy</span><span>Reads every photon</span></div>' +
               '<p id="spy-what">To read a photon the spy must measure it, and about one in four measured photons then arrives wrong. That rise in errors is what gives the spy away.</p>' +
-              '<dl class="q-adv"><dt>Usable key left after cleanup (privacy amplification)</dt><dd id="d-key"></dd>' +
-                "<dt>Photons that arrive, compared with a 10 km fiber</dt><dd>" + (transmittance(l.km) / transmittance(10)).toFixed(2) + "×</dd></dl>" +
+              "<dl><dt>From</dt><dd>" + esc(nameOf(a)) + (a.kv ? " · " + a.kv + " kV" : "") + "</dd>" +
+                "<dt>To</dt><dd>" + esc(nameOf(b)) + (b.kv ? " · " + b.kv + " kV" : "") + "</dd>" +
+                "<dt>Length along the line</dt><dd>" + l.km + " km</dd>" +
+                "<dt>Normal error rate (no spy)</dt><dd>" + pct(baselineQber(l.km), 2) + "</dd>" +
+                '<dt>Usable key left after cleanup (privacy amplification)</dt><dd id="d-key"></dd>' +
+                "<dt>Photons that arrive, compared with a 10 km fiber</dt><dd>" + (transmittance(l.km) / transmittance(10)).toFixed(2) + "×</dd>" +
+                "<dt>Keys</dt><dd>BB84 (QKD); ML-KEM if it alarms</dd></dl>" +
               '<p class="formula q-adv">error rate = p + f(¼ − p/2)<br>p = normal rate, f = share of photons the spy reads</p>' +
               '<p class="q-adv">The live grid simulates this photon by photon and responds on its own: keys switch to ML-KEM, the fiber stays up, traffic reroutes, and the spy is measured.</p>' +
             "</div>"
@@ -399,7 +504,10 @@
             "<p>" + (l.kv && l.kv < 161
               ? "This is a " + l.kv + " kV distribution line. Quantum keys stay on the 161 kV and up backbone; lines out to neighborhoods use ML-KEM."
               : "This span is over 80 km, too long for fiber QKD without a trusted relay, so it uses ML-KEM.") + "</p>" +
-            '<p class="q-adv">Keys: ML-KEM (FIPS 203).</p>') +
+            "<dl><dt>From</dt><dd>" + esc(nameOf(a)) + (a.kv ? " · " + a.kv + " kV" : "") + "</dd>" +
+              "<dt>To</dt><dd>" + esc(nameOf(b)) + (b.kv ? " · " + b.kv + " kV" : "") + "</dd>" +
+              "<dt>Length along the line</dt><dd>" + l.km + " km</dd>" +
+              "<dt>Keys</dt><dd>ML-KEM (FIPS 203)</dd></dl>") +
         '<a class="btn q-btn" href="' + openUrl + '">' + (isQkd ? "Open this fiber in the live grid" : "Open this link in the live grid") + ICON.arrow + "</a>" +
         '<label class="pick">Or pick a fiber from the list<select id="pick">' + (isQkd ? "" : '<option value="" selected>Choose a quantum fiber</option>') + options + "</select></label>";
       var slider = $("tap");
@@ -409,6 +517,42 @@
         if (x) select(x, "list");
       });
       update();
+    }
+
+    // A substation's card: what it is, its lines, and where to open it.
+    function selectNode(n) {
+      if (!hintGone) { hintGone = true; $("hint").classList.add("is-gone"); }
+      if (selected) { var s = baseStyle(selected.link); selected.line.setStyle({ weight: s.weight, opacity: s.opacity }); }
+      selLayer.clearLayers();
+      selected = null; photon = null;
+      var pos = ll(net, n.pos);
+      L.circleMarker(pos, { renderer: svgR, interactive: false, radius: 16, color: css("--q-ink"), weight: 2, fill: false }).addTo(selLayer);
+      tag(pos, '<span style="--tag-c:' + css("--q-gold") + '">' + esc(nameOf(n)) + "<b>selected</b></span>", "map-tag map-tag--sel").addTo(selLayer);
+      var parts = n.name.split(" · ").filter(function (x, i) { return i === 0 || !/control center/i.test(x); });
+      var lines = net.links.filter(function (l) { return l.a === n.id || l.b === n.id; });
+      var q = lines.filter(function (l) { return l.kind === "qkd"; }).length;
+      var TYPE = { control: "Control center (location assumed)", substation: "Transmission substation", subunit: "Distribution substation" };
+      var card = $("selected");
+      card.style.setProperty("--sel-c", css(n.type === "control" ? "--q-gold" : n.type === "substation" ? "--q-ok" : "--q-pqc"));
+      card.innerHTML =
+        '<span class="q-label">Selected substation<span class="q-adv"> · ' + n.id + "</span></span>" +
+        "<h2>" + esc(nameOf(n)) + "</h2>" +
+        '<div class="kind">' + TYPE[n.type] + (n.kv ? " · " + n.kv + " kV" : "") + "</div>" +
+        "<dl>" + (parts.length > 1 ? "<dt>Operator (OpenStreetMap tag)</dt><dd>" + esc(parts.slice(1).join(", ")) + "</dd>" : "") +
+          "<dt>Lines</dt><dd>" + lines.length + "</dd><dt>With quantum keys (QKD)</dt><dd>" + q + "</dd><dt>On ML-KEM</dt><dd>" + (lines.length - q) + "</dd></dl>" +
+        "<p>" + (n.type === "control"
+          ? "A control center holds the keys. Every other site needs a path back to one of them; where that path crosses other substations, each one re-encrypts the key."
+          : q ? "Its quantum-key fibers can carry a key toward a control center. Each substation the key passes on the way decrypts and re-encrypts it."
+              : "None of its lines carry quantum keys, so it gets its keys from ML-KEM, post-quantum encryption.") + "</p>" +
+        '<ul class="neighbors">' + lines.map(function (l) {
+          var o = nodes[l.a === n.id ? l.b : l.a];
+          return '<li><button type="button" data-link="' + l.id + '">' + esc(nameOf(o)) + "</button><small>" + (l.kind === "qkd" ? "QKD" : "ML-KEM") + " · " + l.km + " km</small></li>";
+        }).join("") + "</ul>" +
+        '<a class="btn q-btn" href="grid-twin/index.html?net=' + region + "&select=node:" + n.id + '">Open this substation in the live grid' + ICON.arrow + "</a>" +
+        (n.osm ? '<p style="margin-top:12px"><a class="q-link" href="' + n.osm + '" target="_blank" rel="noopener">See it on OpenStreetMap</a></p>' : "");
+      card.querySelectorAll("[data-link]").forEach(function (b) {
+        b.addEventListener("click", function () { var x = net.links.find(function (k) { return k.id === b.dataset.link; }); if (x) select(x, true); });
+      });
     }
 
     function update() {

@@ -125,11 +125,11 @@
 
     /* ---------- Key numbers ---------- */
     .numbers { background: var(--q-surface); border-block: 1px solid var(--q-line); }
-    .nums { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 0; }
+    .nums { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); row-gap: 40px; }
     .num { padding: 8px 24px 8px 0; }
-    .num + .num { padding-left: 24px; border-left: 1px solid var(--q-line); }
+    .num:not(:nth-child(3n + 1)) { padding-left: 24px; border-left: 1px solid var(--q-line); }
     .num b { display: block; font-size: clamp(44px, 5vw, 68px); line-height: 1; font-weight: 600; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
-    .num span { display: block; margin-top: 14px; font-size: 15px; line-height: 1.5; color: var(--q-ink-dim); max-width: 22ch; }
+    .num span { display: block; margin-top: 14px; font-size: 15px; line-height: 1.5; color: var(--q-ink-dim); max-width: 32ch; }
     .num .q-adv { margin-top: 8px; font-size: 14px; }
 
     /* ---------- Real, assumed, demonstration ---------- */
@@ -191,7 +191,7 @@
       .step__card { padding: 20px; }
       .step__try { flex-direction: column; gap: 6px; }
       .nums { grid-template-columns: 1fr 1fr; }
-      .num, .num + .num { padding: 0; border-left: 0; }
+      .num, .num:not(:nth-child(3n + 1)) { padding: 0; border-left: 0; }
       .num:nth-child(4) { padding-left: 0; }
       .panel { padding: 22px; }
       .panel .btn { width: 100%; }
@@ -209,7 +209,6 @@
       <div class="hero__scrim" aria-hidden="true"></div>
       <div class="wrap hero__inner">
         <div class="hero__copy">
-          <p class="hero__kicker"><i aria-hidden="true"></i>Qrypt · Tennessee Quantum Grid · Secure the Grid track</p>
           <h1 id="hero-h">Quantum keys for Chattanooga's power grid</h1>
           <p class="hero__lead q-enter-item">A working model of the city's real grid whose control links get their keys as single photons (quantum key distribution, QKD). Tap a fiber and the photons give the spy away; the link switches to backup post-quantum encryption and stays up.</p>
           <p class="hero__fact q-enter-item"><span><b>117</b> real substations</span><i class="sep" aria-hidden="true"></i><span>BB84 on every transmission fiber</span></p>
@@ -226,7 +225,7 @@
     <section id="journey" aria-labelledby="journey-h">
       <div class="wrap">
         <div class="sec-head">
-          <h2 id="journey-h">The demo in four steps, simplest first</h2>
+          <h2 id="journey-h">The demo, simplest page first</h2>
           <p>Each step adds one layer: the real city map, the full live grid, a single fiber, then the physics underneath.</p>
           <p class="hint q-simple-only">Click any step to open it. For formulas, raw logs and parameter tables, switch to <kbd>Detailed</kbd> in the top bar.</p>
           <p class="hint q-adv">Detailed mode is on: the pages show their formulas, logs and parameter tables too.</p>
@@ -292,7 +291,7 @@
                   <span class="q-pill pill-plain">The physics</span>
                 </div>
                 <p class="step__what">Teleportation, BB84 and Grover's search computed in your browser, next to real hardware results.</p>
-                <p class="step__try"><b>Try</b><span>Run 1,024 shots and compare your counts with the measured ones.</span></p>
+                <p class="step__try"><b>Try</b><span>Run the experiments in your browser and compare them with results measured on simulators and a real Rigetti quantum computer.</span></p>
                 <p class="step__more q-adv">The measured results come from simulators, emulators and a Rigetti quantum computer.</p>
               </div>
               <span class="go">Open the quantum lab<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
@@ -306,13 +305,14 @@
     <section class="numbers" id="numbers" aria-labelledby="numbers-h">
       <div class="wrap">
         <div class="sec-head">
-          <h2 id="numbers-h">Key numbers from the grid twin</h2>
-          <p>Every figure comes from the model and the map data you can open above.</p>
+          <h2 id="numbers-h">Measured results and map counts</h2>
+          <p>Every figure comes from the map data, the model, or a recorded quantum run (job IDs in <a class="q-link" href="WRITEUP.md">WRITEUP.md</a>).</p>
         </div>
         <ul class="nums">
-          <li class="num"><b>117</b><span>real EPB and TVA substations, from OpenStreetMap</span></li>
+          <li class="num"><b>117</b><span>real substations around Chattanooga, mostly EPB and TVA, from OpenStreetMap</span></li>
           <li class="num"><b>34</b><span>fibers running BB84 in the live grid</span></li>
-          <li class="num"><b>≈1 s</b><span>from a full tap on a fiber to the alarm</span></li>
+          <li class="num"><b>4.25%</b><span>error rate when notebook 1 ran BB84 on a real Rigetti quantum computer, no spy (51 of 1,200 bits): under the 11% limit</span><span class="q-adv">Job aws:rigetti:qpu:cepheus-1-108q-a7ae-qjob-6af8baa6c8f5265fb3f203f7</span></li>
+          <li class="num"><b>83.5%</b><span>of teleported qubits arrived correct on the same Rigetti machine (167 of 200 shots, notebook 3)</span><span class="q-adv">Job aws:rigetti:qpu:cepheus-1-108q-a7ae-qjob-6af8bab8c8f5265fb3f2040a. All three qubits sat on one chip, so this tests the circuit, not distance.</span></li>
           <li class="num"><b>4</b><span>quantum toolkits confirm the physics</span><span class="q-adv">Qiskit, CUDA-Q, Guppy and qBraid</span></li>
           <li class="num"><b>0</b><span>links shut down by an alarm: they switch keys instead</span></li>
         </ul>
@@ -356,7 +356,7 @@
       <div class="wrap">
         <div class="sec-head">
           <h2 id="run-h">Run it on your own machine</h2>
-          <p>The live grid from step 3 also comes as a single HTML file.</p>
+          <p>The live grid (step 2) also comes as a single HTML file.</p>
         </div>
         <div class="run__grid">
           <div class="panel">
@@ -373,7 +373,7 @@
             </div>
           </div>
           <div class="panel q-adv">
-            <h3>Behind it</h3>
+            <h3>Notes, write-up and the first prototype</h3>
             <ul class="links">
               <li><a class="q-link" href="docs/MENTOR_NOTES.md">What the mentors told us</a>, and what we changed</li>
               <li><a class="q-link" href="docs/TECH_RANKED.md">Technologies, ranked</a>, GPU included</li>

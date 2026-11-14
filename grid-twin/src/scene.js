@@ -768,9 +768,40 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
 
     composer.render();
     labelRenderer.render(scene, camera);
+    if (++labelTick % 6 === 0) declutterLabels();
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);
+
+  // Labels never overlap: a few times a second, place them in priority order (focused, control centers, named
+  // substations, the rest) and hide any label that would cover one already placed. Hovering a site still shows it.
+  let labelTick = 0;
+  const labelRank = (id, el) => {
+    const node = net.nodes.get(id);
+    if (el.classList.contains("is-focus")) return 0;
+    if (node.type === "control") return 1;
+    if (node.type === "substation" && node.short) return 2;
+    if (node.type === "substation") return 3;
+    return 4;
+  };
+  function declutterLabels() {
+    const items = [];
+    for (const [id, nv] of nodeViews) {
+      const el = nv.el;
+      if (el.style.display === "none" || el.classList.contains("is-dim")) continue;
+      if (el.classList.contains("label--subunit") && !el.classList.contains("is-focus")) continue;
+      if (el.classList.contains("label--quiet") && !el.classList.contains("is-focus")) continue;
+      items.push({ el, rank: labelRank(id, el) });
+    }
+    items.sort((a, b) => a.rank - b.rank);
+    const placed = [];
+    for (const it of items) {
+      const r = it.el.getBoundingClientRect();
+      const clash = r.width > 0 && placed.some((p) => r.left < p.right + 4 && r.right > p.left - 4 && r.top < p.bottom + 3 && r.bottom > p.top - 3);
+      it.el.classList.toggle("label--hidden", clash && it.rank > 0);
+      if (!clash || it.rank === 0) placed.push(r);
+    }
+  }
 
   return {
     update,

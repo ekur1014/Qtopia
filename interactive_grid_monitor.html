@@ -276,7 +276,6 @@
     <div id="graph-container">
       <canvas id="gridCanvas" role="img" aria-label="Grid map: a control center, four substations and eight feeders joined by fibers. Click a fiber to select it, or use the fiber list in the panel."></canvas>
       <div class="map-overlay" id="map-overlay" data-enter>
-        <div class="q-label">Grid monitor</div>
         <h1>Eavesdropper test on a 2D grid</h1>
         <p class="q-enter-item"><strong>Click any fiber</strong>, then tap it with Eve, an eavesdropper. Watch its error rate cross the alarm line and its keys move to backup encryption.</p>
       </div>
@@ -606,7 +605,7 @@
           setPill(qberEval, 'Normal', 'ok');
           policyText.className = 'policy ok';
           policyText.innerHTML = `<strong>Normal noise.</strong> The alarm sounds above ${pct(warnAt, 1)}. Keys for this fiber come from <strong>QKD</strong>` + adv(' (BB84)') + '.' +
-            '<span class="q-note q-adv">The live grid uses a 4.5&sigma; test against each fiber\'s own baseline (about 4.7&ndash;5.0% on city fibers); this prototype, the map and the lab use the simple stand-in baseline + 1.4 points.</span>';
+            '<span class="q-note q-adv">The live grid uses a 4.5&sigma; test against each fiber\'s own baseline (about 4.3&ndash;5.0% on Chattanooga\'s QKD fibers); this prototype, the map and the lab use the simple stand-in baseline + 1.4 points.</span>';
         } else if (st === 'warn') {
           setPill(qberEval, 'Alarm', 'warn');
           policyText.className = 'policy warn';

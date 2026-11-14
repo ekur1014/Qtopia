@@ -15,3 +15,4 @@ __pycache__/
 
 # taste skill working files
 .taste-skill/
+grid-twin/data/osm/basemap_*.overpass.json

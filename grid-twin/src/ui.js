@@ -80,7 +80,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
       <h2>Try it</h2>
       <p class="try__text"><b>Green fibers</b> carry keys sent as single photons (QKD). Choose <b>Eavesdrop</b> at the bottom of the screen and click a green fiber, or let us do it:</p>
       <button class="btn btn--try q-btn" data-action="demo">Tap a fiber for me</button>
-      <p class="try__after">Then watch the incident card: the network notices the spy in about a second and protects itself, with no one at the controls.</p>
+      <p class="try__after">Then watch the incident card: the network notices the spy in under a second of simulated time and protects itself, with no one at the controls.</p>
     </section>
     <section class="section route">
       <h2>Find a route</h2>
@@ -308,7 +308,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
         });
       fw.innerHTML = rows.length
         ? `<div class="fw__row fw__row--head"><span>Browser engine, live window</span><b>${pct(s.qhat, 2)}</b><em>theory ${pct(s.baseline + (s.eve ?? 0) * (0.25 - s.baseline / 2), 2)}</em></div>${rows.join("")}`
-        : `<div class="fw__hint">Runs this fiber's current noise and tap as 4,000 photons of real quantum code and compares the error rate.</div>`;
+        : `<div class="fw__hint">Re-runs this fiber's current noise and tap on a quantum simulator (4,000 photons on Qiskit, CUDA-Q and Guppy; 2,000 to 12,000 bits on qBraid) and compares the error rate.</div>`;
     }
     // Attack intelligence: shown when the fiber is suspicious or running decoy traffic.
     const showIntel = s.estimate && (s.decoy || s.status === "warning" || s.status === "abort");
@@ -468,6 +468,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
         <div class="route__grover-title">Grover check (quantum search)</div>
         <p>${g.routes.length} candidate QKD routes, <b>${M} clean</b>. ${M ? `${g.iterations ? `After ${g.iterations} Grover round${g.iterations === 1 ? "" : "s"}, a` : "With most routes clean no Grover round is needed: a"} clean route comes out ${pct(g.success, 0)} of the time${g.iterations ? `, against ${pct(M / g.N, 0)} for a random pick` : ""}.` : "None is clean, so Grover's output stays random and every check fails: fall back to ML-KEM."}</p>
         <p class="q-adv">Notebook 2b's oracle marks every route whose fibers are all under the cutoff; its diffuser amplifies them. ${g.N} slots (${Math.log2(g.N)} qubits), ${g.iterations} iteration${g.iterations === 1 ? "" : "s"}, the best count for ${M || 1} marked in ${g.N}${M > g.N / 2 ? " (with most routes clean, a plain random draw already wins, so Grover adds no rounds)" : ""}. This draw: candidate ${g.pick + 1}, ${g.pickClean ? "clean, checked hop by hop" : "not clean, so it is rejected and Grover runs again"}. Classical search already finds the exact answer quickly; this shows the same circuit working on the grid problem, not a speed-up.</p>
+        <p class="q-adv">Recorded run: notebook 3b ran this circuit on Qiskit Aer for Falling Water to Oglethorpe with one fiber tapped (3 of 8 routes clean). 172 of 200 draws were clean, against 84.4% exact and 37.5% for a random pick.</p>
       </div>`;
     }
     out.innerHTML = `

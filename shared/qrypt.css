@@ -85,7 +85,7 @@
 .q-pill--tele { background: color-mix(in srgb, var(--q-tele) 15%, transparent); color: var(--q-tele); }
 .q-pill--gold { background: color-mix(in srgb, var(--q-gold) 15%, transparent); color: var(--q-gold); }
 .q-note { font-size: 12px; line-height: 1.5; color: var(--q-ink-dim); }
-.q-label { font-family: var(--q-mono); font-size: 10.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--q-ink-faint); }
+.q-label { font-family: var(--q-font); font-size: 14px; font-weight: 600; letter-spacing: 0; text-transform: none; color: var(--q-ink); }
 
 /* Simple mode hides what only a detail-minded reader needs. Mark it with class="q-adv". */
 :root[data-mode="simple"] .q-adv { display: none !important; }

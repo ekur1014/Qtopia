@@ -25,6 +25,7 @@ cp grid_twin.html                site/                            # the live gri
 cp grid-twin/index.html grid-twin/style.css site/grid-twin/       # Live grid
 cp -r grid-twin/src             site/grid-twin/src
 cp -r grid-twin/data/networks   site/grid-twin/data/networks      # includes the .js copies the map and lab load
+cp -r grid-twin/data/basemap    site/grid-twin/data/basemap       # the real map's own vector basemap (works where tiles cannot load)
 cp grid-twin/data/network.json grid-twin/data/calibration.json site/grid-twin/data/
 
 # Docs the home page and the lab link to (otherwise those links 404 on the deployed site).

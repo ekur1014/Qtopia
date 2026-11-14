@@ -133,6 +133,7 @@
     ul.plain { margin: 8px 0 0; padding-left: 18px; font-size: 14px; line-height: 1.55; color: var(--q-ink-dim); }
     ul.plain li + li { margin-top: 6px; }
     ul.plain b { color: var(--q-ink); font-weight: 600; }
+    .jobs code { word-break: break-all; font-size: 12px; }
 
     @media (prefers-reduced-motion: reduce) { .bar i, .result, .tab, .chip { transition: none; } }
     @media (max-width: 1000px) {
@@ -151,8 +152,8 @@
   <div id="app">
     <div id="stage">
       <div class="stage-head" data-enter>
-        <div class="stage-top"><span class="q-label">Step 4 · Quantum lab</span><span class="future-tag" id="stage-future" hidden>Future capability · not in the live grid</span></div>
-        <h1 id="stage-title">What a spy does to a photon</h1>
+        <div class="stage-top"><span class="future-tag" id="stage-future" hidden>Future capability · not in the live grid</span></div>
+        <h1 id="stage-title">A photon with and without a spy</h1>
         <p id="stage-text" class="q-enter-item">Left: the photon Alice sends. Right: what reaches Bob, on average. Each wrong guess by the spy scrambles the photon, so Bob's arrow gets shorter.</p>
       </div>
       <div class="pole" id="pole-l0"></div><div class="pole" id="pole-l1"></div>
@@ -174,7 +175,7 @@
 
       <!-- BB84 (notebook 1) -->
       <section class="panel is-on" id="tab-bb84" role="tabpanel" aria-labelledby="t-bb84">
-        <h2>Catch a spy on one fiber (BB84)</h2>
+        <h2>BB84 on one fiber</h2>
         <p class="lead">Every quantum fiber in the live grid sends its keys as single photons (QKD). A spy has to guess how each photon was prepared, and every wrong guess leaves errors that Alice and Bob can count.</p>
         <p class="sub q-adv">Alice sends photons in random bases; Bob measures in random bases; they keep the rounds where the bases match. A spy who measures and resends must guess the basis.</p>
         <div class="card">
@@ -208,18 +209,32 @@
             <tr><td>NVIDIA CUDA-Q</td><td>local simulator</td><td class="n">12.11%</td></tr>
             <tr><td>Quantinuum Guppy on Selene</td><td>local emulator</td><td class="n">11.15%</td></tr>
             <tr><td>qBraid · IonQ simulator</td><td>cloud simulator</td><td class="n">12.55%</td></tr>
-            <tr><td>qBraid · QIR simulator</td><td>cloud simulator</td><td class="n">12.96%</td></tr>
             <tr><td>Team notebook 1 on qBraid QIR</td><td>cloud simulator</td><td class="n">12.48%</td></tr>
           </table>
-          <p class="note">All six are simulators or emulators, not quantum hardware. Each used 1,000 to 12,000 bits, so they land within about 1 to 2 points of theory.</p>
+          <p class="note">All five are simulators or emulators, not quantum hardware. Each used about 2,000 to 12,000 sifted bits. All land within 1.5 points of theory; Guppy, the furthest out, is 2.0 standard errors away.</p>
+          <p class="note q-adv jobs">Job IDs: qBraid IonQ simulator <code>ionq:ionq:sim:simulator-a7ae-qjob-6af89d21c8f5265fb3f1dcf7</code>; notebook 1 on qBraid QIR <code>qbraid:qbraid:sim:qir-sv-a7ae-qjob-6af89fbcc8f5265fb3f1e23b</code>. Qiskit Aer, CUDA-Q and Guppy run locally and create no job.</p>
           <p class="note q-adv">Notebook 1's runs use the team's own finished <code>encode()</code>. Run them yourself from a fiber in the live grid (served by <code>python3 grid-twin/start.py</code>).</p>
+        </div>
+        <div class="card">
+          <h3>What real machines measured</h3>
+          <p class="sub" style="margin:4px 0 8px">Notebook 1's 16-round circuit with no spy, 200 runs per machine: 1,200 bits checked on each.</p>
+          <table>
+            <tr><th>Machine</th><th>Kind</th><th class="n">Error rate</th></tr>
+            <tr class="hw"><td>Rigetti Cepheus</td><td>real quantum computer</td><td class="n">4.25%</td></tr>
+            <tr><td>IonQ simulator (aria-1 noise model)</td><td>cloud simulator</td><td class="n">0%</td></tr>
+            <tr><td>Quantinuum H2 emulator</td><td>cloud emulator</td><td class="n">0.08%</td></tr>
+            <tr><td>qBraid · QIR simulator</td><td>cloud simulator</td><td class="n">0%</td></tr>
+          </table>
+          <p class="note">Only Rigetti Cepheus is a real quantum computer. Its 51 wrong bits in 1,200 come from its own gate and readout errors, well under the 11% limit. The H2 emulator got 1 wrong; the two simulators got none.</p>
+          <p class="note q-adv jobs">Job IDs: Rigetti <code>aws:rigetti:qpu:cepheus-1-108q-a7ae-qjob-6af8baa6c8f5265fb3f203f7</code>; IonQ <code>ionq:ionq:sim:simulator-a7ae-qjob-6af8bac1c8f5265fb3f20417</code>; H2 <code>quantinuum:quantinuum:sim:h2-emulator-a7ae-qjob-6af8bac2c8f5265fb3f2041d</code>; QIR <code>qbraid:qbraid:sim:qir-sv-a7ae-qjob-6af8bac4c8f5265fb3f20421</code>.</p>
         </div>
       </section>
 
       <!-- Grover (notebook 2b) -->
       <section class="panel" id="tab-grover" role="tabpanel" aria-labelledby="t-grover" hidden>
-        <h2>How fast a quantum computer guesses a key (Grover)</h2>
+        <h2>Grover's search for a key</h2>
         <p class="lead">Grover's search finds one key among N in about √N tries instead of N. For AES-128 that is like halving the key length, which is why new grid equipment should use AES-256.</p>
+        <p class="sub">Breaking RSA-2048 is a different job, for Shor's algorithm. Today's largest machines have about 156 qubits, against fewer than 1 million noisy qubits needed by the latest estimate (Gidney 2025): a gap of about 4 orders of magnitude.</p>
         <div class="card">
           <h3>Pick how many keys to search</h3>
           <p class="sub" style="margin:4px 0 10px">The arrow on the right turns one Grover step at a time.</p>
@@ -242,17 +257,17 @@
             <tr><td>Theory</td><td class="n" data-n="4">100%</td><td class="n" data-n="8">94.5%</td><td class="n" data-n="16">96.1%</td></tr>
             <tr><td>Qiskit Aer (simulator)</td><td class="n" data-n="4">100%</td><td class="n" data-n="8">95.5%</td><td class="n" data-n="16">96.0%</td></tr>
             <tr><td>IonQ noisy simulator</td><td class="n" data-n="4">100%</td><td class="n" data-n="8">71.5%</td><td class="n" data-n="16">36%</td></tr>
-            <tr><td>Quantinuum H2 emulator</td><td class="n" data-n="4">100%</td><td class="n" data-n="8">92.5%</td><td class="n" data-n="16">–</td></tr>
-            <tr class="hw"><td>Rigetti Cepheus<span class="hw-tag">real quantum computer</span></td><td class="n" data-n="4">88.5%</td><td class="n" data-n="8">45.0%</td><td class="n" data-n="16">–</td></tr>
+            <tr><td>Quantinuum H2 emulator</td><td class="n" data-n="4">100%</td><td class="n" data-n="8">92.5%</td><td class="n" data-n="16">87.0%</td></tr>
+            <tr class="hw"><td>Rigetti Cepheus<span class="hw-tag">real quantum computer</span></td><td class="n" data-n="4">88.5%</td><td class="n" data-n="8">45.0%</td><td class="n" data-n="16">4.5%</td></tr>
           </table>
-          <p class="note">Random guessing: 25% with 4 keys, 12.5% with 8. On real hardware the right key is still the most common answer, but its lead shrinks fast as circuits grow.</p>
-          <p class="note q-adv">Job IDs and details: <a class="q-link" href="WRITEUP.md">WRITEUP.md</a> (Step 2). Also on Rigetti: Shor on 15 (hand-reduced circuit) put 65% of shots on the four ideal outcomes, against 25% for noise.</p>
+          <p class="note">Random guessing: 25% with 4 keys, 12.5% with 8, 6.25% with 16. On the real Rigetti machine the right key was the most common answer with 4 and 8 keys; with 16 keys it came up on only 9 of 200 shots (4.5%), below random guessing, so the noise wiped out the search.</p>
+          <p class="note q-adv">Job IDs and details: <a class="q-link" href="WRITEUP.md">WRITEUP.md</a> (Step 2). Also on Rigetti: Shor on 15 (hand-reduced circuit) put 65% of shots on the four ideal outcomes, against 25% for noise; on the Qiskit Aer simulator, Shor on 15 found r = 4, so 15 = 3 × 5.</p>
         </div>
       </section>
 
       <!-- Teleportation (notebook 3) -->
       <section class="panel" id="tab-tele" role="tabpanel" aria-labelledby="t-tele" hidden>
-        <h2>Teleport a qubit across the grid</h2>
+        <h2>Teleporting a qubit</h2>
         <p class="lead"><b>A future capability, not part of the live grid.</b> If the fibers also shared entangled photon pairs, a qubit could move from the control center to a substation. This tab checks whether today's fiber noise would allow it.</p>
         <p class="sub q-adv">Alice measures two qubits and sends Bob <b>two classical bits</b> over the network; Bob fixes his qubit. Nothing travels faster than the fiber, and the swapping nodes on the way never hold a key. In the live grid, switch to Detailed and turn on Layers → Teleportation view to see where it would work.</p>
         <div class="card">
@@ -279,11 +294,24 @@
           <p class="changed" id="tele-changed" aria-live="polite"></p>
           <p class="note q-adv">Computed here: a 3-qubit state-vector simulation. Each fiber adds independent bit and phase flips at its error rate (our modelling choice: BB84 measures those two rates, not how they correlate); a spy who intercepts and resends adds a bit flip or a phase flip, never both. The hops combine exactly as Pauli channels. 11% is the key-distribution threshold; for teleportation itself the benchmark is beating 2/3 average fidelity, the best a classical channel can do. Notebook 3 in this repo has the same circuit in Qiskit.</p>
         </div>
+        <div class="card">
+          <h3>What real machines measured</h3>
+          <p class="sub" style="margin:4px 0 8px">Notebook 3 teleports one state, then undoes Alice's preparation, so a working link reads 0 every time. Share of runs that read 0:</p>
+          <table>
+            <tr><th>Machine</th><th>Kind</th><th class="n">Read 0</th></tr>
+            <tr><td>Qiskit Aer</td><td>local simulator</td><td class="n">1,024 of 1,024</td></tr>
+            <tr><td>IonQ simulator (forte-1 noise model)</td><td>cloud simulator</td><td class="n">195 of 200</td></tr>
+            <tr><td>Quantinuum H2 emulator</td><td>cloud emulator</td><td class="n">199 of 200</td></tr>
+            <tr class="hw"><td>Rigetti Cepheus</td><td>real quantum computer</td><td class="n">167 of 200 (83.5%)</td></tr>
+          </table>
+          <p class="note">All three qubits on one chip, so this tests the circuit, not distance. Sending the entangled pair over real fiber is still future work.</p>
+          <p class="note q-adv jobs">Job IDs: IonQ <code>ionq:ionq:sim:simulator-a7ae-qjob-6af8baa7c8f5265fb3f203fa</code>; H2 <code>quantinuum:quantinuum:sim:h2-emulator-a7ae-qjob-6af8babac8f5265fb3f2040d</code>; Rigetti <code>aws:rigetti:qpu:cepheus-1-108q-a7ae-qjob-6af8bab8c8f5265fb3f2040a</code>. Qiskit Aer runs locally and creates no job.</p>
+        </div>
       </section>
 
       <!-- Frameworks -->
       <section class="panel" id="tab-engines" role="tabpanel" aria-labelledby="t-engines" hidden>
-        <h2>The simulator code behind the grid</h2>
+        <h2>The same fiber in four quantum toolkits</h2>
         <p class="lead">When the project runs on its own server, every quantum fiber in the live grid can be re-run as a real quantum program: on Qiskit, NVIDIA CUDA-Q, Quantinuum Guppy or qBraid's cloud simulators.</p>
         <div class="card">
           <h3>What each engine does</h3>
@@ -329,12 +357,12 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
 
       <!-- Roadmap -->
       <section class="panel" id="tab-next" role="tabpanel" aria-labelledby="t-next" hidden>
-        <h2>What is next, and what is not built</h2>
+        <h2>Next, and not built</h2>
         <p class="lead">Where the lab goes after the hackathon, and the ideas we chose to leave out.</p>
         <div class="card"><h3>Next</h3>
           <ul class="plain">
-            <li><b>Hardware:</b> notebook 3's teleportation on a real quantum computer.</li>
-            <li><b>GPU:</b> qBraid's GPU simulators to re-check every fiber at once<span class="q-adv"> (35-qubit state vector, 500-qubit tensor network) and run whole teleportation routes as one circuit</span>.</li>
+            <li><b>Hardware:</b> teleportation between two chips over real fiber (today's run kept all three qubits on one Rigetti chip).</li>
+            <li><b>GPU:</b> qBraid's GPU simulators to re-check every fiber at once<span class="q-adv"> (35-qubit state vector, or tensor networks for larger circuits, and run whole teleportation routes as one circuit)</span>.</li>
             <li><b>Cost:</b> a sourced cost model; we found no published QKD prices.</li>
           </ul></div>
         <div class="card"><h3>Not built</h3>
@@ -371,11 +399,11 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
 
     // ---------------------------------------------------------------- tabs and stage text
     var STAGE = {
-      bb84: ["What a spy does to a photon", "Left: the photon Alice sends. Right: what reaches Bob, on average. Each wrong guess by the spy scrambles the photon, so Bob's arrow gets shorter."],
-      grover: ["How Grover's search finds a key", "Top of each sphere: the right key. Bottom: every other key. Grover's steps turn the arrow from almost all wrong (left) to almost all right (right)."],
+      bb84: ["A photon with and without a spy", "Left: the photon Alice sends. Right: what reaches Bob, on average. Each wrong guess by the spy scrambles the photon, so Bob's arrow gets shorter."],
+      grover: ["Grover's search for a key", "Top of each sphere: the right key. Bottom: every other key. Grover's steps turn the arrow from almost all wrong (left) to almost all right (right)."],
       tele: ["Teleporting a qubit over Chattanooga's fibers", "Left: the state Alice sends. Right: the state Bob ends up with after the entangled pair has crossed real fibers. Noise from the fibers shortens Bob's arrow."],
-      engines: ["The quantum code behind the grid", "The same physics runs in Qiskit, CUDA-Q, Guppy and on qBraid's cloud simulators. The spheres keep your last result."],
-      next: ["What comes next", "What we would build next, and what we chose not to build. The spheres keep your last result."],
+      engines: ["Simulator code", "The same physics runs in Qiskit, CUDA-Q, Guppy and on qBraid's cloud simulators. The spheres keep your last result."],
+      next: ["Roadmap", "What we would build next, and what we chose not to build. The spheres keep your last result."],
     };
     var SPHERES = {
       bb84: { l: ["Alice", "photon sent"], r: ["Bob", "photon received, on average"], poles: ["|0⟩", "|1⟩"], accent: "--q-ok" },

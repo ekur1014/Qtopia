@@ -197,7 +197,11 @@ pre .c { color: var(--muted); }
 .q { border: 1px solid var(--line); border-radius: 8px; padding: 6px 2px; text-align: center; font: 12px/1.5 var(--f-mono); background: var(--panel); color: var(--muted); }
 .q b { display: block; color: var(--ink); font-weight: 500; }
 .q.kept { border-color: var(--ok); box-shadow: inset 0 0 0 1px var(--ok); color: var(--ink); }
-.q.flag { border-color: var(--eve); box-shadow: inset 0 0 0 1px var(--eve); }
+.runs th.n, .runs td.n { text-align: right; white-space: nowrap; }
+.runs tr.hw td { font-weight: 600; }
+.runs td:first-child { font-family: var(--f-body); }
+.runs .kind { display: block; font-size: 13px; font-weight: 400; color: var(--muted); }
+.runs td.job { font-size: 12px; color: var(--muted); word-break: break-all; min-width: 22ch; }
 .facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 18px; font-size: 14px; margin: 0; }
 .facts dt { color: var(--muted); } .facts dd { margin: 0; font-variant-numeric: tabular-nums; word-break: break-all; }
 footer { color: var(--muted); font-size: 14px; max-width: 75ch; border-top: 1px solid var(--line); padding-top: 24px; }
@@ -213,8 +217,7 @@ footer { color: var(--muted); font-size: 14px; max-width: 75ch; border-top: 1px 
 <div class="wrap">
   <section class="hero" data-enter aria-labelledby="hero-h">
     <div class="hero__text">
-      <span class="eyebrow">Step 3 of 4 · The photon line · BB84</span>
-      <h1 id="hero-h">Catch a spy on one fiber, photon by photon</h1>
+      <h1 id="hero-h">BB84 on one fiber</h1>
       <p class="lede q-enter-item">Alice, at a substation, sends Bob, at the control center, a secret key one photon at a time. Each photon carries one bit. If Eve taps the fiber to read the photons, she leaves errors behind.</p>
       <p class="howto q-enter-item"><b>Try it:</b> press <b>Send one photon</b> and watch one round play out. Then turn on <b>Eve taps the fiber</b> and send 200 to see the error rate jump.</p>
     </div>
@@ -288,9 +291,8 @@ footer { color: var(--muted); font-size: 14px; max-width: 75ch; border-top: 1px 
   </section>
 
   <div class="steps-intro">
-    <span class="eyebrow">How BB84 works</span>
-    <h2>The rules behind the stage, in five steps</h2>
-    <p class="lede">BB84 is the first QKD scheme (QKD: keys sent as single photons). These are the rules the round above follows.</p>
+    <h2>How BB84 works</h2>
+    <p class="lede">BB84 is the first QKD scheme (QKD: keys sent as single photons). The round above follows these rules.</p>
   </div>
 
   <section class="step">
@@ -325,7 +327,7 @@ if basis == 1:
     <p class="read">Then they compare a sample of the kept bits. The share that disagree is the error rate, or <b>QBER</b> (quantum bit error rate).</p>
     <div class="two">
       <div class="card"><p class="math">QBER 0.0</p><p>Our notebook's result for 200 photons on a perfect line with nobody listening.</p></div>
-      <div class="card"><p class="math">about 3%</p><p>What real fiber adds on its own. The live grid page includes it.</p></div>
+      <div class="card"><p class="math">about 3.3%</p><p>What a real fiber and detector add on their own (Ma, Qi, Zhao and Lo, Table 1). The live grid includes it.</p></div>
     </div>
   </section>
 
@@ -353,30 +355,34 @@ if basis == 1:
       <span><i style="border-color:var(--z)"></i>Simulated QBER, 200 photons per point</span>
       <span><i style="border-color:var(--muted);border-top-style:dashed"></i>Theory: 0.25 × share</span>
       <span><i style="border-color:var(--eve);border-top-style:dotted"></i>BB84 gives up, 11%</span>
-      <span><i style="border-color:var(--ok)"></i>IonQ simulator noise, 0.08%</span>
+      <span><i style="border-color:var(--ok)"></i>Real Rigetti quantum computer, no spy: 4.25%</span>
     </div>
     <div class="q-adv"><button class="btn btn--quiet q-btn" id="btnSweep" type="button"><span class="b-t">Run the sweep again</span></button></div>
   </section>
 
-  <section class="step q-adv">
-    <div class="head"><span class="num">Step 6</span><h2>One cloud job: 16 rounds side by side</h2><span class="cellref">notebook cells 8 and 10 · bb84_batch_circuit()</span></div>
-    <p class="read">One photon per job would mean hundreds of paid cloud jobs. Instead the notebook puts 16 rounds on 16 qubits in one circuit and runs it 200 times.</p>
-    <p class="read">These are the first 16 rounds from the notebook (seed 42). Six have matching bases, so each shot gives 6 bits to check.</p>
-    <div class="qubits" id="qubits"></div>
+  <section class="step">
+    <div class="head"><span class="num">Step 6</span><h2>Notebook 1's circuit on real and cloud machines</h2><span class="cellref q-adv">notebook cells 8, 10 and 12 · bb84_batch_circuit()</span></div>
+    <p class="read">One photon per job would mean hundreds of paid cloud jobs. Instead the notebook puts 16 rounds on 16 qubits in one circuit and runs it 200 times, with nobody listening. Each run gives 6 bits to check, so each machine was checked on 1,200 bits.</p>
+    <p class="read q-adv">These are the first 16 rounds from the notebook (seed 42). Six have matching bases, so each shot gives 6 bits to check. The 1,200 bits are 200 repeats of the same six states on the same six qubits, so each result is a rough estimate of that machine's noise.</p>
+    <div class="qubits q-adv" id="qubits"></div>
+    <div class="card tablebox">
+      <table class="runs">
+        <thead><tr><th>Machine</th><th class="n">Bits wrong</th><th class="n">Error rate</th><th class="q-adv">Job ID</th></tr></thead>
+        <tbody>
+          <tr class="hw"><td>Rigetti Cepheus-1-108Q<span class="kind">real quantum computer</span></td><td class="n">51 of 1,200</td><td class="n">4.25%</td><td class="job q-adv">aws:rigetti:qpu:cepheus-1-108q-a7ae-qjob-6af8baa6c8f5265fb3f203f7</td></tr>
+          <tr><td>IonQ simulator, aria-1 noise model<span class="kind">simulator</span></td><td class="n">0 of 1,200</td><td class="n">0%</td><td class="job q-adv">ionq:ionq:sim:simulator-a7ae-qjob-6af8bac1c8f5265fb3f20417</td></tr>
+          <tr><td>Quantinuum H2 emulator<span class="kind">emulator</span></td><td class="n">1 of 1,200</td><td class="n">0.08%</td><td class="job q-adv">quantinuum:quantinuum:sim:h2-emulator-a7ae-qjob-6af8bac2c8f5265fb3f2041d</td></tr>
+          <tr><td>qBraid QIR simulator<span class="kind">noise-free simulator</span></td><td class="n">0 of 1,200</td><td class="n">0%</td><td class="job q-adv">qbraid:qbraid:sim:qir-sv-a7ae-qjob-6af8bac4c8f5265fb3f20421</td></tr>
+        </tbody>
+      </table>
+    </div>
     <div class="two">
-      <dl class="facts card">
-        <dt>Device</dt><dd>IonQ simulator, “aria-1” noise model</dd>
-        <dt>Job ID</dt><dd class="mono">ionq:ionq:sim:simulator-a7b0-qjob-6af7c328f15852ed27b72012</dd>
-        <dt>Shots</dt><dd>200</dd>
-        <dt>Kept bits</dt><dd>6 × 200 = 1,200</dd>
-        <dt>Errors</dt><dd>1, on qubit 10</dd>
-        <dt>QBER</dt><dd><b>0.08%</b></dd>
-      </dl>
-      <div class="card"><p class="rule">What the 0.08% tells you</p><p>It is a simulator, not hardware. Its noise model is mostly about two-qubit gates, and BB84 uses none, so the result is close to a perfect line.</p><p>The Quantinuum H2 emulator and the real IonQ Forte also model readout errors and should come out higher.</p></div>
+      <div class="card"><p class="rule">What the 4.25% tells you</p><p>Rigetti Cepheus is the only real quantum computer here. With nobody on the line, its own errors still turned 51 of 1,200 bits wrong. That is well under the 11% limit, so a key could still be kept.</p></div>
+      <div class="card"><p class="rule">Why the others stay near zero</p><p>IonQ's noise model is mostly about two-qubit gates, and BB84 uses none. The Quantinuum H2 emulator, which models readout error, gave 0.08% (1 of 1,200). The real Rigetti Cepheus quantum computer gave 4.25% (51 of 1,200): real hardware has a noise floor the simulators do not show.</p></div>
     </div>
   </section>
 
-  <footer>Built from <span class="mono">1_bb84_eavesdropper.ipynb</span> in the Qrypt repo. The stage and the sweep run in your browser with fresh random bits, so their numbers change from run to run. Nothing on this page ran on quantum hardware.</footer>
+  <footer>Built from <span class="mono">1_bb84_eavesdropper.ipynb</span> in the Qrypt repo. The stage and the sweep run in your browser with fresh random bits, so their numbers change from run to run. The Step 6 results are saved cloud and hardware jobs from notebook 1.</footer>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -410,7 +416,7 @@ if basis == 1:
   const HW = { a: [0,1,1,0,0,1,0,1,0,0,1,1,1,1,1,1], s: [0,1,0,1,0,0,1,1,0,1,0,1,1,0,1,0], b: [1,1,0,1,0,1,0,0,1,0,0,0,0,0,0,1] };
   $("qubits").innerHTML = HW.a.map((bit, q) => {
     const kept = HW.s[q] === HW.b[q];
-    return `<div class="q ${kept ? "kept" : ""} ${q === 10 ? "flag" : ""}" title="qubit ${q}${kept ? ", kept" : ", bases differ"}">
+    return `<div class="q ${kept ? "kept" : ""}" title="qubit ${q}${kept ? ", kept" : ", bases differ"}">
       q${q}<b>${bit}${BAS[HW.s[q]]}</b>Bob ${BAS[HW.b[q]]}<br>${kept ? "kept" : "drop"}</div>`;
   }).join("");
 
@@ -441,7 +447,7 @@ if basis == 1:
     s += `<line x1="${X(0)}" y1="${Y(0)}" x2="${X(1)}" y2="${Y(.25)}" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="5 4" fill="none"/>`;
     s += `<line x1="${L}" x2="${W - R}" y1="${Y(.11)}" y2="${Y(.11)}" stroke="var(--eve)" stroke-width="1.5" stroke-dasharray="2 3" fill="none"/>`;
     s += `<text class="tick" x="${W - R - 4}" y="${Y(.11) - 6}" text-anchor="end" style="fill:var(--eve)">11%: discard the key</text>`;
-    s += `<line x1="${L}" x2="${W - R}" y1="${Y(.0008)}" y2="${Y(.0008)}" stroke="var(--ok)" stroke-width="2" fill="none"/>`;
+    s += `<line x1="${L}" x2="${W - R}" y1="${Y(.0425)}" y2="${Y(.0425)}" stroke="var(--ok)" stroke-width="2" fill="none"/>`;
     s += `<polyline points="${fr.map((f, i) => `${X(f)},${Y(q[i])}`).join(" ")}" fill="none" stroke="var(--z)" stroke-width="2.5"/>`;
     s += fr.map((f, i) => `<circle cx="${X(f)}" cy="${Y(q[i])}" r="4" fill="var(--z)"><title>${Math.round(f * 100)}%: QBER ${(q[i] * 100).toFixed(1)}%</title></circle>`).join("");
     const i = 10; s += `<text class="tick" x="${X(1) - 8}" y="${Y(q[i]) - 10}" text-anchor="end" style="fill:var(--ink)">${(q[i] * 100).toFixed(1)}%</text>`;
