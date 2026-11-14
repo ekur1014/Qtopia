@@ -19,7 +19,6 @@ cp shared/qrypt.css shared/qbar.js site/shared/                   # one design s
 cp chattanooga_quantum_map.html  site/                            # Real map
 cp bb84_visualizer.html          site/                            # Photon line (notebook 1, one fiber)
 cp threejs_quantum_grid.html     site/                            # Quantum lab
-cp presentation_deck.html        site/                            # Pitch deck
 cp interactive_grid_monitor.html site/                            # first prototype, linked from home
 cp grid_twin.html                site/                            # the live grid as one downloadable file
 
@@ -28,7 +27,8 @@ cp -r grid-twin/src             site/grid-twin/src
 cp -r grid-twin/data/networks   site/grid-twin/data/networks      # includes the .js copies the map and lab load
 cp grid-twin/data/network.json grid-twin/data/calibration.json site/grid-twin/data/
 
-# Old public paths from the first version of this site still work.
+# Old public paths from the first version of this site still work. The pitch deck is the teammates' own work and
+# is not part of the Grid Twin site; it stays at its original address.
 cp bb84_visualizer.html          site/bb84.html
 cp presentation_deck.html        site/deck.html
 

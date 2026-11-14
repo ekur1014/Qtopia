@@ -130,7 +130,7 @@ grid-twin/
 
 ## Part of one project site
 
-Every page shares one design system and one top bar (`shared/qrypt.css`, `shared/qbar.js`): Home (`index.html`), Live grid (this folder), Real map (`chattanooga_quantum_map.html`), Quantum lab (`threejs_quantum_grid.html`) and Pitch deck (`presentation_deck.html`). The light/dark choice is shared. Other pages link straight to a fiber or site here with `?net=chattanooga&select=link:L6` or `select=node:T23`.
+Every page shares one design system and one top bar (`shared/qrypt.css`, `shared/qbar.js`): Home (`index.html`), Live grid (this folder), Real map (`chattanooga_quantum_map.html`), Photon line (`bb84_visualizer.html`) and Quantum lab (`threejs_quantum_grid.html`). The light/dark choice is shared. Other pages link straight to a fiber or site here with `?net=chattanooga&select=link:L6` or `select=node:T23`.
 
 ## qBraid engines
 
@@ -139,3 +139,15 @@ With `QBRAID_API_KEY` set (for example `source ~/.qrypt.env` before `start.py`),
 - **Team notebook 1 on qBraid · QIR simulator:** notebook 1's own `encode()` and `qber_from_counts()`, with the fiber's tap and noise added.
 
 The GPU state-vector simulator costs credits, so it is offered only with `GRIDTWIN_ALLOW_PAID=1`. Measured results are in BUILD_LOG.md.
+
+## Deploying to Vercel
+
+`vercel.json` runs `bash tools/build_site.sh` and serves the static `site/` folder.
+
+- **No environment variables are needed.** The site is static: no serverless functions, no keys in the page code.
+- **Do not add `QBRAID_API_KEY` to Vercel.**
+  - It is only read by the local Python server (`grid-twin/start.py` / `sim/live_server.py`) for the qBraid buttons, and Vercel does not run that server.
+  - On the public site those buttons stay hidden; everything else works. The live grid, map, photon line and lab all run in the browser.
+  - A key there would only matter if someone later added a server function, and then a public page could spend the team's qBraid credits.
+- The build writes `site/.vercelignore` so local `.env*` files and `.vercel/` are never uploaded.
+- The map loads standard OpenStreetMap tiles. That is fine for a demo; heavy public traffic would need another tile provider under OSM's tile usage policy.

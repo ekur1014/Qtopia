@@ -194,3 +194,9 @@ User request: fix the teammates' pages and "make sure everything is like 1 thing
 | Notebook 1 on qBraid QIR (12,000 bits each) | 3.10% | 12.48% | 26.18% |
 
 All within 1.3σ. The qBraid QIR job at 40% is `qbraid:qbraid:sim:qir-sv-a7ae-qjob-6af89fbcc8f5265fb3f1e23b`. On the live page, the real Chickamauga–Hamilton fiber at a 40% tap read 12.30%; that was before the notebook was finished, so it used the hint-based `encode()`.
+
+## Pitch deck taken out of the Grid Twin site
+
+The teammates own the pitch deck entirely, so it is no longer part of this site:
+- It is gone from the shared top bar, the home page and the README.
+- `presentation_deck.html` stays in the repo as the teammates' file. The Vercel build still publishes it at its original `/deck.html`, unlinked.

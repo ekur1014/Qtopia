@@ -12,7 +12,6 @@
     { id: "map", label: "Real map", href: "chattanooga_quantum_map.html" },
     { id: "photon", label: "Photon line", href: "bb84_visualizer.html" },
     { id: "lab", label: "Quantum lab", href: "threejs_quantum_grid.html" },
-    { id: "deck", label: "Pitch deck", href: "presentation_deck.html" },
   ];
 
   function readTheme() {

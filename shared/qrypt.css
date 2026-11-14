@@ -1,5 +1,5 @@
 /* Qrypt design system: one set of colors, type and the top bar, shared by every page of the project
-   (live 3D grid, real map, quantum lab, pitch deck, monitor). Light is the default; dark via the toggle. */
+   (home, live 3D grid, real map, photon line, quantum lab, monitor). Light is the default; dark via the toggle. */
 :root {
   color-scheme: light;
   --q-bg: #eef2f7;
