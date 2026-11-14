@@ -27,6 +27,12 @@ cp -r grid-twin/src             site/grid-twin/src
 cp -r grid-twin/data/networks   site/grid-twin/data/networks      # includes the .js copies the map and lab load
 cp grid-twin/data/network.json grid-twin/data/calibration.json site/grid-twin/data/
 
+# Docs the home page and the lab link to (otherwise those links 404 on the deployed site).
+rm -rf site/docs site/WRITEUP.md && mkdir -p site/docs
+cp WRITEUP.md                    site/
+cp docs/MENTOR_NOTES.md docs/TECH_RANKED.md site/docs/
+cp grid-twin/DESIGN.md grid-twin/README.md site/grid-twin/
+
 # Old public path from the first version of this site still works. The pitch deck is no longer published: the team
 # removed it from this project (presentation_deck.html stays in the repo).
 cp bb84_visualizer.html          site/bb84.html
