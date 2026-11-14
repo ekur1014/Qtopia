@@ -4,8 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Quantum Lab · Tennessee Quantum Grid</title>
+  <meta name="description" content="Step 5 of the Tennessee Quantum Grid: BB84, Grover's search and teleportation computed in your browser on two Bloch spheres, next to results measured on simulators and a real Rigetti quantum computer." />
+  <meta name="site-kind" content="software" />
   <!-- The physics behind the live grid, step by step, computed in the browser (no canned numbers), next to the
-       results we measured on simulators, emulators and real hardware. Same data and formulas as grid-twin/. -->
+       results we measured on simulators, emulators and real hardware. Same data and formulas as grid-twin/.
+       Stage: two Bloch spheres. The one moment: a photon of light crosses the fiber arc and Bob's arrow settles
+       from Alice's state to what arrives; on the Grover tab the arrow turns one Grover step at a time. -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -17,107 +21,189 @@
     * { box-sizing: border-box; }
     html, body { margin: 0; height: 100%; }
     body { background: var(--q-bg); color: var(--q-ink); font-family: var(--q-font); -webkit-font-smoothing: antialiased; overflow: hidden; }
-    #app { position: fixed; inset: var(--q-bar-h) 0 0 0; display: grid; grid-template-columns: 1fr 460px; }
-    #stage { position: relative; min-width: 0; }
+    .lab .q-label { font-size: 11px; color: var(--q-ink-dim); letter-spacing: .16em; }
+    #app { position: fixed; inset: var(--q-bar-h) 0 0 0; display: grid; grid-template-columns: 1fr 480px; }
+
+    /* ---------- the stage: two Bloch spheres */
+    #stage { position: relative; min-width: 0; overflow: hidden; background: var(--q-bg); }
     #stage canvas { display: block; }
-    .stage-head { position: absolute; top: 22px; left: 28px; right: 28px; pointer-events: none; }
-    .stage-head h1 { margin: 6px 0 6px; font-size: clamp(28px, 3vw, 42px); letter-spacing: -0.03em; line-height: 1; }
-    .stage-head p { margin: 0; max-width: 56ch; font-size: 13.5px; line-height: 1.5; color: var(--q-ink-dim); }
-    .sphere-label { position: absolute; bottom: 26px; transform: translateX(-50%); text-align: center; font-size: 12px; color: var(--q-ink-dim); pointer-events: none; }
-    .sphere-label b { display: block; font-size: 14px; color: var(--q-ink); }
+    .stage-head { position: absolute; top: 24px; left: 32px; right: 32px; pointer-events: none; z-index: 2; }
+    .stage-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .future-tag { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--q-tele); color: var(--q-ink); background: color-mix(in srgb, var(--q-tele) 10%, var(--q-surface)); font: 600 11.5px var(--q-mono); letter-spacing: .02em; }
+    .future-tag::before { content: ""; width: 7px; height: 7px; border-radius: 50%; border: 1.5px solid var(--q-tele); }
+    .future-tag[hidden] { display: none; }
+    .stage-head h1 { margin: 10px 0 10px; font-size: clamp(26px, 2.7vw, 40px); font-weight: 600; letter-spacing: -0.03em; line-height: 1.05; max-width: 24ch; }
+    .stage-head p { margin: 0; max-width: 54ch; font-size: 15px; line-height: 1.5; color: var(--q-ink-dim); }
+    .pole, .sphere-label, .spy-tag { position: absolute; left: 0; top: 0; pointer-events: none; z-index: 1; will-change: transform; }
+    .pole { font: 500 12px var(--q-mono); color: var(--q-ink-dim); white-space: nowrap; }
+    .sphere-label { text-align: center; width: 240px; }
+    .sphere-label b { display: block; font-size: 15px; font-weight: 600; color: var(--q-ink); }
+    .sphere-label .c { display: block; font-size: 13px; color: var(--q-ink-dim); margin-top: 1px; }
+    .sphere-label .m { display: block; margin-top: 6px; font: 600 22px var(--q-mono); letter-spacing: -0.02em; color: var(--q-ink); }
+    .sphere-label .m:empty { display: none; }
+    .spy-tag { padding: 3px 9px; border-radius: 999px; border: 1px solid var(--q-bad); background: var(--q-surface); color: var(--q-ink); font: 600 11.5px var(--q-mono); white-space: nowrap; }
+    .spy-tag[hidden] { display: none; }
+    .stage-key { position: absolute; left: 32px; bottom: 20px; right: 32px; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 12.5px; color: var(--q-ink-dim); pointer-events: none; z-index: 2; }
+    .stage-key span { display: inline-flex; align-items: center; gap: 7px; }
+    .stage-key i { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--q-ink-dim); }
+    .stage-key i.dash { border-top-style: dashed; }
+    .stage-key i.dot { width: 9px; height: 9px; border: 0; border-radius: 50%; background: var(--q-ok); box-shadow: 0 0 8px var(--q-ok); }
+
+    /* ---------- the side panel */
     aside { display: flex; flex-direction: column; min-height: 0; background: var(--q-glass-strong); border-left: 1px solid var(--q-line); }
-    .tabs { display: flex; gap: 2px; padding: 10px 12px 0; border-bottom: 1px solid var(--q-line); overflow-x: auto; }
-    .tab { padding: 10px 12px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--q-ink-dim); font: 600 12.5px var(--q-font); cursor: pointer; white-space: nowrap; }
-    .tab[aria-selected="true"] { color: var(--q-ink); border-bottom-color: var(--q-ok); }
-    .panel { flex: 1; overflow-y: auto; padding: 18px 20px 24px; display: none; }
+    .tabs { display: flex; gap: 2px; padding: 8px 14px 0; border-bottom: 1px solid var(--q-line); overflow-x: auto; scrollbar-width: none; }
+    .tab { min-height: 44px; padding: 10px 10px; border: 0; border-bottom: 2px solid transparent; background: none; color: var(--q-ink-dim); font: 500 13.5px var(--q-font); cursor: pointer; white-space: nowrap; transition: color var(--q-m-in) var(--q-ease), border-color var(--q-m-in) var(--q-ease); }
+    .tab:hover { color: var(--q-ink); }
+    .tab[aria-selected="true"] { color: var(--q-ink); font-weight: 600; border-bottom-color: var(--q-ink); }
+    .tab:focus-visible { outline: 2px solid var(--q-ok); outline-offset: -2px; border-radius: 6px; }
+    .tab-tag { margin-left: 4px; font: 500 11px var(--q-mono); color: var(--q-ink-dim); }
+    .panel { flex: 1; overflow-y: auto; padding: 20px 22px 32px; display: none; }
     .panel.is-on { display: block; }
-    h2 { margin: 2px 0 6px; font-size: 18px; letter-spacing: -0.01em; }
-    .card { padding: 14px 16px; border-radius: 14px; background: var(--q-surface); border: 1px solid var(--q-line); margin-bottom: 12px; }
-    .sub { margin: 0 0 12px; font-size: 13px; line-height: 1.55; color: var(--q-ink-dim); }
-    .sub b { color: var(--q-ink); font-weight: 500; }
-    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 10px; }
-    .chip { padding: 7px 11px; border-radius: 999px; border: 1px solid var(--q-line); background: var(--q-tint); color: var(--q-ink); font: 500 12.5px var(--q-mono); cursor: pointer; }
+    .panel h2 { margin: 0 0 8px; font-size: 21px; font-weight: 600; letter-spacing: -0.015em; line-height: 1.2; }
+    .lead { margin: 0 0 18px; font-size: 15px; line-height: 1.55; color: var(--q-ink); max-width: 60ch; }
+    .card { padding: 16px 18px; border-radius: 14px; background: var(--q-surface); border: 1px solid var(--q-line); margin-bottom: 14px; }
+    .card h3 { margin: 0 0 4px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+    .sub { margin: 0 0 12px; font-size: 14px; line-height: 1.55; color: var(--q-ink-dim); }
+    .sub b { color: var(--q-ink); font-weight: 600; }
+    .note { font-size: 13px; line-height: 1.5; color: var(--q-ink-dim); margin: 10px 0 0; }
+    .note a, .sub a, .lead a { color: var(--q-ink); }
+    /* running-text links rest on a faint hairline; the shared q-link draws the ink line on hover */
+    .note a.q-link, .sub a.q-link { background-image: linear-gradient(currentColor, currentColor), linear-gradient(var(--q-line), var(--q-line)); background-size: 0 1px, 100% 1px; background-position: 0 100%, 0 100%; background-repeat: no-repeat; }
+    .note a.q-link:hover, .sub a.q-link:hover { background-size: 100% 1px, 100% 1px; }
+    code { font-family: var(--q-mono); font-size: .9em; }
+
+    /* controls */
+    .step { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 16px 0 8px; font-size: 14px; font-weight: 500; color: var(--q-ink); }
+    .card h3 + .step { margin-top: 10px; }
+    .step b { font: 600 14px var(--q-mono); color: var(--q-ink); white-space: nowrap; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 4px; }
+    .chip { display: inline-flex; align-items: center; gap: 7px; min-height: 40px; padding: 8px 13px; border-radius: 999px; border: 1px solid var(--q-line); background: var(--q-surface); color: var(--q-ink); font: 500 13.5px var(--q-font); cursor: pointer; transition: background var(--q-m-in) var(--q-ease), border-color var(--q-m-in) var(--q-ease), color var(--q-m-in) var(--q-ease); }
+    .chip:hover { border-color: var(--q-ink-dim); background: var(--q-tint); }
+    .chip .k { font: 600 13.5px var(--q-mono); }
+    .chip .w { color: var(--q-ink-dim); }
     .chip[aria-pressed="true"] { background: var(--q-ink); color: var(--q-surface); border-color: var(--q-ink); }
-    .btn { display: inline-block; padding: 9px 14px; border-radius: 999px; border: 1px solid var(--q-ink); background: var(--q-ink); color: var(--q-surface); font: 600 12.5px var(--q-font); cursor: pointer; text-decoration: none; }
+    .chip[aria-pressed="true"] .w { color: inherit; opacity: .8; }
+    .chip[aria-pressed="true"]::before { content: ""; width: 9px; height: 5px; margin-right: 1px; border-left: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-2px) rotate(-45deg); }
+    .chip:focus-visible, .btn:focus-visible, select:focus-visible, input[type="range"]:focus-visible { outline: 2px solid var(--q-ok); outline-offset: 2px; }
+    select { width: 100%; min-height: 44px; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--q-line); background: var(--q-surface); color: var(--q-ink); font: 500 14px var(--q-font); cursor: pointer; }
+    input[type="range"] { width: 100%; height: 28px; margin: 0; accent-color: var(--q-ink); cursor: pointer; }
+    .ends { display: flex; justify-content: space-between; font-size: 12px; color: var(--q-ink-dim); margin-top: -2px; }
+    .hint { margin: 12px 0 0; font-size: 13px; color: var(--q-ink-dim); }
+    .actions { margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 10px 18px; border-radius: 999px; border: 1px solid var(--q-ink); background: var(--q-ink); color: var(--q-surface); font: 600 14px var(--q-font); cursor: pointer; text-decoration: none; }
+    .btn:hover { background: color-mix(in srgb, var(--q-ink) 86%, var(--q-surface)); }
     .btn--ghost { background: transparent; color: var(--q-ink); border-color: var(--q-line); }
-    label.f { display: block; font-size: 12px; color: var(--q-ink-dim); margin: 10px 0 6px; }
-    select { width: 100%; padding: 9px 11px; border-radius: 10px; border: 1px solid var(--q-line); background: var(--q-surface); color: var(--q-ink); font: 500 13px var(--q-font); }
-    input[type="range"] { width: 100%; accent-color: var(--q-ok); }
-    dl { display: grid; grid-template-columns: 1fr auto; gap: 7px 12px; margin: 10px 0 0; font-size: 12.5px; }
-    dt { color: var(--q-ink-dim); } dd { margin: 0; text-align: right; font-family: var(--q-mono); font-size: 12px; }
-    .bars { display: flex; gap: 10px; align-items: flex-end; height: 92px; margin: 12px 0 4px; }
-    .bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; height: 100%; }
-    .bar i { width: 100%; border-radius: 6px 6px 0 0; background: var(--q-ok); min-height: 2px; transition: height .35s ease; }
-    .bar span { font: 11px var(--q-mono); color: var(--q-ink-dim); }
-    table { width: 100%; border-collapse: collapse; font-size: 12px; }
-    th, td { padding: 6px 4px; text-align: left; border-bottom: 1px solid var(--q-line); vertical-align: top; }
-    th { color: var(--q-ink-faint); font-weight: 500; font-size: 11px; }
-    td.n { text-align: right; font-family: var(--q-mono); white-space: nowrap; }
-    pre { margin: 8px 0 0; padding: 10px 12px; border-radius: 10px; background: var(--q-tint); border: 1px solid var(--q-line); font: 11px/1.5 var(--q-mono); color: var(--q-ink); overflow-x: auto; }
-    .note { font-size: 11.5px; line-height: 1.5; color: var(--q-ink-faint); margin-top: 8px; }
-    .note a, .sub a { color: var(--q-ink-dim); }
-    @media (max-width: 1000px) { #app { grid-template-columns: 1fr; grid-template-rows: 42vh 1fr; } aside { border-left: 0; border-top: 1px solid var(--q-line); } }
+    .btn--ghost:hover { background: var(--q-tint-2); border-color: var(--q-ink-dim); }
+
+    /* results */
+    .result { transition: border-color .9s var(--q-ease); }
+    .result.is-fresh { border-color: var(--q-ink-dim); transition-duration: 0s; }
+    .verdict { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; margin: 10px 0 14px; border-radius: 10px; border-left: 4px solid var(--v); background: color-mix(in srgb, var(--v) 9%, var(--q-surface)); --v: var(--q-ink-dim); }
+    .verdict[data-state="ok"] { --v: var(--q-ok); }
+    .verdict[data-state="warn"] { --v: var(--q-warn); }
+    .verdict[data-state="bad"] { --v: var(--q-bad); }
+    .verdict svg { flex: none; width: 22px; height: 22px; margin-top: 1px; fill: none; stroke: var(--v); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+    .verdict strong { display: block; font-size: 16px; font-weight: 600; color: var(--q-ink); }
+    .verdict span { display: block; margin-top: 2px; font-size: 14px; line-height: 1.45; color: var(--q-ink-dim); }
+    .figs { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 4px 0 6px; }
+    .fig { padding: 12px 14px; border-radius: 10px; background: var(--q-tint); }
+    .fig .v { display: block; font: 600 30px var(--q-mono); letter-spacing: -0.03em; line-height: 1.1; color: var(--q-ink); }
+    .fig .v small { font-size: 13px; font-weight: 500; letter-spacing: 0; color: var(--q-ink-dim); margin-left: 4px; }
+    .fig .k { display: block; margin-top: 4px; font-size: 13px; line-height: 1.35; color: var(--q-ink-dim); }
+    .fig--lead { background: color-mix(in srgb, var(--q-ink) 7%, transparent); }
+    .explain { margin: 8px 0 0; font-size: 14px; line-height: 1.5; color: var(--q-ink-dim); }
+    .changed { margin: 12px 0 0; padding-top: 10px; border-top: 1px dashed var(--q-line); font-size: 13px; color: var(--q-ink-dim); min-height: 1.5em; }
+    .changed:empty { display: none; }
+    dl { display: grid; grid-template-columns: 1fr auto; gap: 8px 14px; margin: 12px 0 0; font-size: 14px; }
+    dt { color: var(--q-ink-dim); } dd { margin: 0; text-align: right; font: 500 13.5px var(--q-mono); color: var(--q-ink); }
+    dd.route { text-align: left; grid-column: 1 / -1; font-family: var(--q-font); font-size: 14px; margin-top: -4px; }
+    .bars { display: flex; gap: 12px; align-items: flex-end; height: 96px; margin: 14px 0 4px; }
+    .bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 5px; height: 100%; }
+    .bar i { width: 100%; border-radius: 6px 6px 0 0; background: var(--q-ok); min-height: 2px; transition: height .5s var(--q-ease); }
+    .bar span { font: 500 12px var(--q-mono); color: var(--q-ink-dim); }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid var(--q-line); vertical-align: top; }
+    th { color: var(--q-ink-dim); font-weight: 500; font-size: 12px; }
+    td.n, th.n { text-align: right; font-family: var(--q-mono); white-space: nowrap; }
+    td.n { font-size: 13px; }
+    .is-col { background: var(--q-tint-2); color: var(--q-ink); }
+    tr.hw td { font-weight: 600; }
+    .hw-tag { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--q-line); font: 500 11px var(--q-mono); color: var(--q-ink-dim); font-weight: 500; }
+    pre { margin: 10px 0 0; padding: 12px 14px; border-radius: 10px; background: var(--q-tint); border: 1px solid var(--q-line); font: 12px/1.55 var(--q-mono); color: var(--q-ink); overflow-x: auto; }
+    ul.plain { margin: 8px 0 0; padding-left: 18px; font-size: 14px; line-height: 1.55; color: var(--q-ink-dim); }
+    ul.plain li + li { margin-top: 6px; }
+    ul.plain b { color: var(--q-ink); font-weight: 600; }
+
+    @media (prefers-reduced-motion: reduce) { .bar i, .result, .tab, .chip { transition: none; } }
+    @media (max-width: 1000px) {
+      #app { grid-template-columns: 1fr; grid-template-rows: 44vh 1fr; }
+      aside { border-left: 0; border-top: 1px solid var(--q-line); }
+      .stage-head { top: 14px; left: 18px; right: 18px; }
+      .stage-head h1 { font-size: 22px; margin: 6px 0 0; max-width: none; }
+      .stage-head p, .stage-key, .sphere-label .c { display: none; }
+      .sphere-label { width: 170px; }
+      .sphere-label .m { font-size: 17px; margin-top: 2px; }
+    }
+    @media (max-width: 480px) { .figs { grid-template-columns: 1fr; } .panel { padding: 18px 16px 28px; } }
   </style>
 </head>
-<body>
+<body class="lab">
   <div id="app">
     <div id="stage">
-      <div class="stage-head">
-        <span class="q-label">Quantum lab</span>
-        <h1 id="stage-title">Teleportation over Chattanooga's fibers</h1>
-        <p id="stage-text">Left: the state Alice sends. Right: the state Bob ends up with after the entangled pair has crossed real fibers. Noise from the fibers shrinks Bob's arrow.</p>
+      <div class="stage-head" data-enter>
+        <div class="stage-top"><span class="q-label">Step 5 · Quantum lab</span><span class="future-tag" id="stage-future" hidden>Future capability · not in the live grid</span></div>
+        <h1 id="stage-title">What a spy does to a photon</h1>
+        <p id="stage-text" class="q-enter-item">Left: the photon Alice sends. Right: what reaches Bob, on average. Each wrong guess by the spy scrambles the photon, so Bob's arrow gets shorter.</p>
       </div>
-      <div class="sphere-label" id="lab-left" style="left:30%"><b>Alice</b>input state</div>
-      <div class="sphere-label" id="lab-right" style="left:70%"><b>Bob</b>after teleportation</div>
+      <div class="pole" id="pole-l0"></div><div class="pole" id="pole-l1"></div>
+      <div class="pole" id="pole-r0"></div><div class="pole" id="pole-r1"></div>
+      <div class="spy-tag" id="spy-tag" hidden></div>
+      <div class="sphere-label" id="lab-left"></div>
+      <div class="sphere-label" id="lab-right"></div>
+      <p class="stage-key" id="stage-key"></p>
     </div>
 
     <aside>
-      <div class="tabs" role="tablist">
-        <button class="tab" role="tab" data-tab="tele" aria-selected="true">Teleportation</button>
-        <button class="tab" role="tab" data-tab="bb84" aria-selected="false">BB84</button>
-        <button class="tab" role="tab" data-tab="grover" aria-selected="false">Grover</button>
-        <button class="tab" role="tab" data-tab="engines" aria-selected="false">Frameworks</button>
-        <button class="tab" role="tab" data-tab="next" aria-selected="false">Roadmap</button>
+      <div class="tabs" role="tablist" aria-label="Experiments in the lab">
+        <button class="tab" role="tab" id="t-bb84" data-tab="bb84" aria-controls="tab-bb84" aria-selected="true">Catch a spy</button>
+        <button class="tab" role="tab" id="t-grover" data-tab="grover" aria-controls="tab-grover" aria-selected="false" tabindex="-1">Crack a key</button>
+        <button class="tab" role="tab" id="t-tele" data-tab="tele" aria-controls="tab-tele" aria-selected="false" tabindex="-1">Teleport<span class="tab-tag">future</span></button>
+        <button class="tab" role="tab" id="t-engines" data-tab="engines" aria-controls="tab-engines" aria-selected="false" tabindex="-1">Code</button>
+        <button class="tab" role="tab" id="t-next" data-tab="next" aria-controls="tab-next" aria-selected="false" tabindex="-1">Roadmap</button>
       </div>
 
-      <!-- Teleportation (notebook 3) -->
-      <section class="panel is-on" id="tab-tele" role="tabpanel">
-        <h2>Teleport a qubit across the grid</h2>
-        <p class="sub">Alice and Bob share an entangled pair built over real fibers. Alice measures two qubits and sends Bob <b>two classical bits</b> over the network; Bob fixes his qubit. Nothing travels faster than the fiber, and the swapping nodes on the way never hold a key. A future capability: in the live grid, Layers → Teleportation view shows where it would work.</p>
-        <div class="card">
-          <span class="q-label">1 · State to send</span>
-          <div class="chips" id="states"></div>
-          <label class="f" for="target">2 · Route: from the control center to</label>
-          <select id="target"></select>
-          <label class="f" for="spy">3 · A spy on the first hop intercepts <b id="spyv">0%</b> of photons</label>
-          <input type="range" id="spy" min="0" max="100" value="0" />
-          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="run-tele">Run 1,024 shots</button><a class="btn btn--ghost" id="open-route" href="grid-twin/index.html">See the route in the live grid →</a></div>
-        </div>
-        <div class="card">
-          <span class="q-label">Result · Bob measures in the Z basis</span>
-          <div class="bars"><div class="bar"><i id="t0"></i><span id="t0l">|0⟩</span></div><div class="bar"><i id="t1" style="background:var(--q-pqc)"></i><span id="t1l">|1⟩</span></div></div>
-          <dl id="tele-dl"></dl>
-          <p class="note">Computed here: a 3-qubit state-vector simulation. Each fiber adds independent bit and phase flips at its error rate (our modelling choice: BB84 measures those two rates, not how they correlate); a spy who intercepts and resends adds a bit flip or a phase flip, never both. The hops combine exactly as Pauli channels. 11% is the key-distribution threshold; for teleportation itself the benchmark is beating 2/3 average fidelity, the best a classical channel can do. Notebook 3 in this repo has the same circuit in Qiskit.</p>
-        </div>
-      </section>
-
       <!-- BB84 (notebook 1) -->
-      <section class="panel" id="tab-bb84" role="tabpanel">
-        <h2>Catch the eavesdropper (BB84)</h2>
-        <p class="sub">The protocol running on every green fiber of the live grid. Alice sends photons in random bases; Bob measures in random bases; they keep the rounds where the bases match. A spy who measures and resends must guess the basis, and every wrong guess shows up as errors.</p>
+      <section class="panel is-on" id="tab-bb84" role="tabpanel" aria-labelledby="t-bb84">
+        <h2>Catch a spy on one fiber (BB84)</h2>
+        <p class="lead">Every quantum fiber in the live grid sends its keys as single photons (QKD). A spy has to guess how each photon was prepared, and every wrong guess leaves errors that Alice and Bob can count.</p>
+        <p class="sub q-adv">Alice sends photons in random bases; Bob measures in random bases; they keep the rounds where the bases match. A spy who measures and resends must guess the basis.</p>
         <div class="card">
-          <label class="f" for="bb-km">Fiber length: <b id="bb-kmv">10 km</b></label>
+          <h3>Set up the fiber</h3>
+          <label class="step" for="bb-km"><span>Fiber length</span><b id="bb-kmv">10 km</b></label>
           <input type="range" id="bb-km" min="1" max="100" value="10" />
-          <label class="f" for="bb-f">Spy intercepts: <b id="bb-fv">40%</b> of photons</label>
+          <div class="ends" aria-hidden="true"><span>1 km</span><span>100 km</span></div>
+          <label class="step" for="bb-f"><span>Share of photons the spy reads</span><b id="bb-fv">40%</b></label>
           <input type="range" id="bb-f" min="0" max="100" value="40" />
-          <div style="margin-top:12px"><button class="btn" id="run-bb">Send 20,000 photons</button></div>
+          <div class="ends" aria-hidden="true"><span>no spy</span><span>every photon</span></div>
+          <p class="hint">Drag a slider: the result below and Bob's arrow update at once.</p>
+          <div class="actions"><button class="btn q-btn" id="run-bb">Send 20,000 photons</button></div>
+        </div>
+        <div class="card result" id="bb-result">
+          <h3>What Alice and Bob find</h3>
+          <div class="verdict" id="bb-verdict"></div>
+          <div class="figs">
+            <div class="fig fig--lead"><span class="v"><span id="bb-q">–</span><small class="q-adv" id="bb-se"></small></span><span class="k">Measured error rate, this run</span></div>
+            <div class="fig"><span class="v" id="bb-th">–</span><span class="k">Expected from theory</span></div>
+          </div>
+          <p class="explain">The error rate (QBER) is the share of key bits that arrive wrong. Above 11%, no secret key can be kept.</p>
           <dl id="bb-dl"></dl>
+          <p class="changed" id="bb-changed" aria-live="polite"></p>
         </div>
         <div class="card">
-          <span class="q-label">The same fiber on quantum simulators</span>
-          <p class="sub" style="margin:8px 0 6px">One fiber, 3.3% normal error, 40% tap: theory 12.64%.</p>
+          <h3>The same fiber on quantum simulators</h3>
+          <p class="sub" style="margin:6px 0 8px">One fiber with 3.3% normal error and a spy reading 40% of photons. Theory says <b>12.64%</b>.</p>
           <table>
-            <tr><th>Engine</th><th>Kind</th><th style="text-align:right">QBER</th></tr>
+            <tr><th>Engine</th><th>Kind</th><th class="n">Error rate</th></tr>
             <tr><td>Qiskit Aer</td><td>local simulator</td><td class="n">13.52%</td></tr>
             <tr><td>NVIDIA CUDA-Q</td><td>local simulator</td><td class="n">12.11%</td></tr>
             <tr><td>Quantinuum Guppy on Selene</td><td>local emulator</td><td class="n">11.15%</td></tr>
@@ -125,39 +211,91 @@
             <tr><td>qBraid · QIR simulator</td><td>cloud simulator</td><td class="n">12.96%</td></tr>
             <tr><td>Team notebook 1 on qBraid QIR</td><td>cloud simulator</td><td class="n">12.48%</td></tr>
           </table>
-          <p class="note">Each uses 1,000 to 12,000 bits, so results can differ from theory by about 1 to 2 points. Notebook 1's runs use the team's own finished <code>encode()</code>. All of these are simulators or emulators, not hardware. Run them yourself from a fiber in the live grid (served by <code>python3 grid-twin/start.py</code>).</p>
+          <p class="note">All six are simulators or emulators, not quantum hardware. Each used 1,000 to 12,000 bits, so they land within about 1 to 2 points of theory.</p>
+          <p class="note q-adv">Notebook 1's runs use the team's own finished <code>encode()</code>. Run them yourself from a fiber in the live grid (served by <code>python3 grid-twin/start.py</code>).</p>
         </div>
       </section>
 
       <!-- Grover (notebook 2b) -->
-      <section class="panel" id="tab-grover" role="tabpanel">
-        <h2>Grover: how fast can a key be guessed?</h2>
-        <p class="sub">Grover's search finds one key among N in about √N tries instead of N. For AES-128 that is like halving the key length, which is why new equipment should use AES-256. Below: the exact success probability, and what real machines did.</p>
+      <section class="panel" id="tab-grover" role="tabpanel" aria-labelledby="t-grover" hidden>
+        <h2>How fast a quantum computer guesses a key (Grover)</h2>
+        <p class="lead">Grover's search finds one key among N in about √N tries instead of N. For AES-128 that is like halving the key length, which is why new grid equipment should use AES-256.</p>
         <div class="card">
-          <span class="q-label">Search space</span>
-          <div class="chips" id="gN"></div>
+          <h3>Pick how many keys to search</h3>
+          <p class="sub" style="margin:4px 0 10px">The arrow on the right turns one Grover step at a time.</p>
+          <div class="chips" id="gN" role="group" aria-label="Number of possible keys"></div>
+        </div>
+        <div class="card result" id="g-result">
+          <h3>How often the right key comes out</h3>
+          <div class="figs" style="margin-top:12px">
+            <div class="fig fig--lead"><span class="v" id="g-p">–</span><span class="k">Grover's search, exact</span></div>
+            <div class="fig"><span class="v" id="g-r">–</span><span class="k">One random guess</span></div>
+          </div>
           <dl id="g-dl"></dl>
+          <p class="changed" id="g-changed" aria-live="polite"></p>
         </div>
         <div class="card">
-          <span class="q-label">Measured (200 shots each; Qiskit Aer 1,024)</span>
-          <table>
-            <tr><th>Machine</th><th style="text-align:right">N = 4</th><th style="text-align:right">N = 8</th><th style="text-align:right">N = 16</th></tr>
-            <tr><td>Theory</td><td class="n">100%</td><td class="n">94.5%</td><td class="n">96.1%</td></tr>
-            <tr><td>Qiskit Aer (simulator)</td><td class="n">100%</td><td class="n">95.5%</td><td class="n">96.0%</td></tr>
-            <tr><td>IonQ noisy simulator</td><td class="n">100%</td><td class="n">71.5%</td><td class="n">36%</td></tr>
-            <tr><td>Quantinuum H2 emulator</td><td class="n">100%</td><td class="n">92.5%</td><td class="n">–</td></tr>
-            <tr><td><b>Rigetti Cepheus (real QPU)</b></td><td class="n"><b>88.5%</b></td><td class="n"><b>45.0%</b></td><td class="n">–</td></tr>
+          <h3>What real machines measured</h3>
+          <p class="sub" style="margin:4px 0 8px">Share of runs that returned the right key. 200 runs per machine (Qiskit Aer: 1,024).</p>
+          <table id="g-table">
+            <tr><th>Machine</th><th class="n" data-n="4">4 keys</th><th class="n" data-n="8">8 keys</th><th class="n" data-n="16">16 keys</th></tr>
+            <tr><td>Theory</td><td class="n" data-n="4">100%</td><td class="n" data-n="8">94.5%</td><td class="n" data-n="16">96.1%</td></tr>
+            <tr><td>Qiskit Aer (simulator)</td><td class="n" data-n="4">100%</td><td class="n" data-n="8">95.5%</td><td class="n" data-n="16">96.0%</td></tr>
+            <tr><td>IonQ noisy simulator</td><td class="n" data-n="4">100%</td><td class="n" data-n="8">71.5%</td><td class="n" data-n="16">36%</td></tr>
+            <tr><td>Quantinuum H2 emulator</td><td class="n" data-n="4">100%</td><td class="n" data-n="8">92.5%</td><td class="n" data-n="16">–</td></tr>
+            <tr class="hw"><td>Rigetti Cepheus<span class="hw-tag">real quantum computer</span></td><td class="n" data-n="4">88.5%</td><td class="n" data-n="8">45.0%</td><td class="n" data-n="16">–</td></tr>
           </table>
-          <p class="note">Random guessing: 25% (N = 4), 12.5% (N = 8). The right key stays the most common answer on real hardware, but the peak shrinks fast as circuits grow. Job IDs and details: <a href="WRITEUP_step2.md">WRITEUP_step2.md</a>. Also on Rigetti: Shor on 15 (hand-reduced circuit) put 65% of shots on the four ideal outcomes, against 25% for noise.</p>
+          <p class="note">Random guessing: 25% with 4 keys, 12.5% with 8. On real hardware the right key is still the most common answer, but its lead shrinks fast as circuits grow.</p>
+          <p class="note q-adv">Job IDs and details: <a class="q-link" href="WRITEUP_step2.md">WRITEUP_step2.md</a>. Also on Rigetti: Shor on 15 (hand-reduced circuit) put 65% of shots on the four ideal outcomes, against 25% for noise.</p>
+        </div>
+      </section>
+
+      <!-- Teleportation (notebook 3) -->
+      <section class="panel" id="tab-tele" role="tabpanel" aria-labelledby="t-tele" hidden>
+        <h2>Teleport a qubit across the grid</h2>
+        <p class="lead"><b>A future capability, not part of the live grid.</b> If the fibers also shared entangled photon pairs, a qubit could move from the control center to a substation. This tab checks whether today's fiber noise would allow it.</p>
+        <p class="sub q-adv">Alice measures two qubits and sends Bob <b>two classical bits</b> over the network; Bob fixes his qubit. Nothing travels faster than the fiber, and the swapping nodes on the way never hold a key. In the live grid, switch to Detailed and turn on Layers → Teleportation view to see where it would work.</p>
+        <div class="card">
+          <h3>Set up the teleport</h3>
+          <div class="step" id="states-label"><span>1. Pick the state Alice sends</span></div>
+          <div class="chips" id="states" role="group" aria-labelledby="states-label"></div>
+          <label class="step" for="target"><span>2. Pick the substation it goes to</span></label>
+          <select id="target"></select>
+          <label class="step" for="spy"><span>3. Share of photons a spy reads on the first fiber</span><b id="spyv">0%</b></label>
+          <input type="range" id="spy" min="0" max="100" value="0" />
+          <div class="ends" aria-hidden="true"><span>no spy</span><span>every photon</span></div>
+          <div class="actions"><button class="btn q-btn" id="run-tele">Teleport 1,024 times</button><a class="btn btn--ghost q-btn" id="open-route" href="grid-twin/index.html">Open this route in the live grid</a></div>
+        </div>
+        <div class="card result" id="tele-result">
+          <h3>What Bob receives</h3>
+          <div class="verdict" id="tele-verdict"></div>
+          <div class="figs">
+            <div class="fig fig--lead"><span class="v" id="tele-fid">–</span><span class="k">Average fidelity: how closely Bob's copy matches, over all states</span></div>
+            <div class="fig"><span class="v">66.7%</span><span class="k">Classical limit (2/3): the best possible without entanglement</span></div>
+          </div>
+          <div class="bars" aria-label="Bob's 1,024 results"><div class="bar"><i id="t0"></i><span id="t0l">|0⟩</span></div><div class="bar"><i id="t1" style="background:var(--q-tele)"></i><span id="t1l">|1⟩</span></div></div>
+          <dl id="tele-dl"></dl>
+          <table class="q-adv" id="tele-hops" style="margin-top:14px"></table>
+          <p class="changed" id="tele-changed" aria-live="polite"></p>
+          <p class="note q-adv">Computed here: a 3-qubit state-vector simulation. Each fiber adds independent bit and phase flips at its error rate (our modelling choice: BB84 measures those two rates, not how they correlate); a spy who intercepts and resends adds a bit flip or a phase flip, never both. The hops combine exactly as Pauli channels. 11% is the key-distribution threshold; for teleportation itself the benchmark is beating 2/3 average fidelity, the best a classical channel can do. Notebook 3 in this repo has the same circuit in Qiskit.</p>
         </div>
       </section>
 
       <!-- Frameworks -->
-      <section class="panel" id="tab-engines" role="tabpanel">
+      <section class="panel" id="tab-engines" role="tabpanel" aria-labelledby="t-engines" hidden>
         <h2>The simulator code behind the grid</h2>
-        <p class="sub">When the project runs with <code>python3 grid-twin/start.py</code>, every QKD fiber in the live grid can be re-run as real quantum programs. These are excerpts of the code that runs.</p>
+        <p class="lead">When the project runs on its own server, every quantum fiber in the live grid can be re-run as a real quantum program: on Qiskit, NVIDIA CUDA-Q, Quantinuum Guppy or qBraid's cloud simulators.</p>
         <div class="card">
-          <span class="q-label">NVIDIA CUDA-Q · one BB84 round</span>
+          <h3>What each engine does</h3>
+          <ul class="plain">
+            <li><b>NVIDIA CUDA-Q</b> runs one BB84 round per photon, with the spy copying it into a spare qubit.</li>
+            <li><b>Quantinuum Guppy</b> lets the spy really measure the photon and send a fresh one.</li>
+            <li><b>qBraid</b> packs a whole fiber's rounds into one cloud job.</li>
+          </ul>
+          <div class="actions q-simple-only"><button class="btn btn--ghost q-btn" type="button" id="show-code">Show the code</button></div>
+        </div>
+        <div class="card q-adv">
+          <h3>NVIDIA CUDA-Q · one BB84 round</h3>
 <pre>@cudaq.kernel
 def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
     q = cudaq.qubit()
@@ -171,8 +309,8 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
     ...
     mz(q)</pre>
         </div>
-        <div class="card">
-          <span class="q-label">Quantinuum Guppy on Selene · Eve really measures</span>
+        <div class="card q-adv">
+          <h3>Quantinuum Guppy on Selene · Eve really measures</h3>
 <pre>if eve_on:
     if eve_basis:
         h(q)
@@ -183,21 +321,26 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
     if eve_basis:
         h(q)</pre>
         </div>
-        <div class="card">
-          <span class="q-label">qBraid · the whole fiber in one cloud job</span>
-          <p class="sub" style="margin:8px 0 0">BB84 rounds side by side in one circuit, with the tap and the fiber noise as coin qubits, sent to qBraid's QIR or IonQ simulator. The same circuit can use notebook 1's own <code>encode()</code>. qBraid's GPU state-vector simulator is wired in too but off by default (it costs credits). Full code: <a href="grid-twin/sim/engines.py">grid-twin/sim/engines.py</a>.</p>
+        <div class="card q-adv">
+          <h3>qBraid · the whole fiber in one cloud job</h3>
+          <p class="sub" style="margin:6px 0 0">BB84 rounds side by side in one circuit, with the tap and the fiber noise as coin qubits, sent to qBraid's QIR or IonQ simulator. The same circuit can use notebook 1's own <code>encode()</code>. qBraid's GPU state-vector simulator is wired in too but off by default (it costs credits). Start the server with <code>python3 grid-twin/start.py</code>. Full code: <a class="q-link" href="grid-twin/sim/engines.py">grid-twin/sim/engines.py</a>.</p>
         </div>
       </section>
 
       <!-- Roadmap -->
-      <section class="panel" id="tab-next" role="tabpanel">
+      <section class="panel" id="tab-next" role="tabpanel" aria-labelledby="t-next" hidden>
         <h2>What is next, and what is not built</h2>
-        <div class="card"><span class="q-label">Next</span>
-          <p class="sub" style="margin:8px 0 0"><b>GPU:</b> qBraid's GPU simulators (35-qubit state vector, 500-qubit tensor network) to re-check every fiber at once and run whole teleportation routes as one circuit. <b>Hardware:</b> notebook 3's teleportation on a real QPU. <b>Cost:</b> a sourced cost model; we found no published QKD prices.</p></div>
-        <div class="card"><span class="q-label">Not built</span>
-          <p class="sub" style="margin:8px 0 0">No AI assistant, GraphQL API or Next.js app exists in this project; they were ideas on our technology list (<a href="docs/TECH_RANKED.md">ranked here</a>). No breaker is tripped by teleportation: teleportation needs a classical message, so it is never faster than the fiber.</p></div>
-        <div class="card"><span class="q-label">Satellites</span>
-          <p class="sub" style="margin:8px 0 0">Likely to be taken out unless we find a quantum application only a satellite can serve. Chattanooga's links are all under 23 km, well inside fiber QKD's reach.</p></div>
+        <p class="lead">Where the lab goes after the hackathon, and the ideas we chose to leave out.</p>
+        <div class="card"><h3>Next</h3>
+          <ul class="plain">
+            <li><b>Hardware:</b> notebook 3's teleportation on a real quantum computer.</li>
+            <li><b>GPU:</b> qBraid's GPU simulators to re-check every fiber at once<span class="q-adv"> (35-qubit state vector, 500-qubit tensor network) and run whole teleportation routes as one circuit</span>.</li>
+            <li><b>Cost:</b> a sourced cost model; we found no published QKD prices.</li>
+          </ul></div>
+        <div class="card"><h3>Not built</h3>
+          <p class="sub" style="margin:6px 0 0">There is no AI assistant, GraphQL API or Next.js app in this project; they were ideas on our technology list<span class="q-adv"> (<a class="q-link" href="docs/TECH_RANKED.md">ranked here</a>)</span>. Teleportation trips no breaker: it needs a classical message, so it is never faster than the fiber.</p></div>
+        <div class="card"><h3>Satellites</h3>
+          <p class="sub" style="margin:6px 0 0">Likely to be taken out unless we find a quantum use only a satellite can serve. Chattanooga's links are all under 23 km, well inside fiber QKD's reach.</p></div>
       </section>
     </aside>
   </div>
@@ -206,50 +349,117 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
     // ---------------------------------------------------------------- shared helpers
     var css = function (n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); };
     var pct = function (x, d) { return (100 * x).toFixed(d == null ? 1 : d) + "%"; };
+    var $ = function (id) { return document.getElementById(id); };
+    var REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
     var FIBER = { alpha: 0.21, etaBob: 0.045, Y0: 1.7e-6, eDet: 0.033 }; // as grid-twin/src/bb84.js
     function transmittance(km) { return Math.pow(10, -FIBER.alpha * km / 10) * FIBER.etaBob; }
     function baselineQber(km) { var eta = transmittance(km); return (FIBER.eDet * eta + FIBER.Y0 / 2) / (eta + FIBER.Y0); }
     function expectedQber(p, f) { return p + f * (0.25 - p / 2); }
     function h2(q) { return q <= 0 || q >= 1 ? 0 : -q * Math.log2(q) - (1 - q) * Math.log2(1 - q); }
 
-    // ---------------------------------------------------------------- tabs
+    var ICON = {
+      ok: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.4l2.8 2.8L16.2 9.8"/></svg>',
+      warn: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.8l9 15.8H3z"/><path d="M12 10v4.2M12 17.2v.3"/></svg>',
+      bad: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>',
+    };
+    function verdict(el, state, title, text) {
+      el.dataset.state = state;
+      el.innerHTML = ICON[state] + "<div><strong>" + title + "</strong><span>" + text + "</span></div>";
+    }
+    function flash(el) { if (REDUCED) return; el.classList.remove("is-fresh"); void el.offsetWidth; el.classList.add("is-fresh"); setTimeout(function () { el.classList.remove("is-fresh"); }, 60); }
+    function row(label, value, adv) { var c = adv ? ' class="q-adv"' : ""; return "<dt" + c + ">" + label + "</dt><dd" + c + ">" + value + "</dd>"; }
+
+    // ---------------------------------------------------------------- tabs and stage text
     var STAGE = {
-      tele: ["Teleportation over Chattanooga's fibers", "Left: the state Alice sends. Right: the state Bob ends up with after the entangled pair has crossed real fibers. Noise from the fibers shrinks Bob's arrow."],
-      bb84: ["What a spy does to a photon", "Left: Alice's photon. Right: Bob's photon on average. Each time the spy guesses the wrong basis she scrambles it, so the arrow shrinks and Bob's results turn into coin flips."],
-      grover: ["Grover's search on the Bloch sphere", "Top: the right key. Bottom: every other key. Left: the start, almost all wrong. Right: after about √N Grover steps, almost all right."],
-      engines: ["Quantum simulator code", "The same physics runs in Qiskit, CUDA-Q, Guppy and on qBraid's cloud simulators."],
-      next: ["Roadmap", "What we would build next, and what we deliberately did not."],
+      bb84: ["What a spy does to a photon", "Left: the photon Alice sends. Right: what reaches Bob, on average. Each wrong guess by the spy scrambles the photon, so Bob's arrow gets shorter."],
+      grover: ["How Grover's search finds a key", "Top of each sphere: the right key. Bottom: every other key. Grover's steps turn the arrow from almost all wrong (left) to almost all right (right)."],
+      tele: ["Teleporting a qubit over Chattanooga's fibers", "Left: the state Alice sends. Right: the state Bob ends up with after the entangled pair has crossed real fibers. Noise from the fibers shortens Bob's arrow."],
+      engines: ["The quantum code behind the grid", "The same physics runs in Qiskit, CUDA-Q, Guppy and on qBraid's cloud simulators. The spheres keep your last result."],
+      next: ["What comes next", "What we would build next, and what we chose not to build. The spheres keep your last result."],
     };
     var SPHERES = {
-      tele: ["Alice", "input state", "Bob", "after teleportation"],
-      bb84: ["Alice", "photon sent", "Bob", "photon received, on average"],
-      grover: ["Start", "every key equally likely", "After Grover", "almost all on the right key"],
+      bb84: { l: ["Alice", "photon sent"], r: ["Bob", "photon received, on average"], poles: ["|0⟩", "|1⟩"], accent: "--q-ok" },
+      grover: { l: ["Start", "every key equally likely"], r: ["After Grover", "after the Grover steps"], poles: ["right key", "other keys"], accent: "--q-gold" },
+      tele: { l: ["Alice", "state sent"], r: ["Bob", "state received"], poles: ["|0⟩", "|1⟩"], accent: "--q-tele" },
     };
-    document.querySelectorAll(".tab").forEach(function (t) {
-      t.addEventListener("click", function () {
-        document.querySelectorAll(".tab").forEach(function (x) { x.setAttribute("aria-selected", String(x === t)); });
-        document.querySelectorAll(".panel").forEach(function (p) { p.classList.toggle("is-on", p.id === "tab-" + t.dataset.tab); });
-        document.getElementById("stage-title").textContent = STAGE[t.dataset.tab][0];
-        document.getElementById("stage-text").textContent = STAGE[t.dataset.tab][1];
-        var L = SPHERES[t.dataset.tab] || SPHERES.tele;
-        document.getElementById("lab-left").innerHTML = "<b>" + L[0] + "</b>" + L[1];
-        document.getElementById("lab-right").innerHTML = "<b>" + L[2] + "</b>" + L[3];
-        if (t.dataset.tab === "bb84") runBB84();
-        if (t.dataset.tab === "grover") runGrover();
-        if (t.dataset.tab === "tele") runTele();
+    var KEY = {
+      bb84: '<span><i></i>Arrow: the photon\'s state; shorter means scrambled</span><span><i class="dash"></i>Dashed: where a noise-free arrow points</span><span><i class="dot"></i>Moving light: one photon crossing the fiber</span>',
+      grover: '<span><i></i>Arrow up: the right key; arrow down: any other key</span><span>Each Grover step turns the arrow further up</span>',
+      tele: '<span><i></i>Arrow: the qubit\'s state; shorter means noisier</span><span><i class="dash"></i>Dashed: Alice\'s state, a perfect copy</span><span><i class="dot"></i>Moving light: Bob\'s half of the entangled pair</span>',
+    };
+    var physicsTab = "bb84", currentTab = "bb84";
+    var tabs = [].slice.call(document.querySelectorAll(".tab"));
+    function setLabels(tab) {
+      var L = SPHERES[tab];
+      $("lab-left").innerHTML = "<b>" + L.l[0] + '</b><span class="c">' + L.l[1] + '</span><strong class="m" id="m-left"></strong>';
+      $("lab-right").innerHTML = "<b>" + L.r[0] + '</b><span class="c" id="c-right">' + L.r[1] + '</span><strong class="m" id="m-right"></strong>';
+      $("pole-l0").textContent = $("pole-r0").textContent = L.poles[0];
+      $("pole-l1").textContent = $("pole-r1").textContent = L.poles[1];
+      $("stage-key").innerHTML = KEY[tab];
+      accent = L.accent;
+      arc.visible = tab !== "grover";
+      paint();
+    }
+    function selectTab(id, focus) {
+      var t = tabs.filter(function (x) { return x.dataset.tab === id; })[0] || tabs[0];
+      id = t.dataset.tab; currentTab = id;
+      tabs.forEach(function (x) { var on = x === t; x.setAttribute("aria-selected", String(on)); x.tabIndex = on ? 0 : -1; });
+      document.querySelectorAll(".panel").forEach(function (p) { var on = p.id === "tab-" + id; p.classList.toggle("is-on", on); p.hidden = !on; });
+      if (focus) t.focus();
+      $("stage-title").textContent = STAGE[id][0];
+      $("stage-text").textContent = STAGE[id][1];
+      $("stage-future").hidden = id !== "tele";
+      try { history.replaceState(null, "", "#" + id); } catch (e) {}
+      if (!SPHERES[id]) return;   // code and roadmap keep the last experiment on the stage
+      physicsTab = id;
+      stopMotion();
+      setLabels(id);
+      if (id === "bb84") runBB84({ send: true });
+      if (id === "grover") runGrover({ sweep: true });
+      if (id === "tele") runTele({ send: true });
+    }
+    tabs.forEach(function (t, i) {
+      t.addEventListener("click", function () { selectTab(t.dataset.tab); });
+      t.addEventListener("keydown", function (e) {
+        var j = e.key === "ArrowRight" ? i + 1 : e.key === "ArrowLeft" ? i - 1 : e.key === "Home" ? 0 : e.key === "End" ? tabs.length - 1 : null;
+        if (j === null) return;
+        e.preventDefault();
+        selectTab(tabs[(j + tabs.length) % tabs.length].dataset.tab, true);
       });
     });
+    $("show-code").addEventListener("click", function () { if (window.qrypt) window.qrypt.setMode("detailed"); });
 
     // ---------------------------------------------------------------- 3D: two Bloch spheres
-    var stage = document.getElementById("stage");
+    var stage = $("stage");
     var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    stage.appendChild(renderer.domElement);
+    renderer.domElement.setAttribute("aria-hidden", "true");
+    stage.insertBefore(renderer.domElement, stage.firstChild);
     var scene = new THREE.Scene();
     var camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
-    camera.position.set(0, 1.6, 9.5);
-    camera.lookAt(0, -0.2, 0);
     scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 1.0));
+    var accent = "--q-ok";
+
+    function radialTexture(ring) {
+      var c = document.createElement("canvas"); c.width = c.height = 128;
+      var g = c.getContext("2d");
+      if (ring) {
+        g.strokeStyle = "#fff"; g.lineWidth = 9; g.beginPath(); g.arc(64, 64, 46, 0, Math.PI * 2); g.stroke();
+      } else {
+        var gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+        gr.addColorStop(0, "rgba(255,255,255,1)"); gr.addColorStop(0.18, "rgba(255,255,255,.85)");
+        gr.addColorStop(0.45, "rgba(255,255,255,.22)"); gr.addColorStop(1, "rgba(255,255,255,0)");
+        g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+      }
+      return new THREE.CanvasTexture(c);
+    }
+    var GLOW = radialTexture(false), RING = radialTexture(true);
+    function sprite(tex, size) {
+      var s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+      s.scale.set(size, size, 1);
+      return s;
+    }
+
     function makeSphere(x) {
       var g = new THREE.Group();
       g.position.set(x, -0.3, 0);
@@ -262,51 +472,149 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
       var zAxis = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 3.5, 6), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.4 }));
       axes.add(zAxis);
       var arrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 1.5, 0x000000, 0.28, 0.16);
-      g.add(shell, wire, eq, axes, arrow);
-      g.rotation.y = -0.5;
+      var tip = sprite(GLOW, 0.55);
+      var ghost = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1.5, 0)]), new THREE.LineDashedMaterial({ dashSize: 0.09, gapSize: 0.07, transparent: true, opacity: 0.75 }));
+      ghost.computeLineDistances();
+      ghost.visible = false;
+      g.add(shell, wire, eq, axes, arrow, tip, ghost);
+      g.rotation.y = REDUCED ? -0.5 : -1.1;
       scene.add(g);
-      return { g: g, shell: shell, wire: wire, eq: eq, axes: axes, arrow: arrow, target: new THREE.Vector3(0, 1, 0), len: 1, lenGoal: 1, dir: new THREE.Vector3(0, 1, 0) };
+      return { g: g, shell: shell, wire: wire, eq: eq, axes: axes, arrow: arrow, tip: tip, ghost: ghost, target: new THREE.Vector3(0, 1, 0), len: REDUCED ? 1 : 0, lenGoal: 1, dir: new THREE.Vector3(0, 1, 0), hold: false };
     }
     var alice = makeSphere(-2.3);
     var bob = makeSphere(2.3);
+    alice.tip.visible = false;          // the light sits on Bob's tip: what arrives is what matters
+
+    // The fiber between them: a soft arc the photon travels along, and a ring where the spy sits.
+    var curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(-2.3, -0.3, 0), new THREE.Vector3(0, 1.0, 1.3), new THREE.Vector3(2.3, -0.3, 0));
+    var arc = new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(64)), new THREE.LineBasicMaterial({ transparent: true, opacity: 0.35 }));
+    scene.add(arc);
+    var photon = sprite(GLOW, 0.6); photon.visible = false; scene.add(photon);
+    var spyRing = sprite(RING, 0.32); spyRing.visible = false; scene.add(spyRing);
+    var spyAt = 0.5;
+
     // Bloch vector (x, y, z) -> three.js (x, z, -y) with z up
     function setVec(s, v) {
       var len = Math.sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
-      s.target.set(v[0], v[2], -v[1]);
-      if (len > 1e-6) s.target.normalize();
+      if (len > 1e-6) s.target.set(v[0] / len, v[2] / len, -v[1] / len);
       s.lenGoal = len;
     }
+    function setGhost(s, v) {
+      if (!v) { s.ghost.visible = false; return; }
+      var d = new THREE.Vector3(v[0], v[2], -v[1]).normalize();
+      s.ghost.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d);
+      s.ghost.visible = true;
+    }
     function paint() {
+      var dark = document.documentElement.dataset.theme === "dark";
       [alice, bob].forEach(function (s, i) {
         s.shell.material.color.set(css("--q-ink"));
         s.wire.material.color.set(css("--q-ink-faint"));
         s.eq.material.color.set(css("--q-ink-faint"));
         s.axes.children.forEach(function (c) { c.material.color.set(css("--q-ink-dim")); });
-        s.arrow.setColor(new THREE.Color(css(i === 0 ? "--q-ok" : "--q-pqc")));
+        s.arrow.setColor(new THREE.Color(css(i === 0 ? "--q-ink" : accent)));
+        s.ghost.material.color.set(css("--q-ink-dim"));
       });
+      [bob.tip, photon].forEach(function (sp) {
+        sp.material.color.set(css(sp === photon ? "--q-ok" : accent));
+        sp.material.blending = dark ? THREE.AdditiveBlending : THREE.NormalBlending;
+        sp.material.opacity = dark ? 0.95 : 0.4;
+        sp.material.needsUpdate = true;
+      });
+      spyRing.material.color.set(css("--q-bad"));
+      arc.material.color.set(css("--q-ink-dim"));
     }
+    var W = 1, Hh = 1;
     function resize() {
-      var w = stage.clientWidth, h = stage.clientHeight;
-      renderer.setSize(w, h);
-      camera.aspect = w / h;
-      camera.position.z = w / h < 1.2 ? 13 : 9.5;
+      W = stage.clientWidth; Hh = stage.clientHeight;
+      renderer.setSize(W, Hh);
+      camera.aspect = W / Hh;
+      var z = Math.max(13.2 / camera.aspect, 10.5);
+      camera.position.set(0, 1.4, z);
+      camera.lookAt(0, 0.35, 0);
       camera.updateProjectionMatrix();
     }
     window.addEventListener("resize", resize);
     window.addEventListener("qrypt:theme", paint);
-    var clock = new THREE.Clock();
-    (function loop() {
-      var t = clock.getElapsedTime();
-      [alice, bob].forEach(function (s, i) {
-        s.dir.lerp(s.target, 0.08).normalize();
-        s.len += (s.lenGoal - s.len) * 0.08;
-        s.arrow.setDirection(s.dir);
-        s.arrow.setLength(Math.max(0.05, 1.5 * s.len), 0.28 * Math.max(0.4, s.len), 0.16 * Math.max(0.4, s.len));
-        s.g.rotation.y = -0.5 + Math.sin(t * 0.25 + i) * 0.15;
+
+    // Screen positions for the HTML labels: poles beside each sphere, names and results below.
+    var _v = new THREE.Vector3();
+    function toScreen(x, y, z) { _v.set(x, y, z).project(camera); return { x: (_v.x + 1) / 2 * W, y: (1 - _v.y) / 2 * Hh }; }
+    function place(el, x, y, centre) { el.style.transform = "translate(" + Math.round(x) + "px," + Math.round(y) + "px)" + (centre ? " translateX(-50%)" : ""); }
+    function placeLabels() {
+      [[alice, "l", "lab-left"], [bob, "r", "lab-right"]].forEach(function (p) {
+        var gx = p[0].g.position.x, gy = p[0].g.position.y;
+        var top = toScreen(gx, gy + 1.75, 0), bot = toScreen(gx, gy - 1.75, 0);
+        place($("pole-" + p[1] + "0"), top.x + 12, top.y - 9);
+        place($("pole-" + p[1] + "1"), bot.x + 12, bot.y - 9);
+        place($(p[2]), bot.x, bot.y + 16, true);
       });
+      if (!$("spy-tag").hidden) { var s = curve.getPoint(spyAt); var q = toScreen(s.x, s.y, s.z); place($("spy-tag"), q.x, q.y - 40, true); }
+    }
+
+    // Motion: arrows turn along the sphere (never through it), the photon crosses once per action, the Grover
+    // arrow turns step by step. Under reduced motion every arrow jumps to its result.
+    var UP = new THREE.Vector3(0, 1, 0), _axis = new THREE.Vector3();
+    function turn(s, k) {
+      var dot = Math.max(-1, Math.min(1, s.dir.dot(s.target)));
+      if (dot > 0.99999) s.dir.copy(s.target);
+      else {
+        _axis.crossVectors(s.dir, s.target);
+        if (_axis.lengthSq() < 1e-10) _axis.set(0, 0, 1).cross(s.dir);     // opposite poles: swing in the screen plane
+        if (_axis.lengthSq() < 1e-10) _axis.set(1, 0, 0);
+        s.dir.applyAxisAngle(_axis.normalize(), Math.acos(dot) * k).normalize();
+      }
+      s.len += (s.lenGoal - s.len) * k;
+    }
+    var pulse = { t: -1, dur: 1.0 };
+    function sendPhoton() {
+      if (REDUCED) return;
+      pulse.t = 0; bob.hold = true; photon.visible = true;
+    }
+    var sweepTimer = null;
+    function stopMotion() {
+      if (sweepTimer) { clearTimeout(sweepTimer); sweepTimer = null; }
+      pulse.t = -1; photon.visible = false; bob.hold = false;
+    }
+    var io = function (u) { return u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; };
+    var enter = function (u) { return 1 - Math.pow(1 - u, 3); };
+    var clock = new THREE.Clock(), born = 0;
+    (function loop() {
+      var dt = Math.min(clock.getDelta(), 0.05);
+      born += dt;
+      var k = REDUCED ? 1 : 1 - Math.exp(-dt * 6);
+      var ent = REDUCED ? 1 : enter(Math.min(1, born / 1.4));
+      [alice, bob].forEach(function (s) {
+        if (!s.hold) turn(s, k);
+        s.arrow.setDirection(s.dir);
+        var L = Math.max(0.05, s.len);
+        s.arrow.setLength(Math.max(0.05, 1.5 * L), 0.28 * Math.max(0.4, L), 0.16 * Math.max(0.4, L));
+        s.tip.position.copy(s.dir).multiplyScalar(1.5 * L);
+        s.tip.scale.setScalar(0.3 + 0.3 * L);
+        s.g.rotation.y = -1.1 + 0.6 * ent;
+      });
+      if (pulse.t >= 0) {
+        pulse.t += dt;
+        var u = Math.min(1, pulse.t / pulse.dur);
+        photon.position.copy(curve.getPoint(io(u)));
+        if (u >= 1) {
+          pulse.t = -1; photon.visible = false;
+          bob.dir.copy(alice.target); bob.len = alice.lenGoal; bob.hold = false;   // what left Alice, now easing into what arrives
+        }
+      }
+      placeLabels();
       renderer.render(scene, camera);
       requestAnimationFrame(loop);
     })();
+    function updateSpyTag(f, onFirstHop) {
+      var tag = $("spy-tag");
+      var show = f > 0 && (physicsTab === "bb84" || physicsTab === "tele");
+      tag.hidden = !show; spyRing.visible = !!show;
+      if (!show) return;
+      spyAt = onFirstHop ? 0.3 : 0.5;
+      spyRing.position.copy(curve.getPoint(spyAt));
+      tag.textContent = "Spy reads " + Math.round(f * 100) + "%" + (onFirstHop ? " on the first fiber" : "");
+    }
 
     // ---------------------------------------------------------------- tiny state-vector simulator
     // Amplitudes as [re, im] pairs over 2^n basis states; qubit 0 is the least significant bit.
@@ -336,11 +644,11 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
 
     // ---------------------------------------------------------------- teleportation
     var STATES = [
-      { id: "0", label: "|0⟩", theta: 0, phi: 0 },
-      { id: "1", label: "|1⟩", theta: Math.PI, phi: 0 },
-      { id: "+", label: "|+⟩", theta: Math.PI / 2, phi: 0 },
-      { id: "i", label: "|+i⟩", theta: Math.PI / 2, phi: Math.PI / 2 },
-      { id: "r", label: "Ry(π/3)", theta: Math.PI / 3, phi: 0 },
+      { id: "0", label: "|0⟩", word: "up", theta: 0, phi: 0 },
+      { id: "1", label: "|1⟩", word: "down", theta: Math.PI, phi: 0 },
+      { id: "+", label: "|+⟩", word: "side", theta: Math.PI / 2, phi: 0 },
+      { id: "i", label: "|+i⟩", word: "side, turned 90°", theta: Math.PI / 2, phi: Math.PI / 2 },
+      { id: "r", label: "Ry(π/3)", word: "tilted 60°", theta: Math.PI / 3, phi: 0 },
     ];
     var teleState = STATES[4];
     var net = (window.QRYPT_NETWORKS || {}).chattanooga;
@@ -388,26 +696,35 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
       return { hops: hops, qs: qs, ch: ch, q: ch[1] + ch[3], qx: ch[2] + ch[3] };
     }
     var nodeName = function (n) { return n.short || n.id; };
+    var sel = $("target");
     if (net) {
-      var sel = document.getElementById("target");
       net.nodes.filter(function (n) { return n.type === "substation" && n.short && route(n.id, 0); })
         .sort(function (a, b) { return nodeName(a).localeCompare(nodeName(b)); })
         .forEach(function (n) { var o = document.createElement("option"); o.value = n.id; o.textContent = nodeName(n) + " (" + n.id + ")"; sel.appendChild(o); });
       var def = [].slice.call(sel.options).find(function (o) { return o.textContent.indexOf("Hamilton") === 0; });
       if (def) sel.value = def.value;
       routeTo = sel.value;
-      sel.addEventListener("change", function () { routeTo = sel.value; runTele(); });
+      sel.addEventListener("change", function () { routeTo = sel.value; runTele({ send: true, why: "Sent to " + sel.options[sel.selectedIndex].textContent + "." }); });
+    } else {
+      $("tele-verdict").hidden = true;
+      $("tele-dl").innerHTML = row("Network data", "not loaded");
     }
-    var chips = document.getElementById("states");
+    var chips = $("states");
     STATES.forEach(function (s) {
       var b = document.createElement("button");
-      b.className = "chip"; b.textContent = s.label; b.setAttribute("aria-pressed", String(s === teleState));
-      b.addEventListener("click", function () { teleState = s; chips.querySelectorAll(".chip").forEach(function (c) { c.setAttribute("aria-pressed", String(c === b)); }); runTele(); });
+      b.type = "button";
+      b.className = "chip"; b.innerHTML = '<span class="k">' + s.label + '</span><span class="w">' + s.word + "</span>";
+      b.setAttribute("aria-pressed", String(s === teleState));
+      b.addEventListener("click", function () {
+        teleState = s; chips.querySelectorAll(".chip").forEach(function (c) { c.setAttribute("aria-pressed", String(c === b)); });
+        runTele({ send: true, why: "Alice now sends " + s.label + " (" + s.word + ")." });
+      });
       chips.appendChild(b);
     });
-    var spyEl = document.getElementById("spy");
-    spyEl.addEventListener("input", function () { document.getElementById("spyv").textContent = spyEl.value + "%"; runTele(); });
-    document.getElementById("run-tele").addEventListener("click", runTele);
+    var spyEl = $("spy");
+    spyEl.addEventListener("input", function () { $("spyv").textContent = spyEl.value + "%"; runTele({ why: "Spy now reads " + spyEl.value + "% on the first fiber." }); });
+    spyEl.addEventListener("change", function () { sendPhoton(); });
+    $("run-tele").addEventListener("click", function () { runTele({ send: true, why: "Teleported 1,024 more times." }); });
 
     function teleportOnce(ch) {
       // qubit 0: Alice's state; 1: Alice's half of the pair; 2: Bob's half.
@@ -424,7 +741,9 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
       if (m0) apply1(a, 2, Z);
       return measure(a, 2);
     }
-    function runTele() {
+    var lastTele = null;
+    function runTele(opt) {
+      opt = opt || {};
       if (!net || !routeTo) return;
       var spy = Number(spyEl.value) / 100;
       var r = route(routeTo, spy);
@@ -432,88 +751,163 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
       var shots = 1024, ones = 0;
       for (var i = 0; i < shots; i++) ones += teleportOnce(r.ch);
       var p1 = ones / shots, ideal1 = Math.pow(Math.sin(teleState.theta / 2), 2);
-      document.getElementById("t0").style.height = (100 * (1 - p1)) + "%";
-      document.getElementById("t1").style.height = (100 * p1) + "%";
-      document.getElementById("t0l").textContent = "|0⟩ " + (shots - ones);
-      document.getElementById("t1l").textContent = "|1⟩ " + ones;
+      $("t0").style.height = (100 * (1 - p1)) + "%";
+      $("t1").style.height = (100 * p1) + "%";
+      $("t0l").textContent = "|0⟩ " + (shots - ones);
+      $("t1l").textContent = "|1⟩ " + ones;
       // Bloch vectors: Alice's input; Bob's after independent bit and phase flips with probability Q.
       var v = [Math.sin(teleState.theta) * Math.cos(teleState.phi), Math.sin(teleState.theta) * Math.sin(teleState.phi), Math.cos(teleState.theta)];
       var c = r.ch; // [I, X, Z, Y]
-      setVec(alice, v);
-      setVec(bob, [v[0] * (c[0] + c[1] - c[2] - c[3]), v[1] * (c[0] - c[1] - c[2] + c[3]), v[2] * (c[0] - c[1] + c[2] - c[3])]);
       var fid = c[0] + c[1] * v[0] * v[0] + c[3] * v[1] * v[1] + c[2] * v[2] * v[2];
       var avgFid = c[0] + (c[1] + c[2] + c[3]) / 3;
       var worst = Math.max(r.q, r.qx);
       var seq = [hub.id]; r.hops.forEach(function (l) { var last = seq[seq.length - 1]; seq.push(l.a === last ? l.b : l.a); });
-      document.getElementById("tele-dl").innerHTML =
-        "<dt>Route</dt><dd>" + seq.map(function (id) { return nodeName(nodes[id]); }).join(" → ") + "</dd>" +
-        "<dt>Hops (fiber, km, error)</dt><dd>" + r.hops.map(function (l, i) { return l.id + " " + l.km + " km " + pct(r.qs[i]); }).join(" · ") + "</dd>" +
-        "<dt>End-to-end pair error (Z · X basis)</dt><dd>" + pct(r.q, 2) + " · " + pct(r.qx, 2) + "</dd>" +
-        "<dt>Good enough for a key (under 11%)</dt><dd><span class=\"q-pill q-pill--" + (worst < 0.11 ? "ok" : "bad") + "\">" + (worst < 0.11 ? "yes" : "no") + "</span></dd>" +
-        "<dt>Bob's |1⟩ rate: measured · ideal</dt><dd>" + pct(p1) + " · " + pct(ideal1) + "</dd>" +
-        "<dt>Fidelity for this state</dt><dd>" + pct(fid, 1) + "</dd>" +
-        "<dt>Average fidelity vs 2/3 classical limit</dt><dd><span class=\"q-pill q-pill--" + (avgFid > 2 / 3 ? "ok" : "bad") + "\">" + pct(avgFid, 1) + (avgFid > 2 / 3 ? " · beats it" : " · does not") + "</span></dd>" +
-        "<dt>Classical bits sent per qubit</dt><dd>2</dd>";
-      document.getElementById("open-route").href = "grid-twin/index.html?net=chattanooga&select=node:" + routeTo;
+      var beats = avgFid > 2 / 3;
+      if (physicsTab === "tele") {
+        setVec(alice, v);
+        setVec(bob, [v[0] * (c[0] + c[1] - c[2] - c[3]), v[1] * (c[0] - c[1] - c[2] + c[3]), v[2] * (c[0] - c[1] + c[2] - c[3])]);
+        setGhost(bob, v);
+        var ml = $("m-left"), mr = $("m-right");
+        if (ml) ml.textContent = teleState.label;
+        if (mr) mr.textContent = pct(fid, 1) + " match";
+        updateSpyTag(spy, true);
+        if (opt.send) sendPhoton();
+      }
+      if (worst < 0.11) verdict($("tele-verdict"), "ok", "Usable route", "Pair errors stay under 11% (worst " + pct(worst, 2) + "). Average fidelity " + (beats ? "beats" : "does not beat") + " the 2/3 classical limit.");
+      else verdict($("tele-verdict"), "bad", "Too noisy for a key", "Pair errors reach " + pct(worst, 2) + ", above the 11% limit. Average fidelity " + (beats ? "still beats" : "does not beat") + " the 2/3 classical limit.");
+      $("tele-fid").textContent = pct(avgFid, 1);
+      $("tele-dl").innerHTML =
+        "<dt>Route (" + r.hops.length + (r.hops.length === 1 ? " fiber" : " fibers") + ")</dt><dd></dd><dd class=\"route\">" + seq.map(function (id) { return nodeName(nodes[id]); }).join(" → ") + "</dd>" +
+        row("Bob's results that read |1⟩: measured · ideal", pct(p1) + " · " + pct(ideal1)) +
+        row("Fidelity for this state", pct(fid, 1), true) +
+        row("End-to-end pair error (Z · X basis)", pct(r.q, 2) + " · " + pct(r.qx, 2), true) +
+        row("Classical bits sent per qubit", "2", true);
+      $("tele-hops").innerHTML = "<tr><th>Fiber</th><th class=\"n\">Length</th><th class=\"n\">Error on this hop</th></tr>" +
+        r.hops.map(function (l, i) { return "<tr><td>" + l.id + (i === 0 && spy > 0 ? " (spy here)" : "") + "</td><td class=\"n\">" + l.km + " km</td><td class=\"n\">" + pct(r.qs[i]) + "</td></tr>"; }).join("");
+      $("open-route").href = "grid-twin/index.html?net=chattanooga&select=node:" + routeTo;
+      if (opt.why) {
+        $("tele-changed").textContent = opt.why + (lastTele != null && Math.abs(lastTele - avgFid) > 5e-4 ? " Average fidelity was " + pct(lastTele, 1) + ", now " + pct(avgFid, 1) + "." : " Average fidelity " + pct(avgFid, 1) + ".");
+        flash($("tele-result"));
+      }
+      lastTele = avgFid;
     }
 
     // ---------------------------------------------------------------- BB84 Monte Carlo
-    var bbKm = document.getElementById("bb-km"), bbF = document.getElementById("bb-f");
-    [bbKm, bbF].forEach(function (el) { el.addEventListener("input", function () { document.getElementById("bb-kmv").textContent = bbKm.value + " km"; document.getElementById("bb-fv").textContent = bbF.value + "%"; runBB84(); }); });
-    document.getElementById("run-bb").addEventListener("click", runBB84);
-    function runBB84() {
+    var bbKm = $("bb-km"), bbF = $("bb-f");
+    [bbKm, bbF].forEach(function (el) {
+      el.addEventListener("input", function () {
+        $("bb-kmv").textContent = bbKm.value + " km"; $("bb-fv").textContent = bbF.value + "%";
+        runBB84({ why: el === bbKm ? "Fiber is now " + bbKm.value + " km." : "Spy now reads " + bbF.value + "% of photons." });
+      });
+      el.addEventListener("change", function () { sendPhoton(); });
+    });
+    $("run-bb").addEventListener("click", function () { runBB84({ send: true, why: "Sent 20,000 new photons." }); });
+    var lastBB = null;
+    function runBB84(opt) {
+      opt = opt || {};
       var km = Number(bbKm.value), f = Number(bbF.value) / 100, p = baselineQber(km), n = 20000;
-      var sifted = 0, errors = 0, wrongBasisShown = false;
+      var sifted = 0, errors = 0;
       for (var i = 0; i < n; i++) {
         var bit = Math.random() < 0.5 ? 1 : 0, basis = Math.random() < 0.5 ? 1 : 0, bobBasis = Math.random() < 0.5 ? 1 : 0;
         var val = bit, cur = basis;
         if (Math.random() < f) { var eb = Math.random() < 0.5 ? 1 : 0; if (eb !== cur) val = Math.random() < 0.5 ? 1 : 0; cur = eb; }
         if (Math.random() < p) val ^= 1;               // fiber and detector noise
-        var bob = bobBasis === cur ? val : (Math.random() < 0.5 ? 1 : 0);
-        if (basis === bobBasis) { sifted++; if (bob !== bit) errors++; }
+        var bobBit = bobBasis === cur ? val : (Math.random() < 0.5 ? 1 : 0);
+        if (basis === bobBasis) { sifted++; if (bobBit !== bit) errors++; }
       }
       var q = errors / sifted, theory = expectedQber(p, f), se = Math.sqrt(theory * (1 - theory) / sifted);
-      document.getElementById("bb-dl").innerHTML =
-        "<dt>Normal error on this fiber</dt><dd>" + pct(p, 2) + "</dd>" +
-        "<dt>Sifted bits (bases matched)</dt><dd>" + sifted.toLocaleString() + "</dd>" +
-        "<dt>Measured QBER</dt><dd>" + pct(q, 2) + " ± " + pct(se, 2) + "</dd>" +
-        "<dt>Theory p + f(¼ − p/2)</dt><dd>" + pct(theory, 2) + "</dd>" +
-        "<dt>Secret key left</dt><dd>" + pct(Math.max(0, 1 - 2 * h2(q)), 0) + "</dd>" +
-        "<dt>Verdict</dt><dd><span class=\"q-pill q-pill--" + (q > 0.11 ? "bad" : q - p > 0.014 ? "warn" : "ok") + "\">" + (q > 0.11 ? "above 11%: no key" : q - p > 0.014 ? "spy detected (quick estimate)" : "normal noise") + "</span></dd>";
+      var keyLeft = Math.max(0, 1 - 2 * h2(q));
+      $("bb-q").textContent = pct(q, 2);
+      $("bb-se").textContent = "± " + pct(se, 2);
+      $("bb-th").textContent = pct(theory, 2);
+      if (q > 0.11) verdict($("bb-verdict"), "bad", "No key: errors above 11%", "Too many bits arrive wrong, so Alice and Bob throw this key away.");
+      else if (q - p > 0.014) verdict($("bb-verdict"), "warn", "Spy detected", "Errors are above this fiber's normal " + pct(p, 2) + " (quick estimate). " + pct(keyLeft, 0) + " of the matched bits can still become secret key.");
+      else verdict($("bb-verdict"), "ok", "Normal noise", "Errors look like this fiber's normal " + pct(p, 2) + ". " + pct(keyLeft, 0) + " of the matched bits can become secret key.");
+      $("bb-dl").innerHTML =
+        row("Normal error on this fiber", pct(p, 2)) +
+        row("Secret key left", pct(keyLeft, 0)) +
+        row("Sifted bits (bases matched)", sifted.toLocaleString(), true) +
+        row("Theory p + f(¼ − p/2)", pct(theory, 2), true);
+      if (opt.why) {
+        $("bb-changed").textContent = opt.why + (lastBB != null && Math.abs(lastBB - q) > 5e-5 ? " Error rate was " + pct(lastBB, 2) + ", now " + pct(q, 2) + "." : "");
+        flash($("bb-result"));
+      }
+      lastBB = q;
       // Spheres: Alice's photon |0> and Bob's photon on average. A spy who guesses the wrong basis (half the time)
       // leaves a random X-basis state, and the fiber flips the bit with probability p: length (1 - f/2)(1 - 2p).
-      setVec(alice, [0, 0, 1]);
-      setVec(bob, [0, 0, (1 - f / 2) * (1 - 2 * p)]);
+      if (physicsTab === "bb84") {
+        setVec(alice, [0, 0, 1]);
+        setVec(bob, [0, 0, (1 - f / 2) * (1 - 2 * p)]);
+        setGhost(bob, [0, 0, 1]);
+        var ml = $("m-left"), mr = $("m-right");
+        if (ml) ml.textContent = "|0⟩";
+        if (mr) mr.textContent = pct(q, 1) + " wrong";
+        updateSpyTag(f, false);
+        if (opt.send) sendPhoton();
+      }
     }
 
     // ---------------------------------------------------------------- Grover, exact
     var GN = [4, 8, 16, 1024];
     var gN = 8;
-    var gChips = document.getElementById("gN");
+    var gChips = $("gN");
     GN.forEach(function (N) {
       var b = document.createElement("button");
-      b.className = "chip"; b.textContent = "N = " + N; b.setAttribute("aria-pressed", String(N === gN));
-      b.addEventListener("click", function () { gN = N; gChips.querySelectorAll(".chip").forEach(function (c) { c.setAttribute("aria-pressed", String(c === b)); }); runGrover(); });
+      b.type = "button";
+      b.className = "chip"; b.innerHTML = '<span class="k">' + N.toLocaleString() + '</span><span class="w">keys</span>';
+      b.setAttribute("aria-pressed", String(N === gN));
+      b.addEventListener("click", function () {
+        gN = N; gChips.querySelectorAll(".chip").forEach(function (c) { c.setAttribute("aria-pressed", String(c === b)); });
+        runGrover({ sweep: true, why: true });
+      });
       gChips.appendChild(b);
     });
-    function runGrover() {
+    var lastG = null;
+    function runGrover(opt) {
+      opt = opt || {};
       var th = Math.asin(1 / Math.sqrt(gN)), k = Math.max(1, Math.floor(Math.PI / (4 * th))), p = Math.pow(Math.sin((2 * k + 1) * th), 2);
-      document.getElementById("g-dl").innerHTML =
-        "<dt>Qubits</dt><dd>" + Math.log2(gN) + "</dd>" +
-        "<dt>Grover steps (about π/4 · √N)</dt><dd>" + k + "</dd>" +
-        "<dt>Classical tries on average</dt><dd>about " + (gN / 2) + "</dd>" +
-        "<dt>Success probability, exact</dt><dd>" + pct(p, 1) + "</dd>" +
-        "<dt>Random guess</dt><dd>" + pct(1 / gN, gN > 100 ? 2 : 1) + "</dd>";
+      $("g-p").textContent = pct(p, 1);
+      $("g-r").textContent = pct(1 / gN, gN > 100 ? 2 : 1);
+      $("g-dl").innerHTML =
+        row("Qubits", Math.log2(gN)) +
+        row("Grover steps<span class=\"q-adv\"> (about π/4 · √N)</span>", k) +
+        row("Classical tries on average", "about " + (gN / 2).toLocaleString());
+      document.querySelectorAll("#g-table [data-n]").forEach(function (c) { c.classList.toggle("is-col", Number(c.dataset.n) === gN); });
+      if (opt.why) {
+        $("g-changed").textContent = "Searching " + gN.toLocaleString() + " keys" + (lastG ? " (was " + lastG.n.toLocaleString() + ": " + pct(lastG.p, 1) + ")" : "") + ". " + (gN > 16 ? "No machine ran this size; this one is theory only." : "Its column is marked in the table below.");
+        flash($("g-result"));
+      }
+      lastG = { n: gN, p: p };
+      if (physicsTab !== "grover") return;
       // Bloch picture of the two-dimensional Grover plane: the target key at the top, "every other key" at the bottom.
       // A state with amplitude sin(a) on the target sits at polar angle pi - 2a: (sin 2a, 0, -cos 2a).
       var bloch = function (a) { return [Math.sin(2 * a), 0, -Math.cos(2 * a)]; };
       setVec(alice, bloch(th));
-      setVec(bob, bloch((2 * k + 1) * th));
+      setGhost(bob, null);
+      updateSpyTag(0);
+      var ml = $("m-left");
+      if (ml) ml.textContent = "right key " + pct(1 / gN, gN > 100 ? 2 : 1);
+      function showStep(j) {
+        setVec(bob, bloch((2 * j + 1) * th));
+        var cr = $("c-right"), mr = $("m-right");
+        if (cr) cr.textContent = j === k ? "after " + k + (k === 1 ? " Grover step" : " Grover steps") : j === 0 ? "before the first step" : "step " + j + " of " + k;
+        if (mr) mr.textContent = "right key " + pct(Math.pow(Math.sin((2 * j + 1) * th), 2), 1);
+      }
+      if (sweepTimer) { clearTimeout(sweepTimer); sweepTimer = null; }
+      if (!opt.sweep || REDUCED) { showStep(k); return; }
+      // Each Grover step turns the state by the same angle: show them one at a time (about 2.4 s in all).
+      setVec(bob, bloch(th)); bob.dir.copy(bob.target); bob.len = 1;
+      showStep(0);
+      var gap = Math.max(90, Math.min(520, 2400 / k)), j = 0;
+      (function next() { sweepTimer = setTimeout(function () { j++; showStep(j); if (j < k) next(); else sweepTimer = null; }, j === 0 ? 400 : gap); })();
     }
 
+    // ---------------------------------------------------------------- start
     resize();
-    paint();
-    runTele();
+    runBB84();
+    runGrover();
+    var first = (location.hash || "").slice(1);
+    selectTab(STAGE[first] ? first : "bb84");
   </script>
 </body>
 </html>
