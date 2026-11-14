@@ -1,27 +1,31 @@
 # Slides: Secure the Grid (UTC) pitch deck plan
 
-Judges score the deck. This file is the plan and the draft text for it. Build the real deck (5 slides) from the sections below.
+Judges score the deck. This file is the plan and the draft text for it. Build the real deck (5 slides, using the template .pptx) from the sections below.
 Status key: DONE = we have the content, TEAM = needs the teammate or all of us, VERIFY = check before it goes on a slide.
 
 ## What the organizers asked for (their slide-deck note)
 The questions below are what people should consider. The notebooks are there to help you understand the technical and quantum side and to get started, but they should not limit you. Think about how you would present a solution around the problem. The repo is a starting point: pull in other resources and research, code new tools that add value, think about the big picture around the solution, and back it up with technical knowledge and understanding.
 
-What that means for us: the deck is judged on understanding, presentation (problem, customer, solution, value), the tools we build, and honesty about what failed. Code counts less than the story and our ability to explain it in plain words.
+What that means for us: the deck is judged on understanding, presentation (problem, customer, solution, what we learned), the tools we build, and honesty about what failed. Code counts less than the story and our ability to explain it in plain words.
 
-## The new five-slide template (from the root README)
-| # | Slide | One-line job |
+## The new five-slide template (Quantum_Hackathon_Five_Slide_Genric-Template.pptx)
+The organizers' new template is "five slides, five minutes". It replaces the README's older Problem / Customer / Solution / Value / What we learned list. Its prompts, verbatim in meaning:
+
+| # | Slide | Prompts on the template |
 |---|---|---|
-| 1 | Problem | What goes wrong today, and why it matters |
-| 2 | Customer | Who has the problem, what it costs them now, who decides |
-| 3 | Solution | What we built, quantum and classical results side by side |
-| 4 | Value | What it is worth to the customer, in numbers, with sources; label guesses as guesses |
-| 5 | What we learned | Where quantum helps, where it doesn't yet, what failed |
+| 1 | The Problem | What problem are we solving? Describe the specific problem. Why does it matter? What is inadequate about existing approaches? |
+| 2 | Ideal Customer Profile | Who needs this solution? Target organization/customer. Actual end user and decision maker. Why would they adopt or pay for it? |
+| 3 | Solution & Technology | What did we build? Quantum computing/networking method and why it fits. Prototype, simulation, architecture or measured result. What works today versus what remains unproven. |
+| 4 | The Team | Who made it happen? Names and relevant expertise. Individual contributions. Complementary technical and commercial skills. |
+| 5 | What We Learned | What changed in 36 hours? What we validated or disproved. Most important surprise or limitation. What we would test or build next. |
+
+The old "Value" slide is gone, so the value argument now lives on slide 2 (why they would adopt or pay) and slide 3 (what works today vs what is unproven). The finalist slot in the README is 4 minutes; the template says five minutes. Ask a mentor which applies to your slot.
 
 Logistics: submit the deck and a ZIP of this folder by **Sunday 9:00 AM** (hard deadline, one person submits). Bring the deck to the judging slot on a USB stick or laptop. Six finalists present for 4 minutes at the closing ceremony. Keep a run record (device, job ID, shots, status) for every cloud run. Set sharing to "anyone with the link" and test the links in a private window.
 
 ---
 
-## Slide 1. Problem
+## Slide 1. The Problem
 Questions to answer: Which of the utility's data or keys must stay secret for 10 years or more? Is the bigger risk someone reading old traffic, or someone forging a command or firmware update later?
 
 Draft (DONE, from Step 2):
@@ -31,7 +35,7 @@ Draft (DONE, from Step 2):
 - Demo we ran: Shor factors 15 (r = 4, 15 = 3 x 5). The circuit is hard-coded for N = 15, so it shows the idea, not the scale.
 - [TEAM] Step 1: a spy on a fiber link is a separate, present-day threat. Add the BB84 result: error rate without and with an eavesdropper.
 
-## Slide 2. Customer
+## Slide 2. Ideal Customer Profile
 Questions to answer: What does a utility like EPB run on these links today? How long do field devices stay in service? Who signs off on a change like this, and which rules apply?
 
 Draft (mostly DONE, needs VERIFY on numbers):
@@ -42,7 +46,17 @@ Draft (mostly DONE, needs VERIFY on numbers):
 - Who decides and which rules: the utility's engineering and security leadership and its board; NERC CIP-012-2 (control-center-to-control-center data protection, enforceable since 1 July 2026; technology-neutral, does not mandate encryption); CIP-005 (future version 2028, VERIFY). NIST IR 8547 sets 2030 deprecation / 2035 disallowance for RSA and ECC in NIST standards; it binds a municipal utility through contracts, regulators or policy, not automatically.
 - What an attack costs them (use sparingly, label as context): the 2015 Ukraine grid attack cut power to about 225,000 customers for 1-6 hours (E-ISAC report). The IBM Cost of a Data Breach 2024 average is $4.88M across all industries (not utility-specific).
 
-## Slide 3. Solution
+### Why they would adopt or pay (the value argument; belongs on slide 2)
+Prompt: Why would they adopt or pay for it? What does one QKD link cost (equipment, dedicated fiber, trusted nodes) next to a post-quantum software or firmware update? What does the utility get for the difference?
+
+Draft (numbers and where they come from; label guesses):
+- What the agencies say (independent, but pre-existing positions): NSA does not recommend QKD for national security systems and says it needs trusted relays and has limitations (NSA Post-Quantum Cybersecurity Resources page). The UK NCSC (2025 white paper) says it will not support QKD for government or military use. A joint European position paper on QKD (ANSSI, BSI, NLNCSA, Swedish authorities, Jan 2024) calls it suited only to niche use. VERIFY: we could not confirm the last one from a primary source in this session.
+- PQC cost: the White House OMB/ONCD report (July 2024) put federal migration of priority civilian systems at about $7.1 billion over 2025-2035, flagged by OMB itself as high-uncertainty. No published utility-specific dollar figure found; say so.
+- QKD cost (all rough, from academic and consultancy sources, not EPB quotes): about EUR 200,000 per pair of QKD systems (academic estimate, arXiv 2206.14109, 2022); consultancy estimates of $100-150k per node and $200-300k per link (vendor/consultancy source, unverified); dedicated fiber rental about $1,000/km/year (preprint). A trusted-node chain needs hardware at every hop. VERIFY before quoting.
+- A transparent guess for slide 2 (mark it as a guess): a 10-site star network needs 9 QKD links. At $200-300k per link that is roughly $1.8-2.7M in QKD equipment before fiber, trusted-node security and staff. Compare with PQC: mostly software and firmware updates on hardware that can already be patched, plus replacing the devices that cannot (ROM trust anchors, old meters), at normal refresh. We do not have a PQC dollar figure; give it as a range after a mentor or the utility case supports it.
+- Value story: PQC protects every link and every system, is standards-backed (NIST FIPS 203/204/205), and is mostly a software change. QKD protects only the key exchange on the links it is installed on, still needs authentication from classical crypto, and needs relays. The difference in spend buys coverage of the whole network instead of a few links.
+
+## Slide 3. Solution & Technology
 Questions to answer: Your network diagram, your working link, your rollout.
 
 Draft:
@@ -55,17 +69,12 @@ Draft:
 - Suggested design principle for the diagram: use PQC (hybrid ML-KEM + ML-DSA) as the default across all links; use QKD only where the case is strong (short dedicated fiber between a few high-value sites), and treat QKD trusted-node relays as trust anchors that must be protected.
 - Tools to build (these count; pick one or two): an interactive BB84 demo with an eavesdropper slider; a threshold explorer (line noise vs a spy, where to set the alarm); a network map showing which links get QKD vs PQC and why; a migration tracker that ranks systems by data lifetime x device lifetime. Our Part 3 table is already the data for the tracker.
 
-## Slide 4. Value
-Questions to answer: What does one QKD link cost (equipment, dedicated fiber, trusted nodes) next to a post-quantum software or firmware update? What does the utility get for the difference?
+## Slide 4. The Team
+Prompts: Who made it happen? Names and relevant expertise. Individual contributions. Complementary technical and commercial skills.
 
-Draft (numbers and where they come from; label guesses):
-- What the agencies say (independent, but pre-existing positions): NSA does not recommend QKD for national security systems and says it needs trusted relays and has limitations (NSA Post-Quantum Cybersecurity Resources page). The UK NCSC (2025 white paper) says it will not support QKD for government or military use. A joint European position paper on QKD (ANSSI, BSI, NLNCSA, Swedish authorities, Jan 2024) calls it suited only to niche use. VERIFY: we could not confirm the last one from a primary source in this session.
-- PQC cost: the White House OMB/ONCD report (July 2024) put federal migration of priority civilian systems at about $7.1 billion over 2025-2035, flagged by OMB itself as high-uncertainty. No published utility-specific dollar figure found; say so.
-- QKD cost (all rough, from academic and consultancy sources, not EPB quotes): about EUR 200,000 per pair of QKD systems (academic estimate, arXiv 2206.14109, 2022); consultancy estimates of $100-150k per node and $200-300k per link (vendor/consultancy source, unverified); dedicated fiber rental about $1,000/km/year (preprint). A trusted-node chain needs hardware at every hop. VERIFY before quoting.
-- A transparent guess for slide 4 (mark it as a guess): a 10-site star network needs 9 QKD links. At $200-300k per link that is roughly $1.8-2.7M in QKD equipment before fiber, trusted-node security and staff. Compare with PQC: mostly software and firmware updates on hardware that can already be patched, plus replacing the devices that cannot (ROM trust anchors, old meters), at normal refresh. We do not have a PQC dollar figure; give it as a range after a mentor or the utility case supports it.
-- Value story: PQC protects every link and every system, is standards-backed (NIST FIPS 203/204/205), and is mostly a software change. QKD protects only the key exchange on the links it is installed on, still needs authentication from classical crypto, and needs relays. The difference in spend buys coverage of the whole network instead of a few links.
+Draft: [TEAM] fill in names and roles. Suggested split from this repo's work: Step 1 BB84 (teammate), Step 2 Shor/Grover and the migration analysis (this branch's author, with AI assistance), Step 3 capstone design, deck and customer/value research. Say plainly which parts used AI assistants (see slide 5) and who can explain each result. Judges ask everyone to explain the work in plain words.
 
-## Slide 5. What we learned
+## Slide 5. What We Learned
 Questions to answer: Where does quantum help this customer today, and where doesn't it? What failed, and why?
 
 Draft (honest list; add the teammate's failures):
@@ -79,7 +88,8 @@ Draft (honest list; add the teammate's failures):
 ---
 
 ## Checklist before Sunday 9:00 AM
-- [ ] Teammate's Step 1 (BB84) and Step 3 (capstone) added to slides 1, 3, 5.
+- [ ] Teammate's Step 1 (BB84) and Step 3 (capstone) added to slides 1, 3, 5; names and roles on slide 4.
+- [ ] Open the template .pptx and fill in its five slides (it is not committed by us; add it to the repo only if the team wants it there).
 - [ ] Merge `WRITEUP_step2.md` and the other steps into one `WRITEUP.md` (the README's required name), labeled by Step and Part.
 - [ ] Resolve every VERIFY item or remove the claim.
 - [ ] Run record complete (job IDs are in `WRITEUP_step2.md`).
