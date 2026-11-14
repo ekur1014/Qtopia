@@ -15,6 +15,7 @@ Saturday 14 November 2026. Scope: everything this part of the team produced (not
 | Browser: desktop 1440×900, phone 375×812 | No console errors at either size after the fixes below |
 | Grid Twin physics vs Qiskit Aer (7 scenarios) | All agree |
 | Same fiber on Qiskit Aer, CUDA-Q, Guppy (Selene) | All within statistical error of theory |
+| Published artifact renders (Three.js from jsDelivr through an import map) | Confirmed by the user, 14 Nov |
 
 ## Problems found and fixed
 
@@ -51,5 +52,4 @@ The team chose Grid Twin's design. These need the teammates' attention before su
 
 ## Not verified
 
-- That the published artifact renders Three.js on the artifact host (it loads modules from jsDelivr through an import map). Open the link once to confirm.
 - Performance on the 300-bus grid on an older laptop (the 118-bus grid ran at about 120 fps in the test browser).
