@@ -162,7 +162,7 @@ Notebook `2b_grover_symmetric_keys.ipynb` runs Grover's search with a phase orac
 - **Real hardware.** On Rigetti Cepheus the right key was the most common outcome at N = 4 (88.5%) and N = 8 (45.0%), against 25% and 12.5% for random guessing. At N = 8 each of the seven wrong outcomes got 5.5 to 10%, so the peak is real but far below the 94.5% theory value, and below both noise models. At N = 16 the key came up on only 9 of 200 shots (4.5%), below the 6.25% of random guessing, and the two most common outcomes were wrong keys (21 shots each): at that size the noise wipes out the search.
 - **What it shows.** Today's machines can find a 3-bit key with Grover's search, but the success rate collapses as the circuit grows. A search over 16 keys says nothing about AES directly; the point is the scaling, about √N steps instead of N.
 
-**What Grover's search means for AES key length.** Grover's search cuts a brute-force search over 2¹²⁸ keys (AES-128) to about 2⁶⁴ quantum steps, and over 2²⁵⁶ (AES-256) to about 2¹²⁸. It weakens AES by halving the key exponent; it does not break it. In practice it is weaker still. Each step must run a full AES circuit on an error-corrected quantum computer, and the steps must run one after another: split across M machines, Grover's search runs only √M times faster (Zalka, 1999), while a classical search runs M times faster.
+**What Grover's search means for AES key length.** Grover's search cuts a brute-force search over 2¹²⁸ keys (AES-128) to about 2⁶⁴ quantum steps, and over 2²⁵⁶ (AES-256) to about 2¹²⁸. It weakens AES by halving the key exponent; it does not break it. In practice it is weaker still. Each step must run a full AES circuit on an error-corrected quantum computer, and the steps must run one after another: split across M machines, Grover's search runs only √M times faster, while a classical search runs M times faster (Zalka, 1997, cited in NIST's FAQ).
 
 NIST's post-quantum FAQ ("To protect against the threat of quantum computers, should we double the key length for AES now?") says "it is quite likely that Grover's algorithm will provide little or no advantage in attacking AES, and AES 128 will remain secure for decades to come", and that current applications can keep using AES with 128, 192 or 256-bit keys.
 
@@ -252,7 +252,7 @@ What the runs show:
 | qBraid IonQ simulator (job `ionq:ionq:sim:simulator-a7ae-qjob-6af89d21c8f5265fb3f1dcf7`) | 12.55% |
 | Notebook 1's own code on qBraid's QIR simulator | 12.48% |
 
-All are within statistical error of the theory value.
+With about 2,000 sifted bits per run, one standard error is about 0.7 points. Four engines are within 1.2 standard errors of the theory value; Guppy, at 11.15%, is the furthest out, at 2.0.
 
 ### Part 4. Rollout plan
 1. **Now (software, no new hardware).** A cryptographic inventory; hybrid ML-KEM on every VPN, TLS and SSH edge; PQC-capable hardware and AES-256 required in all new procurement; dual-signed firmware (classical plus a hash-based or ML-DSA signature). These are ranks 1 to 3 of the Step 2 migration plan, and they protect every link against "harvest now, decrypt later".
@@ -263,7 +263,7 @@ All are within statistical error of the theory value.
 **What it costs.**
 - We found no published QKD price: ID Quantique and Toshiba do not publish prices.
 - From the architecture: each QKD fiber needs a matched pair of devices and suitable fiber, and every hop of a longer route needs a secured relay. QKD cost therefore grows with the number of fibers and hops: 34 fibers in our design, against 145 for QKD everywhere.
-- PQC is mostly software and firmware updates, plus replacing devices that can't be updated at their normal refresh time. We found no utility-specific figure. For scale, the White House (OMB/ONCD, July 2024) estimated about $7.1 billion to migrate priority federal civilian systems over 2025 to 2035, a figure it describes as highly uncertain.
+- PQC is mostly software and firmware updates, plus replacing devices that can't be updated at their normal refresh time. We found no utility-specific figure. For scale, the White House (OMB/ONCD, July 2024) estimated about $7.1 billion (in 2024 dollars) to migrate prioritized federal systems, national security systems excluded, over 2025 to 2035. The report calls this a rough order-of-magnitude estimate with "a high, but expected, level of uncertainty".
 
 **What it protects, and what a cheaper option leaves exposed.**
 - **PQC alone** protects every link and system against harvest-now and forge-later attacks with standards-backed algorithms (FIPS 203, 204 and 205). It does not detect a tap: an eavesdropper on a PQC fiber goes unseen, though what they record stays encrypted.
@@ -294,7 +294,7 @@ All simulator and emulator jobs cost 0 credits. Our six Rigetti Cepheus jobs cos
 |---|---|---|---|---|---|
 | 1 | Qiskit Aer (local), Shor N = 15 | 1024 | completed | none | r = 4, 15 = 3 × 5 |
 | 1 | **Rigetti Cepheus-1-108Q, real QPU**, Shor reduced circuit (4 counting qubits) | 200 | COMPLETED | `aws:rigetti:qpu:cepheus-1-108q-a7ae-qjob-6af7d39af15852ed27b724ad` | 130/200 on the four ideal outcomes |
-| 2 | qBraid device catalog and SDK listing (13 Nov 2026) | none | | none | 156 qubits (web), 107 (SDK) |
+| 2 | qBraid device catalog and SDK listing (13 Nov 2026) | none | n/a | none | 156 qubits (web), 107 (SDK) |
 | 5 | Qiskit Aer (local), Grover N = 4, 8, 16 | 1024 each | completed | none | 100.0%, 95.5%, 96.0% |
 | 5 | IonQ simulator, forte-1, Grover N = 4, key 2 | 200 | COMPLETED | `ionq:ionq:sim:simulator-a7ae-qjob-6af7caaff15852ed27b7215d` | 200/200 |
 | 5 | IonQ simulator, forte-1, Grover N = 8, key 6 | 200 | COMPLETED | `ionq:ionq:sim:simulator-a7ae-qjob-6af7cacbf15852ed27b72167` | 143/200 |
@@ -332,6 +332,7 @@ Runs that produced no result: our first three jobs on IonQ Forte through Open Qu
 - NERC CIP-012-2: https://www.nerc.com/standards/reliability-standards/cip/cip-012-2 ; CIP-005-8: https://www.nerc.com/standards/reliability-standards/cip/cip-005-8
 - Gidney 2025: https://arxiv.org/abs/2505.15917 ; Gidney & Ekerå 2019: https://arxiv.org/abs/1905.09749
 - Pappalardo et al. (Alice & Bob): https://eprint.iacr.org/2026/2665
+- OMB/ONCD, Report on Post-Quantum Cryptography (July 2024): https://bidenwhitehouse.archives.gov/wp-content/uploads/2024/07/REF_PQC-Report_FINAL_Send.pdf
 - Iceberg Quantum Pinnacle: https://www.iceberg-quantum.com/blog/pinnacle-and-series-seed/ and https://www.iceberg-quantum.com/blog/releases/pinnacle-1-2/
 - Ma, Qi, Zhao and Lo, practical decoy-state QKD: https://arxiv.org/abs/quant-ph/0503005
 - Evans et al., trusted-node QKD at EPB: https://arxiv.org/abs/2103.09877
