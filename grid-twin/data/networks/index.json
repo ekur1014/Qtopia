@@ -1,0 +1,66 @@
+[
+ {
+  "id": "city",
+  "label": "Stylized city network",
+  "file": "data/network.json",
+  "nodes": 17,
+  "links": 21,
+  "qkd": 11,
+  "note": "Hand-made layout: 2 control centers, 6 substations, 8 sub-units, 1 remote site."
+ },
+ {
+  "id": "ieee14",
+  "label": "IEEE 14-bus grid",
+  "file": "data/networks/ieee14.json",
+  "nodes": 14,
+  "links": 20,
+  "qkd": 13,
+  "control": 2,
+  "substation": 8,
+  "subunit": 4
+ },
+ {
+  "id": "ieee30",
+  "label": "IEEE 30-bus grid",
+  "file": "data/networks/ieee30.json",
+  "nodes": 30,
+  "links": 41,
+  "qkd": 20,
+  "control": 2,
+  "substation": 15,
+  "subunit": 13
+ },
+ {
+  "id": "ieee57",
+  "label": "IEEE 57-bus grid",
+  "file": "data/networks/ieee57.json",
+  "nodes": 57,
+  "links": 78,
+  "qkd": 30,
+  "control": 2,
+  "substation": 23,
+  "subunit": 32
+ },
+ {
+  "id": "ieee118",
+  "label": "IEEE 118-bus grid",
+  "file": "data/networks/ieee118.json",
+  "nodes": 118,
+  "links": 179,
+  "qkd": 104,
+  "control": 2,
+  "substation": 73,
+  "subunit": 43
+ },
+ {
+  "id": "ieee300",
+  "label": "IEEE 300-bus grid",
+  "file": "data/networks/ieee300.json",
+  "nodes": 300,
+  "links": 409,
+  "qkd": 258,
+  "control": 2,
+  "substation": 201,
+  "subunit": 97
+ }
+]

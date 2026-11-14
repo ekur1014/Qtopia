@@ -7,7 +7,7 @@
 //  3. Only an operator quarantine removes a link from service; traffic then reroutes around it.
 //  4. A QKD key that crosses several links is relayed through trusted nodes: every relay sees the key.
 
-import { shortestPath, controlCenters } from "./network.js";
+import { shortestPathTree, pathFromTree, controlCenters } from "./network.js";
 
 /** How one link gets its keys right now. */
 export function linkKeySource(link, state) {
@@ -29,6 +29,10 @@ export function computeResponse(net, linkStates) {
     links.set(link.id, { keySource, carriesData: keySource !== "none" });
   }
 
+  // One search tree for data paths (any link in service) and one for QKD key paths (healthy QKD links only).
+  const dataTree = shortestPathTree(net, centers, (l) => links.get(l.id).carriesData);
+  const qkdTree = shortestPathTree(net, centers, (l) => links.get(l.id).keySource === "qkd");
+
   const sites = new Map();
   for (const node of net.nodes.values()) {
     if (node.type === "control") {
@@ -36,14 +40,14 @@ export function computeResponse(net, linkStates) {
       continue;
     }
 
-    const dataPath = shortestPath(net, centers, node.id, (l) => links.get(l.id).carriesData);
+    const dataPath = pathFromTree(dataTree, node.id);
 
     // Major substations get an end-to-end QKD key when a chain of healthy QKD links reaches a control center.
     // Everything else (sub-units, remote sites, or a substation whose QKD chain is broken) uses ML-KEM.
     let keySource = "pqc";
     let keyPath = null;
     if (node.type === "substation") {
-      const qkdPath = shortestPath(net, centers, node.id, (l) => links.get(l.id).keySource === "qkd");
+      const qkdPath = pathFromTree(qkdTree, node.id);
       if (qkdPath) {
         keySource = "qkd";
         keyPath = qkdPath;
@@ -71,10 +75,10 @@ export function describeChanges(net, before, after) {
     if (!was || was.keySource === now.keySource) continue;
     const l = net.links.get(id);
     const name = `${l.id} (${l.a}–${l.b})`;
-    if (now.keySource === "pqc-fallback") events.push({ level: "warn", text: `${name}: QKD keys no longer trusted. Switched to ML-KEM; link stays up.` });
-    else if (now.keySource === "qkd" && was.keySource === "pqc-fallback") events.push({ level: "ok", text: `${name}: error rate back to baseline. QKD keys trusted again.` });
+    if (now.keySource === "pqc-fallback" && was.keySource === "qkd") events.push({ level: "warn", text: `${name}: QKD keys no longer trusted. Switched to ML-KEM; link stays up.` });
+    else if (now.keySource === "qkd" && was.keySource === "pqc-fallback") events.push({ level: "ok", text: `${name}: enough clean measurements, error rate within normal noise. QKD keys trusted.` });
     else if (now.keySource === "none") events.push({ level: "bad", text: `${name}: quarantined by operator. Traffic rerouted.` });
-    else if (was.keySource === "none") events.push({ level: "ok", text: `${name}: restored to service.` });
+    else if (was.keySource === "none") events.push({ level: "ok", text: `${name}: restored to service. On ML-KEM keys until fresh measurements clear it.` });
   }
   for (const [id, now] of after.sites) {
     const was = before.sites.get(id);

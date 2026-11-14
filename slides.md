@@ -60,15 +60,17 @@ Draft (numbers and where they come from; label guesses):
 Questions to answer: Your network diagram, your working link, your rollout.
 
 Draft:
-- [TEAM] Step 3: network design (2 control centers + 6-10 substations, link lengths), where QKD and where PQC, trusted-node problem, timing sync, working prototype link (BB84 or teleportation), phased rollout. Not started in this repo by us.
+- DONE, the design we present (Step 3): **Grid Twin** (`grid-twin/`), a 3D live twin of the network. 2 control centers, 6 major substations, 8 feeder sub-units, 1 remote site. QKD (BB84) on the 11-fiber backbone between control centers and major substations; ML-KEM on the short sub-unit links and the 140 km rural link (QKD there would detect about 537 times fewer photons than on a city fiber). Show it live: tap a fiber, watch the error rate climb, the alarm fire, keys switch to ML-KEM and QKD keys reroute through a trusted relay. See `grid-twin/DEMO.md` for the 60-second script.
+- How the response works: an alarm never takes a fiber down (an attacker could use that to cut comms); the fiber switches to ML-KEM keys and stays up. Only an operator quarantines a fiber. Isolation cuts communication paths, never power. The alarm is statistical (a rise above that fiber's own baseline, about 4.7 to 5.0%), and 11% is the abort line where no key can be made.
+- Evidence: the browser's BB84 engine matches Qiskit Aer circuits on all 7 test scenarios; 15 automated tests pass. Teleportation link (Step 3, Part 3): the teammate's notebook 3.
 - DONE, our migration ranking (Step 2): 1 crypto inventory and agility; 2 hybrid ML-KEM on every VPN/TLS/SSH edge now; 3 firmware signing and ROM trust anchors (dual-sign, PQC-capable hardware); 4 PKI/CA; 5 AMI procurement; 6 SCADA/DNP3 TLS layer; 7 IEC 61850/GOOSE; 8 ICCP/synchrophasors; 9 DER and APIs; 10 enterprise IT; 11 symmetric keys (AES-256 in new buys). See `WRITEUP_step2.md` Parts 3-5.
 - Results to show side by side (quantum vs classical, simulator vs emulator):
   - Shor factors 15: r = 4, 3 x 5.
   - Grover on Aer: N = 4, 8, 16 find the key with 100%, 95.5%, 96.0% success (theory 100%, 94.5%, 96.1%).
   - Noise: IonQ noisy simulator drops N = 8 to 71.5% and N = 16 to 36%; Quantinuum H2 emulator stays at 92.5% for N = 8. Different machine models, different answers.
   - Real hardware (Rigetti Cepheus, 200 shots): Grover N = 4 finds the key 88.5% of the time and N = 8 only 45% (theory 94.5%, random 12.5%). Shor on 15 (circuit cut down by hand to 168 two-qubit gates): 65% of shots on the four ideal outcomes vs 25% for pure noise. The structure survives on a real quantum computer, but only at the smallest size.
-- Suggested design principle for the diagram: use PQC (hybrid ML-KEM + ML-DSA) as the default across all links; use QKD only where the case is strong (short dedicated fiber between a few high-value sites), and treat QKD trusted-node relays as trust anchors that must be protected.
-- Tools to build (these count; pick one or two): an interactive BB84 demo with an eavesdropper slider; a threshold explorer (line noise vs a spy, where to set the alarm); a network map showing which links get QKD vs PQC and why; a migration tracker that ranks systems by data lifetime x device lifetime. Our Part 3 table is already the data for the tracker.
+- Design principle: PQC (hybrid ML-KEM + ML-DSA) protects everything; QKD adds a physical eavesdropper alarm on the backbone fibers where it is worth it; trusted-node relays are trust anchors that must be protected (Grid Twin draws them as gold rings).
+- Tools built: Grid Twin covers three of the README's suggested tools in one: the interactive BB84 demo with an eavesdropper, the threshold explorer (the sensitivity slider and the careful-spy case), and the network map of QKD vs PQC links. Still possible: a migration tracker from our Part 3 table.
 
 ## Slide 4. The Team
 Prompts: Who made it happen? Names and relevant expertise. Individual contributions. Complementary technical and commercial skills.
@@ -83,6 +85,7 @@ Draft (honest list; add the teammate's failures):
 - Quantum does not help today: Shor cannot break RSA yet (4 orders of magnitude of qubits to go, and no error-corrected machine). Our Grover demo says nothing about breaking AES: Grover only halves the key exponent, and NIST says AES-128 stays secure for decades (we still recommend AES-256 in new buys).
 - What surprised us: IonQ's simulator and Quantinuum's emulator gave very different noise results for the same circuit (71.5% vs 92.5% at N = 8), and the real Rigetti machine did worse than both (45%): noise is a property of the machine, not the algorithm. The Shor circuit as written needs about 13,300 two-qubit gates; we had to cut it to 168 by hand to run it at all.
 - What failed or cost us time: the notebook's device list did not show IBM's 156-qubit machines that the web catalog lists; a package update (openqasm3 1.0.2) broke QASM 2 submission from Python until we pinned 1.0.1; the first job path to the Quantinuum emulator needed Quantinuum's terms accepted. Add anything else that went wrong.
+- From building Grid Twin: a careful spy who taps about 5% of photons hides inside normal fiber noise (QBER 4.5% against a 4.7 to 5.0% warning line). QKD cannot catch her quickly, but privacy amplification makes what she learns worthless. A fixed threshold like 7% would let a much bigger tap hide; the threshold should come from each fiber's own baseline.
 - What we would do next: pilot hybrid ML-KEM on the VPN edge, start a crypto inventory, require PQC-capable hardware in the next procurement.
 - Tools we used: AI assistants helped with drafting and checking code and notes. We reviewed the results ourselves, and everyone presenting can explain what is in the deck.
 
@@ -91,7 +94,7 @@ Draft (honest list; add the teammate's failures):
 ## Checklist before Sunday 9:00 AM
 - [ ] Teammate's Step 1 (BB84) and Step 3 (capstone) added to slides 1, 3, 5; names and roles on slide 4.
 - [ ] Open the template .pptx (now in this repo) and fill in its five slides.
-- [ ] Merge `WRITEUP_step2.md` and the other steps into one `WRITEUP.md` (the README's required name), labeled by Step and Part.
+- [ ] A teammate created `WRITEUP.md` (the README's required name). Before submitting, replace its Step 2 with our verified `WRITEUP_step2.md` (theirs says RSA-2048 needs 4 to 20 million qubits; the current estimate is under 1 million, Gidney 2025) and make its Step 3 match Grid Twin's design. See `docs/AUDIT.md`.
 - [ ] Resolve the remaining VERIFY items (exact protocol crypto per vendor) or remove the claim.
 - [ ] Run record complete (job IDs are in `WRITEUP_step2.md`).
 - [ ] Rehearse: everyone can explain the Shor, Grover, QKD-vs-PQC and migration-ranking choices in plain words.

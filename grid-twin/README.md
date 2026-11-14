@@ -23,8 +23,23 @@ Then open http://localhost:8000. Three.js and the fonts load from public CDNs, s
 | **2 · Eavesdrop** | Click a fiber to tap it (click again to remove). The panel sets what share of photons the tap intercepts: 100% is loud, a few percent is a careful spy. |
 | **3 · Quarantine** | Click a fiber to take it out of service (click again to restore). Traffic reroutes; a site with no path left keeps its power on and runs on local protection. |
 | Alarm sensitivity | How many standard deviations above a fiber's own baseline counts as an alarm, with the false-alarm chance per check. |
-| Space / Esc | Pause and resume / clear the selection. Drag to orbit, scroll to zoom. |
+| Space / Esc / F | Pause and resume / clear the selection / frame the whole network. Drag to orbit, scroll to zoom. |
 | Browser console | `gridTwin.tap("L4", 0.1)`, `gridTwin.quarantine("P4")`, `gridTwin.select("node", "S6")`, `gridTwin.state()`: for scripted demos and tests. |
+
+## Networks
+
+Pick one in the panel, or open `?net=<id>`:
+
+| id | Network | Sites | Fibers | QKD fibers |
+|---|---|---|---|---|
+| `city` (default) | Stylized city network, hand-made | 17 | 21 | 11 |
+| `ieee14` | IEEE 14-bus test grid | 14 | 20 | 13 |
+| `ieee30` | IEEE 30-bus test grid | 30 | 41 | 20 |
+| `ieee57` | IEEE 57-bus test grid | 57 | 78 | 30 |
+| `ieee118` | IEEE 118-bus test grid | 118 | 179 | 104 |
+| `ieee300` | IEEE 300-bus test grid | 300 | 409 | 258 |
+
+The IEEE grids are public test systems (MATPOWER, UW Power Systems Test Case Archive; copies in `data/ieee/`). `tools/import_ieee.mjs` turns them into networks: every power line is assumed to carry fiber (utilities commonly run fiber in the ground wire of their own lines, OPGW), the two best-connected buses become control centers, generator buses and buses with 3 or more lines become major substations on QKD, and the rest are feeder sub-units on ML-KEM. IEEE cases have no coordinates, so positions come from a force-directed layout and fiber lengths are scaled (median 14 km): illustrative, not real distances.
 
 ## What is real and what is simulated
 
@@ -32,7 +47,7 @@ Then open http://localhost:8000. Three.js and the fonts load from public CDNs, s
 |---|---|
 | BB84 with an intercept-resend eavesdropper | Simulated in the browser (`src/bb84.js`). This is an exact simulation: BB84 only uses single qubits in the Z or X basis, so every outcome probability is 0, 1/2 or 1. |
 | Cross-check against Qiskit | `sim/bb84_reference.py` runs the same scenarios as real circuits on Qiskit Aer and writes `data/calibration.json`; `tests/engine.test.mjs` checks the browser engine against it. All 7 scenarios agree. |
-| Fiber loss and detector noise | A standard model with published lab parameters (GYS 2004 values as used by Lo, Ma and Chen, PRL 94, 230504, 2005): 0.21 dB/km loss, 4.5% detection efficiency, 1.7e-6 dark counts, 3.3% optical error. Assumptions for a generic metro fiber, not measurements of any utility. |
+| Fiber loss and detector noise | A standard model (Eq. (8) of Lo, Ma and Chen, PRL 94, 230504, 2005) with published lab parameters: the GYS 2004 row of Table 1 in Ma, Qi, Zhao and Lo, arXiv quant-ph/0503005: 0.21 dB/km loss, 4.5% detection efficiency, 1.7e-6 dark counts, 3.3% detector error, 1550 nm. Assumptions for a generic metro fiber, not measurements of any utility. |
 | Abort line at 11% | Where the secret-key fraction 1 − 2h(Q) reaches zero (Shor and Preskill, PRL 85, 441, 2000). |
 | The network layout | Made up, in the spirit of the README (2 control centers, 6 major substations, 8 feeder sub-units, 1 remote site). Real substation locations are sensitive, so none are used. |
 | The response policy | Our design (`src/response.js`). See DESIGN.md. |

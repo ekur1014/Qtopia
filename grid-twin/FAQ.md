@@ -1,0 +1,39 @@
+# Grid Twin: questions judges may ask
+
+Short answers anyone on the team can give, with the reasoning behind them. Numbers come from DESIGN.md and the tests.
+
+**Is the quantum part real or just an animation?**
+The BB84 statistics are computed, not drawn: every 250 ms each quantum fiber runs a few hundred simulated photons with random bits and bases, an optional eavesdropper, fiber noise, and sifting. Because BB84 only uses single qubits in two bases, this simulation is exact. We checked it against real Qiskit Aer circuits on 7 scenarios and they agree (`sim/bb84_reference.py`, `tests/engine.test.mjs`). It is a simulation, not hardware: we say so on the page.
+
+**Why not run Qiskit live?**
+One Qiskit job per photon takes seconds per fiber; 11 fibers at 4 updates a second would need a server and would lag. The math is identical, and Qiskit is how we proved it.
+
+**Why does a full tap give about 25%?**
+Eve guesses the wrong basis half the time; then her resent photon makes Bob's result random, wrong half of those times: 1/2 × 1/2 = 1/4. With fiber noise p, the error rate is p + f(1/4 − p/2) for a tap on a fraction f of photons.
+
+**Why isn't the alarm at 11%?**
+11% is where no secret key can be made at all (the key fraction 1 − 2h(Q) reaches zero; Shor and Preskill 2000). A careful spy stays far below that. So we warn when a fiber is statistically above its own baseline, about 4.7% to 5.0% here, and keep 11% as the abort line.
+
+**Can a spy hide?**
+Yes, a little. Tapping about 5% of photons gives a 4.5% error rate, inside normal noise. She learns little, and privacy amplification removes what she learned. Raising sensitivity catches her sooner but causes more false alarms; the panel shows that trade-off.
+
+**Couldn't an attacker trigger alarms on purpose to shut us down?**
+That's why an alarm never takes a fiber down. The fiber stops trusting quantum keys and switches to post-quantum keys (ML-KEM), and keeps working. Only an operator can quarantine a fiber.
+
+**What does "isolate" mean?**
+Cutting a communication path. Never power: switching off power is the harm we're protecting against. If a site loses every path, it keeps running on its own local protection and a crew is sent.
+
+**Why not QKD everywhere?**
+QKD needs dedicated fiber and costly hardware at both ends, gets weaker with distance (the 140 km rural link would detect about 537 times fewer photons than a city fiber), and still needs classical authentication. Post-quantum cryptography protects every link in software. NSA, the UK NCSC and the French, German, Dutch and Swedish agencies all say to prioritize post-quantum cryptography. We use QKD where it adds something: an eavesdropping alarm on the backbone.
+
+**What is the trusted-node problem?**
+QKD keys only cross one fiber. To reach a far substation, the key is relayed through intermediate sites, and each relay holds the key in the clear for a moment. Every relay must be trusted and physically secured. Select a substation whose direct fiber is tapped to see its relays (gold rings).
+
+**Is this a real utility's network?**
+No. The layout is invented (real substation locations are sensitive). The fiber parameters come from a published experiment (GYS 2004, as tabulated by Ma, Qi, Zhao and Lo).
+
+**What does it not model?**
+Attacks beyond intercept-resend (for example photon-number splitting or detector attacks), key rates in bits per second, finite-key effects, and real network traffic. See the limits section of DESIGN.md.
+
+**Where is the quantum advantage?**
+The eavesdropping alarm is the part only physics can give: a classical link can be copied without a trace. The response logic is ordinary graph search, and we say so.

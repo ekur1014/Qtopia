@@ -1,0 +1,300 @@
+{
+ "meta": {
+  "name": "IEEE 14-bus grid",
+  "source": "MATPOWER case14.m (https://github.com/MATPOWER/matpower/blob/master/data/case14.m), converted from the public IEEE Common Data Format file in the UW Power Systems Test Case Archive (https://labs.ece.uw.edu/pstca/).",
+  "note": "Public IEEE test grid (MATPOWER / UW Power Systems Test Case Archive). Every power line is assumed to carry fiber (OPGW), so the communication graph follows the grid. Positions are a computed layout and fiber lengths are scaled so the median line is about 14 km: illustrative, not real distances.",
+  "design": "Control centers: the two buses with the most lines. Major substations (QKD backbone): generator buses and buses with 3 or more lines. Feeder sub-units (ML-KEM): the rest. QKD only on backbone fibers under 80 km."
+ },
+ "nodes": [
+  {
+   "id": "B1",
+   "name": "Generator substation · bus 1",
+   "type": "substation",
+   "pos": [
+    15,
+    11.4
+   ],
+   "bus": 1,
+   "generator": true,
+   "load_mw": 0
+  },
+  {
+   "id": "B2",
+   "name": "Control center · bus 2",
+   "type": "control",
+   "pos": [
+    7.2,
+    13.1
+   ],
+   "bus": 2,
+   "generator": true,
+   "load_mw": 21.7
+  },
+  {
+   "id": "B3",
+   "name": "Generator substation · bus 3",
+   "type": "substation",
+   "pos": [
+    1.9,
+    18.8
+   ],
+   "bus": 3,
+   "generator": true,
+   "load_mw": 94.2
+  },
+  {
+   "id": "B4",
+   "name": "Control center · bus 4",
+   "type": "control",
+   "pos": [
+    -1.7,
+    9.6
+   ],
+   "bus": 4,
+   "generator": false,
+   "load_mw": 47.8
+  },
+  {
+   "id": "B5",
+   "name": "Substation · bus 5",
+   "type": "substation",
+   "pos": [
+    8.4,
+    4.1
+   ],
+   "bus": 5,
+   "generator": false,
+   "load_mw": 7.6
+  },
+  {
+   "id": "B6",
+   "name": "Generator substation · bus 6",
+   "type": "substation",
+   "pos": [
+    8.1,
+    -10.3
+   ],
+   "bus": 6,
+   "generator": true,
+   "load_mw": 11.2
+  },
+  {
+   "id": "B7",
+   "name": "Substation · bus 7",
+   "type": "substation",
+   "pos": [
+    -13.2,
+    9.8
+   ],
+   "bus": 7,
+   "generator": false,
+   "load_mw": 0
+  },
+  {
+   "id": "B8",
+   "name": "Generator substation · bus 8",
+   "type": "substation",
+   "pos": [
+    -22.4,
+    15.3
+   ],
+   "bus": 8,
+   "generator": true,
+   "load_mw": 0
+  },
+  {
+   "id": "B9",
+   "name": "Substation · bus 9",
+   "type": "substation",
+   "pos": [
+    -8.4,
+    -0.1
+   ],
+   "bus": 9,
+   "generator": false,
+   "load_mw": 29.5
+  },
+  {
+   "id": "B10",
+   "name": "Feeder sub-unit · bus 10",
+   "type": "subunit",
+   "pos": [
+    -11,
+    -10.8
+   ],
+   "bus": 10,
+   "generator": false,
+   "load_mw": 9
+  },
+  {
+   "id": "B11",
+   "name": "Feeder sub-unit · bus 11",
+   "type": "subunit",
+   "pos": [
+    -2.6,
+    -16.3
+   ],
+   "bus": 11,
+   "generator": false,
+   "load_mw": 3.5
+  },
+  {
+   "id": "B12",
+   "name": "Feeder sub-unit · bus 12",
+   "type": "subunit",
+   "pos": [
+    13.8,
+    -18.6
+   ],
+   "bus": 12,
+   "generator": false,
+   "load_mw": 6.1
+  },
+  {
+   "id": "B13",
+   "name": "Substation · bus 13",
+   "type": "substation",
+   "pos": [
+    6.6,
+    -16.8
+   ],
+   "bus": 13,
+   "generator": false,
+   "load_mw": 13.5
+  },
+  {
+   "id": "B14",
+   "name": "Feeder sub-unit · bus 14",
+   "type": "subunit",
+   "pos": [
+    -1.8,
+    -9.3
+   ],
+   "bus": 14,
+   "generator": false,
+   "load_mw": 14.9
+  }
+ ],
+ "links": [
+  {
+   "id": "F1",
+   "a": "B1",
+   "b": "B2",
+   "kind": "qkd"
+  },
+  {
+   "id": "F2",
+   "a": "B1",
+   "b": "B5",
+   "kind": "qkd"
+  },
+  {
+   "id": "F3",
+   "a": "B2",
+   "b": "B3",
+   "kind": "qkd"
+  },
+  {
+   "id": "F4",
+   "a": "B2",
+   "b": "B4",
+   "kind": "qkd"
+  },
+  {
+   "id": "F5",
+   "a": "B2",
+   "b": "B5",
+   "kind": "qkd"
+  },
+  {
+   "id": "F6",
+   "a": "B3",
+   "b": "B4",
+   "kind": "qkd"
+  },
+  {
+   "id": "F7",
+   "a": "B4",
+   "b": "B5",
+   "kind": "qkd"
+  },
+  {
+   "id": "F8",
+   "a": "B4",
+   "b": "B7",
+   "kind": "qkd"
+  },
+  {
+   "id": "F9",
+   "a": "B4",
+   "b": "B9",
+   "kind": "qkd"
+  },
+  {
+   "id": "F10",
+   "a": "B5",
+   "b": "B6",
+   "kind": "qkd"
+  },
+  {
+   "id": "F11",
+   "a": "B6",
+   "b": "B11",
+   "kind": "pqc"
+  },
+  {
+   "id": "F12",
+   "a": "B6",
+   "b": "B12",
+   "kind": "pqc"
+  },
+  {
+   "id": "F13",
+   "a": "B6",
+   "b": "B13",
+   "kind": "qkd"
+  },
+  {
+   "id": "F14",
+   "a": "B7",
+   "b": "B8",
+   "kind": "qkd"
+  },
+  {
+   "id": "F15",
+   "a": "B7",
+   "b": "B9",
+   "kind": "qkd"
+  },
+  {
+   "id": "F16",
+   "a": "B9",
+   "b": "B10",
+   "kind": "pqc"
+  },
+  {
+   "id": "F17",
+   "a": "B9",
+   "b": "B14",
+   "kind": "pqc"
+  },
+  {
+   "id": "F18",
+   "a": "B10",
+   "b": "B11",
+   "kind": "pqc"
+  },
+  {
+   "id": "F19",
+   "a": "B12",
+   "b": "B13",
+   "kind": "pqc"
+  },
+  {
+   "id": "F20",
+   "a": "B13",
+   "b": "B14",
+   "kind": "pqc"
+  }
+ ]
+}

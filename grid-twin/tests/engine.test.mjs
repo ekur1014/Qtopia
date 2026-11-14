@@ -160,3 +160,24 @@ test("Response: a substation with no healthy QKD chain falls back to ML-KEM and 
   assert.equal(s5.keySource, "pqc");
   assert.equal(s5.islanded, false);
 });
+
+test("Response: a fiber on probation (pending) uses ML-KEM keys but keeps carrying traffic", () => {
+  const states = healthy();
+  states.set("L4", { alarm: "pending", quarantined: false });
+  const r = computeResponse(net, states);
+  assert.equal(r.links.get("L4").keySource, "pqc-fallback");
+  assert.equal(r.links.get("L4").carriesData, true);
+});
+
+test("Imported IEEE grids: every site can reach a control center, and the response runs on all of them", () => {
+  const dir = path.join(here, "../data/networks");
+  const manifest = JSON.parse(fs.readFileSync(path.join(dir, "index.json"), "utf8"));
+  for (const m of manifest.filter((x) => x.id.startsWith("ieee"))) {
+    const g = buildNetwork(JSON.parse(fs.readFileSync(path.join(here, "..", m.file), "utf8")));
+    assert.equal(g.nodes.size, m.nodes, `${m.id} node count`);
+    assert.equal(controlCenters(g).length, 2, `${m.id} has 2 control centers`);
+    const st = new Map([...g.links.keys()].map((id) => [id, { alarm: "ok", quarantined: false }]));
+    const r = computeResponse(g, st);
+    for (const [id, site] of r.sites) assert.equal(site.islanded, false, `${m.id} ${id} connected`);
+  }
+});

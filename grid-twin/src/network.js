@@ -72,6 +72,57 @@ export function shortestPath(net, sources, target, usable) {
   return { nodes, links, km: dist.get(target) };
 }
 
+/**
+ * One multi-source Dijkstra from `sources` over usable links: shortest distance and predecessor for every node.
+ * The response policy needs a path for every site, so one tree per tick replaces one search per site
+ * (this matters on the 300-bus grid).
+ */
+export function shortestPathTree(net, sources, usable) {
+  const ids = [...net.nodes.keys()];
+  const dist = new Map(ids.map((id) => [id, Infinity]));
+  const prev = new Map();
+  const done = new Set();
+  for (const s of sources) dist.set(s, 0);
+  for (let step = 0; step < ids.length; step++) {
+    let current = null;
+    let best = Infinity;
+    for (const id of ids) {
+      const d = dist.get(id);
+      if (!done.has(id) && d < best) {
+        best = d;
+        current = id;
+      }
+    }
+    if (current === null) break;
+    done.add(current);
+    for (const link of net.adjacency.get(current)) {
+      if (!usable(link)) continue;
+      const next = otherEnd(link, current);
+      const d = best + link.km;
+      if (d < dist.get(next)) {
+        dist.set(next, d);
+        prev.set(next, { node: current, link });
+      }
+    }
+  }
+  return { dist, prev };
+}
+
+/** The path to `target` in a tree from shortestPathTree, or null if it is unreachable. */
+export function pathFromTree(tree, target) {
+  if (!Number.isFinite(tree.dist.get(target))) return null;
+  const nodes = [target];
+  const links = [];
+  let at = target;
+  while (tree.prev.has(at)) {
+    const step = tree.prev.get(at);
+    links.unshift(step.link);
+    nodes.unshift(step.node);
+    at = step.node;
+  }
+  return { nodes, links, km: tree.dist.get(target) };
+}
+
 export function controlCenters(net) {
   return [...net.nodes.values()].filter((n) => n.type === "control").map((n) => n.id);
 }

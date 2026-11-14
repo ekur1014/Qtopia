@@ -5,9 +5,11 @@
 // Sampling those probabilities is an exact simulation of the protocol's statistics. sim/bb84_reference.py
 // runs the same scenarios on Qiskit Aer and tests/engine.test.mjs checks that the two agree.
 
-// Fiber and detector parameters. These are the GYS 2004 experiment values used by Lo, Ma and Chen,
-// "Decoy State Quantum Key Distribution", PRL 94, 230504 (2005). They are assumptions for a generic
-// metro fiber link, not measurements of any utility's network.
+// Fiber and detector parameters: the GYS 2004 experiment row of Table 1 in Ma, Qi, Zhao and Lo,
+// "Practical decoy state for quantum key distribution" (arXiv quant-ph/0503005): 1550 nm, alpha = 0.21 dB/km,
+// e_detector = 3.3%, Y0 = 1.7e-6, eta_Bob = 0.045. The same values drive Figure 1 of Lo, Ma and Chen,
+// "Decoy State Quantum Key Distribution", PRL 94, 230504 (2005), whose Eq. (8) is the baseline formula below.
+// They are assumptions for a generic metro fiber link, not measurements of any utility's network.
 export const FIBER = {
   alphaDbPerKm: 0.21,   // fiber loss
   bobEfficiency: 0.045, // detector efficiency times receiver optics
@@ -23,7 +25,8 @@ export function transmittance(km, p = FIBER) {
   return Math.pow(10, (-p.alphaDbPerKm * km) / 10) * p.bobEfficiency;
 }
 
-/** Error rate of a link with no eavesdropper: misalignment errors plus dark counts, which matter more as loss grows. */
+/** Error rate of a link with no eavesdropper: misalignment errors plus dark counts, which matter more as loss grows.
+ *  Single-photon case of Eq. (8) in Lo, Ma and Chen (2005): e = (e_detector * eta + Y0 / 2) / (eta + Y0). */
 export function baselineQber(km, p = FIBER) {
   const eta = transmittance(km, p);
   const y0 = p.darkCountProb;

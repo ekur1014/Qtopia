@@ -60,3 +60,18 @@ What was built, in order, and how each step was checked. Times are Saturday 14 N
 - Added `window.gridTwin` (tap, untap, quarantine, restore, select, state) for scripted demos and browser tests, because clicking moving 3D objects by screen coordinates is fragile.
 - Trusted-relay check: tapped L11 (CC2–S6) at 100%. L11 went to abort (QBER 27.8%, expected 26.65% ± about 1%). S6 kept a QKD key by rerouting CC1 → S1 → S6, the inspector named S1 as a trusted node, and the gold relay ring appeared on S1. S6's data stayed on CC2 → S6, because an alarmed fiber keeps carrying traffic on ML-KEM keys. No console errors.
 - All 15 node tests pass after the final changes.
+
+## Audit fixes
+
+- **Phone layout** (375×812): the toolbar was 411 px wide and overflowed the screen, and the network was framed far too close. The toolbar is now compact on phones (fits: 48 to 327 px of 375).
+- **Camera framing** is now automatic: the scene projects every site onto the screen and binary-searches the closest camera distance at which all of them fall inside the area the panel leaves free, with a margin. This replaced hand-tuned constants that were right on desktop and wrong on phones. Checked at 375×812 (all 19 sites visible above the bottom sheet) and 1440×900 (network fills the space beside the panel). No console errors at either size.
+- **Citation corrected**: the fiber parameter values come from Table 1 (GYS row) of Ma, Qi, Zhao and Lo, arXiv quant-ph/0503005; the earlier text credited Lo, Ma and Chen's PRL, which uses but does not print them. The baseline formula was confirmed to be the single-photon case of that PRL's Eq. (8).
+- **Wording**: DESIGN.md no longer calls a 140 km fiber "close to unusable" because of its 4.8% baseline; the real issue is that it detects about 537 times fewer photons than a 10 km fiber.
+
+## Expansion: datasets, scale and visuals
+
+- **IEEE grids imported** (`tools/import_ieee.mjs`): 14, 30, 57, 118 and 300-bus public test grids, selectable in the panel or with `?net=`. All connected; fiber lengths 3 to 52 km after scaling.
+- **Scale**: the response now builds one shortest-path tree per tick instead of one search per site: 2.6 ms per tick on the 300-bus grid. The 118-bus grid renders at about 120 fps in the test browser.
+- **Visuals** (user request: bigger nodes, less glow, more deliberate effects): nodes about 40% larger and sized to the network; bloom roughly halved and limited to photons, beacons and taps so fibers stay crisp; flat ground without speckle; a shockwave ring where an alarm fires; the camera glides to whatever is selected; gold key packets flow along the selected site's key path; sites lift on hover; F frames the whole network. On big grids only control centers keep permanent labels.
+- **Probation fix** (from the audit): restoring a fiber now starts it on ML-KEM keys until fresh measurements clear it. Checked in the browser: restored L5 showed "Measuring" on ML-KEM, then "QKD keys trusted" about 3 s later.
+- Tests: 17 passing (added probation and imported-grid checks).

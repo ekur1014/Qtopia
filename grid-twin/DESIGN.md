@@ -16,9 +16,11 @@ A utility already sees its fiber links. A quantum-secured link adds a new signal
 
 5. **The trusted-node problem is visible.** A QKD key from a control center to a distant substation is relayed hop by hop; every relay holds the key in the clear for a moment. Selecting a substation draws gold rings around its relays.
 
-6. **PQC first, QKD where it is worth it.** QKD runs on the backbone (control centers and major substations). Sub-units and the long rural link use ML-KEM: short, numerous links are cheapest with software, and a 140 km fiber loses too many photons (its QKD baseline would be about 4.8%, close to unusable once anything else goes wrong; at 200 km it would be 21%, past the abort line). This matches NSA, UK NCSC and the ANSSI/BSI/NLNCSA/Swedish joint paper, which all put post-quantum cryptography first.
+6. **PQC first, QKD where it is worth it.** QKD runs on the backbone (control centers and major substations). Sub-units and the long rural link use ML-KEM: short, numerous links are cheapest with software, and a 140 km fiber detects about 537 times fewer photons than a 10 km city fiber, so its key rate would be tiny (its error baseline would still be about 4.8%, workable on its own; at 200 km it would be 21%, past the abort line). Lo, Ma and Chen report a maximum secure distance of a little over 140 km for these parameters even with decoy states. This matches NSA, UK NCSC and the ANSSI/BSI/NLNCSA/Swedish joint paper, which all put post-quantum cryptography first.
 
 7. **Stylized map.** Real substation locations are sensitive infrastructure data, so the layout is invented: 2 control centers (primary and backup), 6 major substations, 8 feeder sub-units, 1 remote site.
+
+8. **No key is trusted before evidence.** A fiber that has just been restored (or has just started) runs on ML-KEM keys until it has collected enough sifted bits to judge its error rate ("Measuring"). Real QKD works the same way: the error rate is estimated before any key is used. This fixed a bug the audit found, where a restored fiber reused its old alarm state.
 
 ## Physics
 
@@ -32,7 +34,7 @@ A full tap (f = 1) on a clean fiber gives 25%; on a 3.3% fiber it gives 26.65%.
 
   Q_base(L) = (e_opt·η + Y0/2) / (η + Y0),
 
-using α = 0.21 dB/km, η_Bob = 4.5%, Y0 = 1.7e-6, e_opt = 3.3% (GYS 2004 values as used by Lo, Ma and Chen 2005). City links (8 to 22 km) sit at 3.30%; 100 km is 3.5%, 150 km 5.7%, 200 km 21%.
+the single-photon case of Eq. (8) in Lo, Ma and Chen (PRL 94, 230504, 2005), using α = 0.21 dB/km, η_Bob = 4.5%, Y0 = 1.7e-6, e_opt = 3.3%: the GYS 2004 row of Table 1 in Ma, Qi, Zhao and Lo (arXiv quant-ph/0503005). City links (8 to 22 km) sit at 3.30%; 100 km is 3.5%, 150 km 5.7%, 200 km 21%.
 
 **Alarm.** Over a sliding window of n sifted bits, warn when Q̂ > Q_base + z·sqrt(Q_base(1 − Q_base)/n). With n about 2,200 to 3,200 sifted bits (a 4-second window; longer fibers detect fewer photons) and z = 4.5, the warning line is 4.7% to 5.0%. A tap on 10% or more of photons (QBER about 5.6%) is caught within seconds; a 7% tap (4.9%) sits right on the line and is caught only some of the time; a 5% tap (4.5%) hides in the noise (that is the "careful spy" the README asks about; privacy amplification is what makes her information worthless). The false-alarm chance per check is the normal tail at z (3.4e-6 at z = 4.5). Alarms clear only after several calm checks (hysteresis).
 

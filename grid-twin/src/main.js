@@ -25,11 +25,11 @@ boot().catch((err) => {
 });
 
 async function boot() {
-  const raw = await fetch("data/network.json").then((r) => {
-    if (!r.ok) throw new Error(`network.json: HTTP ${r.status}`);
-    return r.json();
-  });
-  const net = buildNetwork(raw);
+  // Which network: ?net=<id> from data/networks/index.json (default: the stylized city).
+  const manifest = await fetchJson("data/networks/index.json");
+  const wanted = new URLSearchParams(location.search).get("net") ?? "city";
+  const entry = manifest.find((m) => m.id === wanted) ?? manifest[0];
+  const net = buildNetwork(await fetchJson(entry.file));
 
   const sim = {
     tool: "inspect",
@@ -49,17 +49,27 @@ async function boot() {
       perTick: Math.max(40, Math.round((DETECTED_PER_TICK_AT_10KM * transmittance(link.km)) / transmittance(10))),
       eve: null,
       quarantined: false,
-      last: { n: 0, errors: 0, qhat: 0, sigma: Infinity, threshold: baseline, status: "ok" },
+      last: freshReading(baseline),
       history,
     });
   }
 
+  // Warm-up: collect a few seconds of evidence on every fiber before the first frame (the loader's
+  // "calibrating fibers"), so no fiber starts on probation.
+  for (let i = 0; i < 6; i++) for (const s of sim.links.values()) if (s.detector) s.last = s.detector.push(runRounds({ rounds: s.perTick, lineError: s.baseline }));
   let response = computeResponse(net, alarmStates());
 
   const ui = createUI({
     panel: document.getElementById("panel"),
     net,
+    networks: manifest,
+    currentNetwork: entry.id,
     handlers: {
+      onNetwork: (id) => {
+        const url = new URL(location.href);
+        url.searchParams.set("net", id);
+        location.href = url.toString();
+      },
       onEveStrength: (f) => {
         sim.eveStrength = f;
         setHint();
@@ -135,15 +145,22 @@ async function boot() {
     const s = sim.links.get(id);
     s.quarantined = true;
     s.detector?.reset();
+    s.last = freshReading(s.baseline);
   }
   function restore(id) {
+    // A restored fiber starts on probation: it carries traffic on ML-KEM keys until it has collected enough
+    // fresh measurements to judge it, as real QKD estimates the error rate before trusting any key.
     const s = sim.links.get(id);
     s.quarantined = false;
     s.detector?.reset();
+    s.last = freshReading(s.baseline);
   }
   function alarmStates() {
     const m = new Map();
-    for (const [id, s] of sim.links) m.set(id, { alarm: s.last.status, quarantined: s.quarantined });
+    for (const [id, s] of sim.links) {
+      const alarm = s.detector && !s.last.enough ? "pending" : s.last.status;
+      m.set(id, { alarm, quarantined: s.quarantined });
+    }
     return m;
   }
 
@@ -152,10 +169,7 @@ async function boot() {
     if (!sim.paused) {
       for (const [id, s] of sim.links) {
         if (!s.detector) continue;
-        if (s.quarantined) {
-          s.last = { ...s.last, n: 0, status: "ok" };
-          continue;
-        }
+        if (s.quarantined) continue; // no photons on a fiber out of service
         const counts = runRounds({ rounds: s.perTick, lineError: s.baseline, eveFraction: s.eve ?? 0 });
         const before = s.last.status;
         s.last = s.detector.push(counts);
@@ -189,7 +203,7 @@ async function boot() {
         qhat: s.last.qhat,
         n: s.last.n,
         threshold: s.last.threshold,
-        status: s.last.status,
+        status: s.detector && !s.quarantined && !s.last.enough ? "pending" : s.last.status,
         eve: s.eve,
         quarantined: s.quarantined,
         keySource: response.links.get(id).keySource,
@@ -242,6 +256,11 @@ async function boot() {
     if (e.key === "1") setTool("inspect");
     else if (e.key === "2") setTool("eve");
     else if (e.key === "3") setTool("quarantine");
+    else if (e.key === "f" || e.key === "F") {
+      sim.selected = null;
+      scene.frameAll();
+      refresh();
+    }
     else if (e.key === "Escape") {
       sim.selected = null;
       refresh();
@@ -280,7 +299,12 @@ async function boot() {
     restore: (id) => (restore(id), refresh()),
     select: (type, id) => ((sim.selected = type ? { type, id } : null), refresh()),
     state: () => ({
-      links: Object.fromEntries([...sim.links].map(([id, s]) => [id, { status: s.last.status, qber: s.last.qhat, tapped: s.eve != null, quarantined: s.quarantined }])),
+      links: Object.fromEntries(
+        [...sim.links].map(([id, s]) => [
+          id,
+          { status: s.detector && !s.quarantined && !s.last.enough ? "pending" : s.last.status, qber: s.last.qhat, tapped: s.eve != null, quarantined: s.quarantined, keySource: response.links.get(id).keySource },
+        ]),
+      ),
       sites: Object.fromEntries([...response.sites].map(([id, s]) => [id, { keySource: s.keySource, relays: s.relays, islanded: s.islanded, power: s.power }])),
     }),
   };
@@ -301,4 +325,14 @@ async function boot() {
   refresh();
   setInterval(tick, TICK_MS);
   requestAnimationFrame(() => loader.classList.add("is-done"));
+}
+
+function freshReading(baseline) {
+  return { n: 0, errors: 0, qhat: 0, sigma: Infinity, threshold: baseline, status: "ok", enough: false };
+}
+
+async function fetchJson(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
+  return r.json();
 }

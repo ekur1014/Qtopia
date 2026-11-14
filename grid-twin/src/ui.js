@@ -12,6 +12,7 @@ const STATUS_PILL = {
   ok: ["Healthy", "ok"],
   warning: ["Above baseline", "warn"],
   abort: ["No key possible", "bad"],
+  pending: ["Measuring", "gold"],
 };
 const KEY_LABEL = {
   qkd: ["QKD keys", "ok"],
@@ -24,9 +25,17 @@ const KEY_LABEL = {
 const pct = (x, d = 1) => `${(100 * x).toFixed(d)}%`;
 const pill = ([text, tone]) => `<span class="pill pill--${tone}">${text}</span>`;
 
-export function createUI({ panel, net, handlers }) {
+export function createUI({ panel, net, networks = [], currentNetwork, handlers }) {
   const startedAt = performance.now();
+  const netOptions = networks
+    .map((m) => `<option value="${m.id}"${m.id === currentNetwork ? " selected" : ""}>${m.label} · ${m.nodes} sites</option>`)
+    .join("");
   panel.innerHTML = `
+    <section class="section">
+      <h2>Network</h2>
+      <select class="select" data-input="network" aria-label="Choose a network">${netOptions}</select>
+      <div class="control__note">${net.meta?.note ?? ""}</div>
+    </section>
     <section class="section">
       <h2>Network now</h2>
       <div class="stats">
@@ -67,7 +76,7 @@ export function createUI({ panel, net, handlers }) {
       <ul class="log" data-log></ul>
     </section>
 
-    <section class="section foot">
+    <section class="section foot" data-foot>
       <b>What is simulated.</b> BB84 runs on every QKD fiber with an exact intercept-resend model, cross-checked against Qiskit Aer. Fiber loss and detector noise use published lab parameters. The layout is made up. The response cuts communication paths only; power is never switched off. Details in README.md and DESIGN.md.
     </section>`;
 
@@ -99,6 +108,7 @@ export function createUI({ panel, net, handlers }) {
   });
   fill(eveInput);
   showZ();
+  $('[data-input="network"]').addEventListener("change", (e) => handlers.onNetwork(e.target.value));
 
   panel.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-action]");
@@ -171,6 +181,7 @@ export function createUI({ panel, net, handlers }) {
     f("sfbar").style.width = pct(sf, 1);
     let text;
     if (s.quarantined) text = "Out of service. Traffic that used this fiber has been rerouted. Restore it to resume key exchange.";
+    else if (s.status === "pending") text = "Measuring. This fiber has just come into service, so it carries traffic on ML-KEM keys until it has enough fresh measurements to judge its error rate. No QKD key is trusted before then.";
     else if (s.status === "abort") text = `The error rate is above 11%. Error correction would leak more than the key is worth, so <b>no secret key can come from this fiber</b>. Its traffic now uses ML-KEM keys and stays up. Someone should inspect the fiber.`;
     else if (s.status === "warning") text = `The error rate is <b>significantly above this fiber's baseline</b>. That is the signature of someone measuring the photons. QKD keys from this fiber are no longer trusted; traffic switches to ML-KEM and stays up.`;
     else if (s.eve != null) text = `A tap is intercepting ${pct(s.eve, 0)} of photons, but the error rate is still inside normal noise. A careful spy can hide this way; the price for her is that privacy amplification removes what she learned. Raise the sensitivity or watch longer.`;

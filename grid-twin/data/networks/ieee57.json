@@ -1,0 +1,1164 @@
+{
+ "meta": {
+  "name": "IEEE 57-bus grid",
+  "source": "MATPOWER case57.m (https://github.com/MATPOWER/matpower/blob/master/data/case57.m), converted from the public IEEE Common Data Format file in the UW Power Systems Test Case Archive (https://labs.ece.uw.edu/pstca/).",
+  "note": "Public IEEE test grid (MATPOWER / UW Power Systems Test Case Archive). Every power line is assumed to carry fiber (OPGW), so the communication graph follows the grid. Positions are a computed layout and fiber lengths are scaled so the median line is about 14 km: illustrative, not real distances.",
+  "design": "Control centers: the two buses with the most lines. Major substations (QKD backbone): generator buses and buses with 3 or more lines. Feeder sub-units (ML-KEM): the rest. QKD only on backbone fibers under 80 km."
+ },
+ "nodes": [
+  {
+   "id": "B1",
+   "name": "Generator substation · bus 1",
+   "type": "substation",
+   "pos": [
+    33.9,
+    7.1
+   ],
+   "bus": 1,
+   "generator": true,
+   "load_mw": 55
+  },
+  {
+   "id": "B2",
+   "name": "Generator substation · bus 2",
+   "type": "substation",
+   "pos": [
+    31.7,
+    14.3
+   ],
+   "bus": 2,
+   "generator": true,
+   "load_mw": 3
+  },
+  {
+   "id": "B3",
+   "name": "Generator substation · bus 3",
+   "type": "substation",
+   "pos": [
+    22.3,
+    16
+   ],
+   "bus": 3,
+   "generator": true,
+   "load_mw": 41
+  },
+  {
+   "id": "B4",
+   "name": "Substation · bus 4",
+   "type": "substation",
+   "pos": [
+    14.1,
+    25.9
+   ],
+   "bus": 4,
+   "generator": false,
+   "load_mw": 0
+  },
+  {
+   "id": "B5",
+   "name": "Feeder sub-unit · bus 5",
+   "type": "subunit",
+   "pos": [
+    17.4,
+    33.8
+   ],
+   "bus": 5,
+   "generator": false,
+   "load_mw": 13
+  },
+  {
+   "id": "B6",
+   "name": "Generator substation · bus 6",
+   "type": "substation",
+   "pos": [
+    17.2,
+    29.3
+   ],
+   "bus": 6,
+   "generator": true,
+   "load_mw": 75
+  },
+  {
+   "id": "B7",
+   "name": "Substation · bus 7",
+   "type": "substation",
+   "pos": [
+    11.5,
+    32.3
+   ],
+   "bus": 7,
+   "generator": false,
+   "load_mw": 0
+  },
+  {
+   "id": "B8",
+   "name": "Generator substation · bus 8",
+   "type": "substation",
+   "pos": [
+    19.3,
+    20.8
+   ],
+   "bus": 8,
+   "generator": true,
+   "load_mw": 150
+  },
+  {
+   "id": "B9",
+   "name": "Control center · bus 9",
+   "type": "control",
+   "pos": [
+    26,
+    4.9
+   ],
+   "bus": 9,
+   "generator": true,
+   "load_mw": 121
+  },
+  {
+   "id": "B10",
+   "name": "Substation · bus 10",
+   "type": "substation",
+   "pos": [
+    31.8,
+    -3.9
+   ],
+   "bus": 10,
+   "generator": false,
+   "load_mw": 5
+  },
+  {
+   "id": "B11",
+   "name": "Substation · bus 11",
+   "type": "substation",
+   "pos": [
+    22.3,
+    -12.7
+   ],
+   "bus": 11,
+   "generator": false,
+   "load_mw": 0
+  },
+  {
+   "id": "B12",
+   "name": "Generator substation · bus 12",
+   "type": "substation",
+   "pos": [
+    33.1,
+    0.8
+   ],
+   "bus": 12,
+   "generator": true,
+   "load_mw": 377
+  },
+  {
+   "id": "B13",
+   "name": "Control center · bus 13",
+   "type": "control",
+   "pos": [
+    22.1,
+    -3.7
+   ],
+   "bus": 13,
+   "generator": false,
+   "load_mw": 18
+  },
+  {
+   "id": "B14",
+   "name": "Substation · bus 14",
+   "type": "substation",
+   "pos": [
+    18.5,
+    -4.4
+   ],
+   "bus": 14,
+   "generator": false,
+   "load_mw": 10.5
+  },
+  {
+   "id": "B15",
+   "name": "Substation · bus 15",
+   "type": "substation",
+   "pos": [
+    21.8,
+    4.4
+   ],
+   "bus": 15,
+   "generator": false,
+   "load_mw": 22
+  },
+  {
+   "id": "B16",
+   "name": "Feeder sub-unit · bus 16",
+   "type": "subunit",
+   "pos": [
+    40.4,
+    5.6
+   ],
+   "bus": 16,
+   "generator": false,
+   "load_mw": 43
+  },
+  {
+   "id": "B17",
+   "name": "Feeder sub-unit · bus 17",
+   "type": "subunit",
+   "pos": [
+    40.4,
+    2.3
+   ],
+   "bus": 17,
+   "generator": false,
+   "load_mw": 42
+  },
+  {
+   "id": "B18",
+   "name": "Feeder sub-unit · bus 18",
+   "type": "subunit",
+   "pos": [
+    2.4,
+    27.4
+   ],
+   "bus": 18,
+   "generator": false,
+   "load_mw": 27.2
+  },
+  {
+   "id": "B19",
+   "name": "Feeder sub-unit · bus 19",
+   "type": "subunit",
+   "pos": [
+    -8,
+    25.2
+   ],
+   "bus": 19,
+   "generator": false,
+   "load_mw": 3.3
+  },
+  {
+   "id": "B20",
+   "name": "Feeder sub-unit · bus 20",
+   "type": "subunit",
+   "pos": [
+    -15.8,
+    18.9
+   ],
+   "bus": 20,
+   "generator": false,
+   "load_mw": 2.3
+  },
+  {
+   "id": "B21",
+   "name": "Feeder sub-unit · bus 21",
+   "type": "subunit",
+   "pos": [
+    -19.7,
+    9.6
+   ],
+   "bus": 21,
+   "generator": false,
+   "load_mw": 0
+  },
+  {
+   "id": "B22",
+   "name": "Substation · bus 22",
+   "type": "substation",
+   "pos": [
+    -19.4,
+    -0.8
+   ],
+   "bus": 22,
+   "generator": false,
+   "load_mw": 0
+  },
+  {
+   "id": "B23",
+   "name": "Feeder sub-unit · bus 23",
+   "type": "subunit",
+   "pos": [
+    -31.9,
+    5.1
+   ],
+   "bus": 23,
+   "generator": false,
+   "load_mw": 6.3
+  },
+  {
+   "id": "B24",
+   "name": "Substation · bus 24",
+   "type": "substation",
+   "pos": [
+    -41.9,
+    11.6
+   ],
+   "bus": 24,
+   "generator": false,
+   "load_mw": 0
+  },
+  {
+   "id": "B25",
+   "name": "Feeder sub-unit · bus 25",
+   "type": "subunit",
+   "pos": [
+    -52.5,
+    3.2
+   ],
+   "bus": 25,
+   "generator": false,
+   "load_mw": 6.3
+  },
+  {
+   "id": "B26",
+   "name": "Feeder sub-unit · bus 26",
+   "type": "subunit",
+   "pos": [
+    -35.9,
+    24.1
+   ],
+   "bus": 26,
+   "generator": false,
+   "load_mw": 0
+  },
+  {
+   "id": "B27",
+   "name": "Feeder sub-unit · bus 27",
+   "type": "subunit",
+   "pos": [
+    -25.9,
+    33.8
+   ],
+   "bus": 27,
+   "generator": false,
+   "load_mw": 9.3
+  },
+  {
+   "id": "B28",
+   "name": "Feeder sub-unit · bus 28",
+   "type": "subunit",
+   "pos": [
+    -13,
+    39.6
+   ],
+   "bus": 28,
+   "generator": false,
+   "load_mw": 4.6
+  },
+  {
+   "id": "B29",
+   "name": "Substation · bus 29",
+   "type": "substation",
+   "pos": [
+    1.7,
+    40.9
+   ],
+   "bus": 29,
+   "generator": false,
+   "load_mw": 17
+  },
+  {
+   "id": "B30",
+   "name": "Feeder sub-unit · bus 30",
+   "type": "subunit",
+   "pos": [
+    -59.5,
+    -6.9
+   ],
+   "bus": 30,
+   "generator": false,
+   "load_mw": 3.6
+  },
+  {
+   "id": "B31",
+   "name": "Feeder sub-unit · bus 31",
+   "type": "subunit",
+   "pos": [
+    -62.2,
+    -18
+   ],
+   "bus": 31,
+   "generator": false,
+   "load_mw": 5.8
+  },
+  {
+   "id": "B32",
+   "name": "Substation · bus 32",
+   "type": "substation",
+   "pos": [
+    -59.9,
+    -28.9
+   ],
+   "bus": 32,
+   "generator": false,
+   "load_mw": 1.6
+  },
+  {
+   "id": "B33",
+   "name": "Feeder sub-unit · bus 33",
+   "type": "subunit",
+   "pos": [
+    -67.2,
+    -32.7
+   ],
+   "bus": 33,
+   "generator": false,
+   "load_mw": 3.8
+  },
+  {
+   "id": "B34",
+   "name": "Feeder sub-unit · bus 34",
+   "type": "subunit",
+   "pos": [
+    -49.1,
+    -34.1
+   ],
+   "bus": 34,
+   "generator": false,
+   "load_mw": 0
+  },
+  {
+   "id": "B35",
+   "name": "Feeder sub-unit · bus 35",
+   "type": "subunit",
+   "pos": [
+    -36.2,
+    -36.2
+   ],
+   "bus": 35,
+   "generator": false,
+   "load_mw": 6
+  },
+  {
+   "id": "B36",
+   "name": "Substation · bus 36",
+   "type": "substation",
+   "pos": [
+    -21.8,
+    -35.1
+   ],
+   "bus": 36,
+   "generator": false,
+   "load_mw": 0
+  },
+  {
+   "id": "B37",
+   "name": "Substation · bus 37",
+   "type": "substation",
+   "pos": [
+    -13.5,
+    -26
+   ],
+   "bus": 37,
+   "generator": false,
+   "load_mw": 0
+  },
+  {
+   "id": "B38",
+   "name": "Substation · bus 38",
+   "type": "substation",
+   "pos": [
+    -6.5,
+    -11.7
+   ],
+   "bus": 38,
+   "generator": false,
+   "load_mw": 14
+  },
+  {
+   "id": "B39",
+   "name": "Feeder sub-unit · bus 39",
+   "type": "subunit",
+   "pos": [
+    -10.5,
+    -35.1
+   ],
+   "bus": 39,
+   "generator": false,
+   "load_mw": 0
+  },
+  {
+   "id": "B40",
+   "name": "Feeder sub-unit · bus 40",
+   "type": "subunit",
+   "pos": [
+    -9.8,
+    -39.1
+   ],
+   "bus": 40,
+   "generator": false,
+   "load_mw": 0
+  },
+  {
+   "id": "B41",
+   "name": "Substation · bus 41",
+   "type": "substation",
+   "pos": [
+    15,
+    -27.6
+   ],
+   "bus": 41,
+   "generator": false,
+   "load_mw": 6.3
+  },
+  {
+   "id": "B42",
+   "name": "Feeder sub-unit · bus 42",
+   "type": "subunit",
+   "pos": [
+    11.3,
+    -36.3
+   ],
+   "bus": 42,
+   "generator": false,
+   "load_mw": 7.1
+  },
+  {
+   "id": "B43",
+   "name": "Feeder sub-unit · bus 43",
+   "type": "subunit",
+   "pos": [
+    21.9,
+    -23.3
+   ],
+   "bus": 43,
+   "generator": false,
+   "load_mw": 2
+  },
+  {
+   "id": "B44",
+   "name": "Feeder sub-unit · bus 44",
+   "type": "subunit",
+   "pos": [
+    0.9,
+    -4.7
+   ],
+   "bus": 44,
+   "generator": false,
+   "load_mw": 12
+  },
+  {
+   "id": "B45",
+   "name": "Feeder sub-unit · bus 45",
+   "type": "subunit",
+   "pos": [
+    10.7,
+    0.8
+   ],
+   "bus": 45,
+   "generator": false,
+   "load_mw": 0
+  },
+  {
+   "id": "B46",
+   "name": "Feeder sub-unit · bus 46",
+   "type": "subunit",
+   "pos": [
+    13.8,
+    -12.6
+   ],
+   "bus": 46,
+   "generator": false,
+   "load_mw": 0
+  },
+  {
+   "id": "B47",
+   "name": "Feeder sub-unit · bus 47",
+   "type": "subunit",
+   "pos": [
+    7.4,
+    -17.5
+   ],
+   "bus": 47,
+   "generator": false,
+   "load_mw": 29.7
+  },
+  {
+   "id": "B48",
+   "name": "Substation · bus 48",
+   "type": "substation",
+   "pos": [
+    1.4,
+    -14.4
+   ],
+   "bus": 48,
+   "generator": false,
+   "load_mw": 0
+  },
+  {
+   "id": "B49",
+   "name": "Substation · bus 49",
+   "type": "substation",
+   "pos": [
+    8.9,
+    -10.7
+   ],
+   "bus": 49,
+   "generator": false,
+   "load_mw": 18
+  },
+  {
+   "id": "B50",
+   "name": "Feeder sub-unit · bus 50",
+   "type": "subunit",
+   "pos": [
+    19.7,
+    -14.6
+   ],
+   "bus": 50,
+   "generator": false,
+   "load_mw": 21
+  },
+  {
+   "id": "B51",
+   "name": "Feeder sub-unit · bus 51",
+   "type": "subunit",
+   "pos": [
+    29.6,
+    -12.5
+   ],
+   "bus": 51,
+   "generator": false,
+   "load_mw": 18
+  },
+  {
+   "id": "B52",
+   "name": "Feeder sub-unit · bus 52",
+   "type": "subunit",
+   "pos": [
+    11.8,
+    46
+   ],
+   "bus": 52,
+   "generator": false,
+   "load_mw": 4.9
+  },
+  {
+   "id": "B53",
+   "name": "Feeder sub-unit · bus 53",
+   "type": "subunit",
+   "pos": [
+    22.2,
+    43.2
+   ],
+   "bus": 53,
+   "generator": false,
+   "load_mw": 20
+  },
+  {
+   "id": "B54",
+   "name": "Feeder sub-unit · bus 54",
+   "type": "subunit",
+   "pos": [
+    28.5,
+    33.4
+   ],
+   "bus": 54,
+   "generator": false,
+   "load_mw": 4.1
+  },
+  {
+   "id": "B55",
+   "name": "Feeder sub-unit · bus 55",
+   "type": "subunit",
+   "pos": [
+    29.4,
+    20.1
+   ],
+   "bus": 55,
+   "generator": false,
+   "load_mw": 6.8
+  },
+  {
+   "id": "B56",
+   "name": "Substation · bus 56",
+   "type": "substation",
+   "pos": [
+    3.4,
+    -36.6
+   ],
+   "bus": 56,
+   "generator": false,
+   "load_mw": 7.6
+  },
+  {
+   "id": "B57",
+   "name": "Feeder sub-unit · bus 57",
+   "type": "subunit",
+   "pos": [
+    -3.8,
+    -40.6
+   ],
+   "bus": 57,
+   "generator": false,
+   "load_mw": 6.7
+  }
+ ],
+ "links": [
+  {
+   "id": "F1",
+   "a": "B1",
+   "b": "B2",
+   "kind": "qkd"
+  },
+  {
+   "id": "F2",
+   "a": "B1",
+   "b": "B15",
+   "kind": "qkd"
+  },
+  {
+   "id": "F3",
+   "a": "B1",
+   "b": "B16",
+   "kind": "pqc"
+  },
+  {
+   "id": "F4",
+   "a": "B1",
+   "b": "B17",
+   "kind": "pqc"
+  },
+  {
+   "id": "F5",
+   "a": "B2",
+   "b": "B3",
+   "kind": "qkd"
+  },
+  {
+   "id": "F6",
+   "a": "B3",
+   "b": "B4",
+   "kind": "qkd"
+  },
+  {
+   "id": "F7",
+   "a": "B3",
+   "b": "B15",
+   "kind": "qkd"
+  },
+  {
+   "id": "F8",
+   "a": "B4",
+   "b": "B5",
+   "kind": "pqc"
+  },
+  {
+   "id": "F9",
+   "a": "B4",
+   "b": "B6",
+   "kind": "qkd"
+  },
+  {
+   "id": "F10",
+   "a": "B4",
+   "b": "B18",
+   "kind": "pqc"
+  },
+  {
+   "id": "F11",
+   "a": "B5",
+   "b": "B6",
+   "kind": "pqc"
+  },
+  {
+   "id": "F12",
+   "a": "B6",
+   "b": "B7",
+   "kind": "qkd"
+  },
+  {
+   "id": "F13",
+   "a": "B6",
+   "b": "B8",
+   "kind": "qkd"
+  },
+  {
+   "id": "F14",
+   "a": "B7",
+   "b": "B8",
+   "kind": "qkd"
+  },
+  {
+   "id": "F15",
+   "a": "B7",
+   "b": "B29",
+   "kind": "qkd"
+  },
+  {
+   "id": "F16",
+   "a": "B8",
+   "b": "B9",
+   "kind": "qkd"
+  },
+  {
+   "id": "F17",
+   "a": "B9",
+   "b": "B10",
+   "kind": "qkd"
+  },
+  {
+   "id": "F18",
+   "a": "B9",
+   "b": "B11",
+   "kind": "qkd"
+  },
+  {
+   "id": "F19",
+   "a": "B9",
+   "b": "B12",
+   "kind": "qkd"
+  },
+  {
+   "id": "F20",
+   "a": "B9",
+   "b": "B13",
+   "kind": "qkd"
+  },
+  {
+   "id": "F21",
+   "a": "B9",
+   "b": "B55",
+   "kind": "pqc"
+  },
+  {
+   "id": "F22",
+   "a": "B10",
+   "b": "B12",
+   "kind": "qkd"
+  },
+  {
+   "id": "F23",
+   "a": "B10",
+   "b": "B51",
+   "kind": "pqc"
+  },
+  {
+   "id": "F24",
+   "a": "B11",
+   "b": "B13",
+   "kind": "qkd"
+  },
+  {
+   "id": "F25",
+   "a": "B11",
+   "b": "B41",
+   "kind": "qkd"
+  },
+  {
+   "id": "F26",
+   "a": "B11",
+   "b": "B43",
+   "kind": "pqc"
+  },
+  {
+   "id": "F27",
+   "a": "B12",
+   "b": "B13",
+   "kind": "qkd"
+  },
+  {
+   "id": "F28",
+   "a": "B12",
+   "b": "B16",
+   "kind": "pqc"
+  },
+  {
+   "id": "F29",
+   "a": "B12",
+   "b": "B17",
+   "kind": "pqc"
+  },
+  {
+   "id": "F30",
+   "a": "B13",
+   "b": "B14",
+   "kind": "qkd"
+  },
+  {
+   "id": "F31",
+   "a": "B13",
+   "b": "B15",
+   "kind": "qkd"
+  },
+  {
+   "id": "F32",
+   "a": "B13",
+   "b": "B49",
+   "kind": "qkd"
+  },
+  {
+   "id": "F33",
+   "a": "B14",
+   "b": "B15",
+   "kind": "qkd"
+  },
+  {
+   "id": "F34",
+   "a": "B14",
+   "b": "B46",
+   "kind": "pqc"
+  },
+  {
+   "id": "F35",
+   "a": "B15",
+   "b": "B45",
+   "kind": "pqc"
+  },
+  {
+   "id": "F36",
+   "a": "B18",
+   "b": "B19",
+   "kind": "pqc"
+  },
+  {
+   "id": "F37",
+   "a": "B19",
+   "b": "B20",
+   "kind": "pqc"
+  },
+  {
+   "id": "F38",
+   "a": "B20",
+   "b": "B21",
+   "kind": "pqc"
+  },
+  {
+   "id": "F39",
+   "a": "B21",
+   "b": "B22",
+   "kind": "pqc"
+  },
+  {
+   "id": "F40",
+   "a": "B22",
+   "b": "B23",
+   "kind": "pqc"
+  },
+  {
+   "id": "F41",
+   "a": "B22",
+   "b": "B38",
+   "kind": "qkd"
+  },
+  {
+   "id": "F42",
+   "a": "B23",
+   "b": "B24",
+   "kind": "pqc"
+  },
+  {
+   "id": "F43",
+   "a": "B24",
+   "b": "B25",
+   "kind": "pqc"
+  },
+  {
+   "id": "F44",
+   "a": "B24",
+   "b": "B26",
+   "kind": "pqc"
+  },
+  {
+   "id": "F45",
+   "a": "B25",
+   "b": "B30",
+   "kind": "pqc"
+  },
+  {
+   "id": "F46",
+   "a": "B26",
+   "b": "B27",
+   "kind": "pqc"
+  },
+  {
+   "id": "F47",
+   "a": "B27",
+   "b": "B28",
+   "kind": "pqc"
+  },
+  {
+   "id": "F48",
+   "a": "B28",
+   "b": "B29",
+   "kind": "pqc"
+  },
+  {
+   "id": "F49",
+   "a": "B29",
+   "b": "B52",
+   "kind": "pqc"
+  },
+  {
+   "id": "F50",
+   "a": "B30",
+   "b": "B31",
+   "kind": "pqc"
+  },
+  {
+   "id": "F51",
+   "a": "B31",
+   "b": "B32",
+   "kind": "pqc"
+  },
+  {
+   "id": "F52",
+   "a": "B32",
+   "b": "B33",
+   "kind": "pqc"
+  },
+  {
+   "id": "F53",
+   "a": "B32",
+   "b": "B34",
+   "kind": "pqc"
+  },
+  {
+   "id": "F54",
+   "a": "B34",
+   "b": "B35",
+   "kind": "pqc"
+  },
+  {
+   "id": "F55",
+   "a": "B35",
+   "b": "B36",
+   "kind": "pqc"
+  },
+  {
+   "id": "F56",
+   "a": "B36",
+   "b": "B37",
+   "kind": "qkd"
+  },
+  {
+   "id": "F57",
+   "a": "B36",
+   "b": "B40",
+   "kind": "pqc"
+  },
+  {
+   "id": "F58",
+   "a": "B37",
+   "b": "B38",
+   "kind": "qkd"
+  },
+  {
+   "id": "F59",
+   "a": "B37",
+   "b": "B39",
+   "kind": "pqc"
+  },
+  {
+   "id": "F60",
+   "a": "B38",
+   "b": "B44",
+   "kind": "pqc"
+  },
+  {
+   "id": "F61",
+   "a": "B38",
+   "b": "B48",
+   "kind": "qkd"
+  },
+  {
+   "id": "F62",
+   "a": "B38",
+   "b": "B49",
+   "kind": "qkd"
+  },
+  {
+   "id": "F63",
+   "a": "B39",
+   "b": "B57",
+   "kind": "pqc"
+  },
+  {
+   "id": "F64",
+   "a": "B40",
+   "b": "B56",
+   "kind": "pqc"
+  },
+  {
+   "id": "F65",
+   "a": "B41",
+   "b": "B42",
+   "kind": "pqc"
+  },
+  {
+   "id": "F66",
+   "a": "B41",
+   "b": "B43",
+   "kind": "pqc"
+  },
+  {
+   "id": "F67",
+   "a": "B41",
+   "b": "B56",
+   "kind": "qkd"
+  },
+  {
+   "id": "F68",
+   "a": "B42",
+   "b": "B56",
+   "kind": "pqc"
+  },
+  {
+   "id": "F69",
+   "a": "B44",
+   "b": "B45",
+   "kind": "pqc"
+  },
+  {
+   "id": "F70",
+   "a": "B46",
+   "b": "B47",
+   "kind": "pqc"
+  },
+  {
+   "id": "F71",
+   "a": "B47",
+   "b": "B48",
+   "kind": "pqc"
+  },
+  {
+   "id": "F72",
+   "a": "B48",
+   "b": "B49",
+   "kind": "qkd"
+  },
+  {
+   "id": "F73",
+   "a": "B49",
+   "b": "B50",
+   "kind": "pqc"
+  },
+  {
+   "id": "F74",
+   "a": "B50",
+   "b": "B51",
+   "kind": "pqc"
+  },
+  {
+   "id": "F75",
+   "a": "B52",
+   "b": "B53",
+   "kind": "pqc"
+  },
+  {
+   "id": "F76",
+   "a": "B53",
+   "b": "B54",
+   "kind": "pqc"
+  },
+  {
+   "id": "F77",
+   "a": "B54",
+   "b": "B55",
+   "kind": "pqc"
+  },
+  {
+   "id": "F78",
+   "a": "B56",
+   "b": "B57",
+   "kind": "pqc"
+  }
+ ]
+}
