@@ -1,5 +1,23 @@
 [
  {
+  "id": "chattanooga",
+  "label": "Chattanooga real grid (OpenStreetMap)",
+  "file": "data/networks/chattanooga.json",
+  "nodes": 117,
+  "links": 145,
+  "qkd": 34,
+  "real": true
+ },
+ {
+  "id": "tennessee500",
+  "label": "Tennessee 500 kV backbone (OpenStreetMap)",
+  "file": "data/networks/tennessee500.json",
+  "nodes": 33,
+  "links": 38,
+  "qkd": 30,
+  "real": true
+ },
+ {
   "id": "city",
   "label": "Stylized city network",
   "file": "data/network.json",

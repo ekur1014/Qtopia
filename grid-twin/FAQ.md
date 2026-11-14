@@ -57,4 +57,7 @@ The eavesdropping alarm is the part only physics can give: a classical link can 
 No. Detection, the switch to ML-KEM, rerouting, decoy traffic, the tap measurement and the inspection recommendation all run on their own; the incident card shows each step and its time. The one thing left to a person is quarantine, because an automatic quarantine would let an attacker cut communications just by tapping.
 
 **Is there a satellite?**
-Only as a drawing. The team scoped satellites out, so the build models fiber only. The **Satellite (concept)** layer shows where a satellite QKD link to the control centers would sit, labeled "concept, not simulated", for the discussion slide.
+Only as a drawing, and it will probably be taken out unless we find a quantum application only a satellite can serve. The mentors put satellites on the roadmap for statewide distances. Our real Chattanooga links are all under 22 km, well within fiber QKD; only the statewide 500 kV view has spans over 80 km.
+
+**Is the map real?**
+Yes. Substations and lines are public OpenStreetMap data, the same data OpenInfraMap draws. Two things are our assumptions: which two substations hold the keys, and that fiber runs along every power line.

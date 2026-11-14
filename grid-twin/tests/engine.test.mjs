@@ -5,7 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { runRounds, mulberry32, expectedQber, baselineQber, secretFraction, ABORT_QBER, estimateTapFraction } from "../src/bb84.js";
+import { runRounds, mulberry32, expectedQber, baselineQber, secretFraction, ABORT_QBER, estimateTapFraction, transmittance } from "../src/bb84.js";
 import { createDetector, normalTail } from "../src/detector.js";
 import { buildNetwork, shortestPath, controlCenters } from "../src/network.js";
 import { computeResponse, sitesStrandedWithout } from "../src/response.js";
@@ -252,4 +252,38 @@ test("QKD on every fiber (whiteboard mode): sub-units get QKD keys when their fi
   assert.equal(r.sites.get("U4").keySource, "qkd");
   st.set("P4", { alarm: "warning", quarantined: false });
   assert.equal(computeResponse(allQkd, st).sites.get("U4").keySource, "pqc", "its only fiber in alarm: ML-KEM");
+});
+
+test("Real OpenStreetMap grids: connected, real lengths, QKD only on short backbone spans, routes start and end at their sites", () => {
+  const dir = path.join(here, "../data/networks");
+  const manifest = JSON.parse(fs.readFileSync(path.join(dir, "index.json"), "utf8"));
+  const real = manifest.filter((x) => x.real);
+  assert.deepEqual(real.map((m) => m.id), ["chattanooga", "tennessee500"]);
+  for (const m of real) {
+    const raw = JSON.parse(fs.readFileSync(path.join(here, "..", m.file), "utf8"));
+    const g = buildNetwork(raw);
+    assert.equal(controlCenters(g).length, 2, `${m.id} has 2 key hubs`);
+    const st = new Map([...g.links.keys()].map((id) => [id, { alarm: "ok", quarantined: false }]));
+    for (const [id, site] of computeResponse(g, st).sites) assert.equal(site.islanded, false, `${m.id} ${id} connected`);
+    for (const l of raw.links) {
+      const a = g.nodes.get(l.a);
+      const b = g.nodes.get(l.b);
+      assert.ok(l.km > 0, `${m.id} ${l.id} has a length`);
+      // A real route is never shorter than the straight line between its ends (small slack for centroids).
+      assert.ok(l.km + 0.6 >= Math.hypot(a.pos[0] - b.pos[0], a.pos[1] - b.pos[1]), `${m.id} ${l.id} length vs straight line`);
+      if (l.kind === "qkd") assert.ok(l.km < 80, `${m.id} ${l.id} QKD span under 80 km`);
+      assert.ok(Array.isArray(l.path) && l.path.length >= 2, `${m.id} ${l.id} has a route`);
+    }
+  }
+});
+
+test("Every fiber up to 80 km reaches the detector's minimum evidence within one window (no endless 'Measuring')", () => {
+  for (const km of [5, 40, 79.9]) {
+    const perTick = Math.max(90, Math.round((500 * transmittance(km)) / transmittance(10))); // as in main.js
+    const det = createDetector({ baseline: baselineQber(km), z: 4.5 });
+    let r;
+    for (let i = 0; i < 16; i++) r = det.push(runRounds({ rounds: perTick, lineError: baselineQber(km), rng: mulberry32(7 + i) }));
+    assert.ok(r.enough, `${km} km: ${r.n} sifted bits in one window`);
+    assert.equal(r.status, "ok", `${km} km: no false alarm`);
+  }
 });

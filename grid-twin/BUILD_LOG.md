@@ -108,3 +108,25 @@ User request: the dark scene made stations hard to see; wanted a light mode, a r
 - **`grid-twin/start.py`**: one command that serves the page and opens the browser; it starts the live quantum-framework bridge when the packages are installed (checked: Qiskit, CUDA-Q, Guppy and notebook 1 listed) and otherwise serves the page alone (checked with system Python).
 - `grid-twin/README.md` now opens with these three ways in. The root README is untouched.
 
+## Tennessee Quantum Grid hero, screen gate, mentor notes
+
+Driven by the mentor recordings (see `docs/MENTOR_NOTES.md`).
+
+- **Real grid:**
+  - `tools/import_osm.mjs` turns OpenStreetMap power data (Overpass API) into networks.
+  - Chattanooga: 117 substations, 145 links (34 QKD), real routes and lengths.
+  - Tennessee 500 kV: 33 substations, 38 links (30 QKD).
+  - Lines that tee into other lines are split at shared towers. Teed duplicates are pruned when two shorter legs exist.
+  - The real Chattanooga grid is now the default view, titled Tennessee Quantum Grid. The earlier networks became the Simulation lab.
+- **Scene:** links follow real routes (Catmull-Rom through the simplified line geometry). Named transmission sites keep short on-map labels. A node-size factor handles dense downtown substations.
+- **Fixes found on the statewide view:**
+  - Fibers over about 50 km never collected enough evidence and stayed "Measuring". Added a detection floor, with a test.
+  - "Fibers in alarm" counted "Measuring" fibers. It now counts warning and abort only.
+- **Screen gate:** below 1024 × 600 the page shows "Needs a bigger screen" and starts once the window is large enough.
+- **Satellite:** the note now says it will probably be removed unless a quantum application needs it.
+- **Docs:** `docs/TECH_RANKED.md` (ranked "what we can do with each", GPU included) and `docs/MENTOR_NOTES.md`.
+- **Checked** in headless Chrome:
+  - Chattanooga hero: a tap opened an incident.
+  - Tennessee view: all 38 fibers healthy at rest.
+  - The gate at 800 × 700.
+- Tests: 26 passing.

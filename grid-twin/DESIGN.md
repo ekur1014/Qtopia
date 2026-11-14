@@ -80,3 +80,19 @@ Placing a tap needs no further clicks: the network runs the whole response itsel
 6. **Recommend**: send a crew to inspect the fiber; quarantine is the operator's call.
 
 What stays manual, on purpose: **quarantine**. If a tap could take a fiber out of service automatically, an attacker could cut communications at will by tapping. The operator can quarantine from the card or the inspector, and restore later (the fiber restarts on probation).
+
+## Real grid (the hero)
+
+The default view is Chattanooga's real grid from OpenStreetMap, and a statewide 500 kV view.
+
+**Mapping:**
+- Substations become sites.
+- Power lines become fiber links with their real route and length.
+- 161 kV and above is the QKD backbone; 46 kV distribution runs on ML-KEM.
+- The two key hubs are assumed.
+
+**What the real data shows:**
+- **Chattanooga:** every link is between 0.2 and 22 km, comfortably inside fiber QKD's reach.
+- **Statewide:** 8 of 38 spans exceed 80 km and would need trusted relays or repeaters. That is the only place a satellite argument could start, and it stays on the roadmap.
+
+**Long fibers:** they detect fewer photons. Each fiber gets at least 90 detections per tick (about 45 sifted bits), so one 16-tick window always reaches the detector's 600-bit minimum. Before this floor, fibers over about 50 km stayed in "Measuring" forever.

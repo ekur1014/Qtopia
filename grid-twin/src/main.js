@@ -15,6 +15,8 @@ const TICK_MS = 250;
 const DETECTED_PER_TICK_AT_10KM = 500;
 const HISTORY = 120; // ticks shown in the chart (30 s)
 const DEFAULT_Z = 4.5;
+const MIN_W = 1024; // screen gate: smallest window the app will draw in
+const MIN_H = 600;
 // The standalone single-file build (tools/build_standalone.mjs) carries its data inline, so it opens with a
 // double-click and needs no web server.
 const EMBEDDED = globalThis.GRIDTWIN_DATA ?? null;
@@ -34,10 +36,25 @@ boot().catch((err) => {
     location.protocol === "file:" ? "Open grid_twin.html (the single-file copy at the top of the repo), or run python3 grid-twin/start.py" : `Could not start: ${err.message}`;
 });
 
+// Screen gate: the 3D view and its panel need a laptop-sized screen. Smaller screens get a message instead,
+// and the app starts as soon as the window is big enough.
+function roomy() {
+  return window.innerWidth >= MIN_W && window.innerHeight >= MIN_H;
+}
+function waitForRoom() {
+  if (roomy()) return Promise.resolve();
+  return new Promise((resolve) => {
+    const check = () => roomy() && (window.removeEventListener("resize", check), resolve());
+    window.addEventListener("resize", check);
+  });
+}
+
 async function boot() {
+  await waitForRoom();
   // Which network: ?net=<id> from data/networks/index.json (default: the stylized city).
   const manifest = await fetchJson("data/networks/index.json");
-  const wanted = new URLSearchParams(location.search).get("net") ?? "city";
+  // The hero is the real Chattanooga grid; the stylized city and IEEE grids are the simulation lab (?net=<id>).
+  const wanted = new URLSearchParams(location.search).get("net") ?? "chattanooga";
   const entry = manifest.find((m) => m.id === wanted) ?? manifest[0];
   // Live quantum frameworks: available only when the page is served by sim/live_server.py.
   const engines = EMBEDDED ? {} : await fetch("api/engines").then((r) => (r.ok ? r.json() : null)).then((j) => j?.engines ?? {}).catch(() => ({}));
@@ -48,6 +65,15 @@ async function boot() {
   // "all" puts QKD on every fiber, as on the team's whiteboard sketch.
   if (coverage === "all") for (const l of raw.links) l.kind = "qkd";
   const net = buildNetwork(raw);
+  // Hero framing: the real grid gets the Tennessee title and the map-data credit the ODbL licence requires.
+  const real = !!net.meta?.real;
+  document.body.classList.toggle("is-real", real);
+  document.querySelector(".brand__title").textContent = real ? "Tennessee Quantum Grid" : "Grid Twin";
+  document.querySelector(".brand__mark").textContent = real ? "QRYPT · REAL GRID" : "QRYPT · SIMULATION LAB";
+  document.querySelector(".brand__sub").textContent = real
+    ? `${net.meta.name.replace(" (real)", "")}: real substations and lines. Every green fiber runs BB84 live; tap one and the network defends itself.`
+    : "A quantum-secured utility network, live. Every green fiber runs BB84; every error is counted.";
+  document.title = real ? "Tennessee Quantum Grid · Qrypt" : "Grid Twin · Qrypt";
   const centers = controlCenters(net);
 
   const sim = {
@@ -68,7 +94,9 @@ async function boot() {
     sim.links.set(link.id, {
       baseline,
       detector: link.kind === "qkd" ? createDetector({ baseline, z: DEFAULT_Z }) : null,
-      perTick: Math.max(40, Math.round((DETECTED_PER_TICK_AT_10KM * transmittance(link.km)) / transmittance(10))),
+      // Floor of 90 detections per tick: about half survive sifting, so one 16-tick window always reaches the
+      // detector's 600-bit minimum. Without it, fibers longer than about 50 km could never be judged.
+      perTick: Math.max(90, Math.round((DETECTED_PER_TICK_AT_10KM * transmittance(link.km)) / transmittance(10))),
       eve: null,
       quarantined: false,
       decoy: false,
@@ -259,6 +287,10 @@ async function boot() {
     if (html) st.html = html;
     st.at = simTime();
   }
+  // On the real map, sites have names people know; use them in incident cards.
+  function placeName(nodeId) {
+    return net.nodes.get(nodeId).short ?? nodeId;
+  }
   function openIncident(id) {
     const s = sim.links.get(id);
     const l = net.links.get(id);
@@ -267,8 +299,8 @@ async function boot() {
     const inc = {
       n: ++incidentSeq,
       link: id,
-      a: l.a,
-      b: l.b,
+      a: placeName(l.a),
+      b: placeName(l.b),
       state: "active",
       openedAt: t,
       measureFrom: null,
@@ -329,7 +361,7 @@ async function boot() {
         inc,
         "recommend",
         "done",
-        `<b>Recommended</b>: send a crew to inspect ${id} (${l.a}–${l.b}, ${l.km} km of fiber) for a physical tap. ${s.decoy ? "Decoy traffic keeps running meanwhile." : "Traffic stays on ML-KEM keys meanwhile."} Quarantine is the operator's call.`,
+        `<b>Recommended</b>: send a crew to inspect ${id} (${placeName(l.a)}–${placeName(l.b)}, ${l.km} km of fiber) for a physical tap. ${s.decoy ? "Decoy traffic keeps running meanwhile." : "Traffic stays on ML-KEM keys meanwhile."} Quarantine is the operator's call.`,
       );
       ui.log({ level: "warn", text: `Incident #${inc.n}: about ${pct(est.f, 0)} of photons on ${id} are being intercepted. Crew inspection recommended.` });
     }

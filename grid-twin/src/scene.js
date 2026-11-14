@@ -42,7 +42,8 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
   const zs = [...net.nodes.values()].map((n) => n.pos[1]);
   const center = new THREE.Vector3((Math.min(...xs) + Math.max(...xs)) / 2, 0, (Math.min(...zs) + Math.max(...zs)) / 2);
   const span = Math.max(30, Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs));
-  const S = THREE.MathUtils.clamp(Math.sqrt(span / 55), 1, 2.2); // size factor for nodes, fibers and photons
+  // Size factor for nodes, fibers and photons. Real maps set nodeScale: substations there can sit a few hundred metres apart.
+  const S = THREE.MathUtils.clamp(Math.sqrt(span / 55), 1, 2.2) * (net.meta?.nodeScale ?? 1);
 
   // Renderer, labels, post-processing ------------------------------------------------------------
   const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
@@ -239,8 +240,8 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
     group.add(relayRing);
 
     const el = document.createElement("div");
-    el.className = `label label--${node.type}${crowded && node.type !== "control" ? " label--quiet" : ""}`;
-    el.innerHTML = `${node.id}<span class="label__name">${node.name}</span>`;
+    el.className = `label label--${node.type}${crowded && node.type !== "control" && !node.short ? " label--quiet" : ""}`;
+    el.innerHTML = node.short ? `${node.short}<span class="label__name">${node.id}</span>` : `${node.id}<span class="label__name">${node.name}</span>`;
     const label = new CSS2DObject(el);
     label.position.set(0, height + (node.type === "control" ? 3.2 : 1.6) * S, 0);
     group.add(label);
@@ -259,9 +260,24 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
     const b = net.nodes.get(link.b);
     const pa = new THREE.Vector3(a.pos[0], endHeight(a), a.pos[1]);
     const pb = new THREE.Vector3(b.pos[0], endHeight(b), b.pos[1]);
-    const mid = pa.clone().lerp(pb, 0.5);
-    mid.y += 1.4 * S + pa.distanceTo(pb) * 0.12; // arc, so links read as cables lifted off the ground
-    const curve = new THREE.QuadraticBezierCurve3(pa, mid, pb);
+    let curve;
+    if (link.path?.length >= 2) {
+      // Real route (from the map data): follow it, lifted like a cable on towers.
+      const pts = link.path.map(([x, z]) => new THREE.Vector3(x, 0, z));
+      pts[0].copy(pa).setY(0);
+      pts[pts.length - 1].copy(pb).setY(0);
+      if (pts.length === 2) pts.splice(1, 0, pts[0].clone().lerp(pts[1], 0.5));
+      const n = pts.length;
+      pts.forEach((p, i) => {
+        const t = i / (n - 1);
+        p.y = THREE.MathUtils.lerp(pa.y, pb.y, t) + Math.sin(Math.PI * t) * (0.5 * S + pa.distanceTo(pb) * 0.04);
+      });
+      curve = new THREE.CatmullRomCurve3(pts, false, "centripetal");
+    } else {
+      const mid = pa.clone().lerp(pb, 0.5);
+      mid.y += 1.4 * S + pa.distanceTo(pb) * 0.12; // arc, so links read as cables lifted off the ground
+      curve = new THREE.QuadraticBezierCurve3(pa, mid, pb);
+    }
 
     const isQkd = link.kind === "qkd";
     const base = linkBase(isQkd);

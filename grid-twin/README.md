@@ -6,6 +6,8 @@ A 3D twin of a city utility's quantum-secured communication network, built for t
 
 Every green fiber runs BB84 quantum key distribution. Tap any fiber with an eavesdropper and watch its error rate (QBER) climb, the alarm fire, and the network respond on its own: keys switch to ML-KEM, real traffic reroutes, the fiber switches to decoy traffic so the tap can be measured, and a crew inspection is recommended. Any cut is to **communication paths**, never power, and only an operator can quarantine a fiber.
 
+It opens on the **Tennessee Quantum Grid**: Chattanooga's real EPB and TVA grid from OpenStreetMap. The stylized city and the IEEE test grids are the **Simulation lab** in the same network list. Screens smaller than 1024 × 600 get a "needs a bigger screen" message instead of the 3D view.
+
 It opens in a light theme (easier to read on a projector); **T** or the moon button switches to dark, and `?theme=dark` opens dark.
 
 ## Open it (teammates: start here)
@@ -70,12 +72,20 @@ Pick one in the panel, or open `?net=<id>`:
 
 | id | Network | Sites | Fibers | QKD fibers |
 |---|---|---|---|---|
-| `city` (default) | Stylized city network, hand-made | 17 | 21 | 11 |
+| `chattanooga` (default, the hero) | **Real** Chattanooga grid: EPB and TVA substations and lines from OpenStreetMap | 117 | 145 | 34 |
+| `tennessee500` | **Real** TVA 500 kV backbone across Tennessee, from OpenStreetMap | 33 | 38 | 30 |
+| `city` | Simulation lab: stylized city network, hand-made | 17 | 21 | 11 |
 | `ieee14` | IEEE 14-bus test grid | 14 | 20 | 13 |
 | `ieee30` | IEEE 30-bus test grid | 30 | 41 | 20 |
 | `ieee57` | IEEE 57-bus test grid | 57 | 78 | 30 |
 | `ieee118` | IEEE 118-bus test grid | 118 | 179 | 104 |
 | `ieee300` | IEEE 300-bus test grid | 300 | 409 | 258 |
+
+The two real networks come from OpenStreetMap, the data behind OpenInfraMap (the mentors' suggestion), © OpenStreetMap contributors, ODbL; the credit shows on screen.
+- `tools/import_osm.mjs` joins power lines end to end, including lines that tee into others, into substation-to-substation links that keep the real route and length. Raw Overpass responses are in `data/osm/`, so the import reruns offline.
+- **Chattanooga:** QKD on 161 kV and above, ML-KEM on 46 kV distribution.
+- **Statewide:** QKD only on 500 kV spans under 80 km.
+- **Assumption:** the two key hubs (Chickamauga and Oglethorpe in Chattanooga) are ours, because real control-center locations are not public. Fiber is assumed along every line (OPGW).
 
 The IEEE grids are public test systems (MATPOWER, UW Power Systems Test Case Archive; copies in `data/ieee/`). `tools/import_ieee.mjs` turns them into networks: every power line is assumed to carry fiber (utilities commonly run fiber in the ground wire of their own lines, OPGW), the two best-connected buses become control centers, generator buses and buses with 3 or more lines become major substations on QKD, and the rest are feeder sub-units on ML-KEM. IEEE cases have no coordinates, so positions come from a force-directed layout and fiber lengths are scaled (median 14 km): illustrative, not real distances.
 

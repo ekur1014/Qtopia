@@ -29,14 +29,13 @@ const pill = ([text, tone]) => `<span class="pill pill--${tone}">${text}</span>`
 export function createUI({ panel, incidentsEl = null, net, networks = [], currentNetwork, coverage = "backbone", engines = {}, handlers }) {
   const engineIds = Object.keys(engines);
   const startedAt = performance.now();
-  const netOptions = networks
-    .map((m) => `<option value="${m.id}"${m.id === currentNetwork ? " selected" : ""}>${m.label} · ${m.nodes} sites</option>`)
-    .join("");
+  const opt = (m) => `<option value="${m.id}"${m.id === currentNetwork ? " selected" : ""}>${m.label} · ${m.nodes} sites</option>`;
+  const netOptions = `<optgroup label="Real grid">${networks.filter((m) => m.real).map(opt).join("")}</optgroup><optgroup label="Simulation lab">${networks.filter((m) => !m.real).map(opt).join("")}</optgroup>`;
   panel.innerHTML = `
     <section class="section">
       <h2>Network</h2>
       <select class="select" data-input="network" aria-label="Choose a network">${netOptions}</select>
-      <div class="control__note">${net.meta?.note ?? ""}</div>
+      <div class="control__note">${net.meta?.note ?? ""}${net.meta?.real ? ` <a href="https://openinframap.org/#11.68/35.0463/-85.2892/A,B,L,P" target="_blank" rel="noopener">Open the same area on OpenInfraMap</a>.` : ""}</div>
       <label class="field" for="coverage">QKD coverage</label>
       <select class="select" id="coverage" data-input="coverage" aria-label="Which fibers run QKD">
         <option value="backbone"${coverage === "backbone" ? " selected" : ""}>Backbone only: control centers and major substations (our design)</option>
@@ -75,7 +74,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
       <label class="check" for="autoresponse"><input type="checkbox" id="autoresponse" data-input="autoresponse" checked aria-label="Automatic response" /> <span><b>Automatic response</b>: when a fiber alarms, the network acts on its own: keys switch to ML-KEM, real traffic reroutes, the fiber switches to decoy traffic to measure the tap, and a crew inspection is recommended. Quarantine stays the operator's decision.</span></label>
       <h2>Layers</h2>
       <label class="check" for="teleport"><input type="checkbox" id="teleport" data-input="teleport" aria-label="Teleportation view" /> <span><b>Teleportation view</b>: show which fibers are under 11% error (usable entanglement if run entanglement-based) and each substation's entanglement-swapping route, which needs no trusted relays</span></label>
-      <label class="check" for="satellite"><input type="checkbox" id="satellite" data-input="satellite" aria-label="Satellite concept" /> <span><b>Satellite (concept)</b>: draw where a satellite QKD link to the control centers would sit. A drawing for discussion only: not simulated, and out of the project's scope.</span></label>
+      <label class="check" for="satellite"><input type="checkbox" id="satellite" data-input="satellite" aria-label="Satellite concept" /> <span><b>Satellite (concept)</b>: draw where a satellite QKD link to the control centers would sit. A drawing for discussion only, not simulated. <b>Likely to be removed</b> unless we find a quantum application only a satellite can serve; the mentors placed it on the roadmap, for statewide distances.</span></label>
       <div class="btns">
         <button class="btn btn--danger" data-action="clear-eves">Remove all taps</button>
         <button class="btn btn--ok" data-action="restore-all">Restore all fibers</button>
@@ -353,7 +352,7 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
       if (net.links.get(id).kind !== "qkd") continue;
       qkdLinks++;
       if (!s.quarantined && s.status === "ok") healthy++;
-      if (!s.quarantined && s.status !== "ok") alerts++;
+      if (!s.quarantined && (s.status === "warning" || s.status === "abort")) alerts++;
     }
     let qkdSites = 0;
     let substations = 0;

@@ -1,5 +1,7 @@
 # Technology options: what each idea would take, and what we did
 
+> The ranked version, with what we can do with each technology (GPU included), is in [TECH_RANKED.md](TECH_RANKED.md).
+
 From the team's notebook page (`Idea/tech-ideas-notebook.jpg`) and Saturday's chat ideas. Status as of Saturday 14 November 2026.
 
 | Idea | Status | What it gives us | Where |
