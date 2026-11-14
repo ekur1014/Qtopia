@@ -73,6 +73,7 @@ Pick one in the panel, or open `?net=<id>`:
 |---|---|---|---|---|
 | `chattanooga` (default, the hero) | **Real** Chattanooga grid: EPB and TVA substations and lines from OpenStreetMap | 117 | 145 | 34 |
 | `tennessee500` | **Real** TVA 500 kV backbone across Tennessee, from OpenStreetMap | 33 | 38 | 30 |
+| `dualring` | **Team design:** command center + nine supernodes in a dual ring (two fibers per span), substations off each supernode | 19 | 29 | 20 |
 | `city` | Simulation lab: stylized city network, hand-made | 17 | 21 | 11 |
 | `ieee14` | IEEE 14-bus test grid | 14 | 20 | 13 |
 | `ieee30` | IEEE 30-bus test grid | 30 | 41 | 20 |

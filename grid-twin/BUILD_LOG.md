@@ -215,3 +215,11 @@ Fixed from its findings (each checked by hand first):
 - **Captions:** the sphere labels change per tab.
 - **Wording:** "about N/2" classical tries; the 11% threshold is labelled as the key threshold.
 - **`engines.py` comment updated:** IonQ's free simulator returns exact probabilities, not samples.
+
+## Dual ring (New Chat Grid), sync and audits
+
+- **Read the new folder:** the whiteboard photo and the 7-minute recording. Re-transcribed it locally with whisper.cpp because the app's transcript looked short; the gaps were side conversation. Saved as `transcript-local.txt`.
+- **Built the dual ring** (`tools/make_dualring.mjs`, `?net=dualring`), as described in DESIGN.md. Added a "Team design" group in the network list, its own title, and a home-page card.
+- **New test:** one tapped fiber moves to its twin; with both fibers tapped, the key goes the other way round. 27 tests passing.
+- **Checked in the browser:** with both fibers between supernodes 3 and 4 tapped, two incident cards fire and supernode 4's key path runs via 7, 6, 5.
+- **Opus reviewers** (qBraid gateway) audited readability, faithfulness to the plan, and consistency of numbers. Fixes follow below.

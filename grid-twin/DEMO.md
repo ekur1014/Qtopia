@@ -26,6 +26,7 @@ A 60-second live demo for the Solution & Technology slide, plus setup and a back
 | 0:30 | Press **1**, click **Hamilton** | "Hamilton still gets a quantum key, now relayed from Oglethorpe through two other substations. Those gold rings are trusted nodes: they briefly hold the key, so they must be physically secured. That's the trusted-node problem." |
 | 0:40 | Remove the tap (click the fiber again with tool 2, or "Remove all taps"); set the tap slider to **5%** and tap another fiber | "A careful spy taps only 5%. Now the error rate stays inside normal noise: physics alone can't catch her quickly. That's why the threshold comes from each fiber's own baseline, and why privacy amplification matters." |
 | 0:55 | On the incident card, click **Quarantine fiber** | "If the operator does quarantine, traffic reroutes. A site with no path left loses communications, but never power." |
+| Optional | Pick **Dual ring** in the network list (or open `?net=dualring`). Tap one fiber between supernodes 3 and 4, then the other | "This is our team's ring design: nine supernodes around the command center, two fibers per span. One tapped fiber: traffic just moves to its twin. Both tapped: supernode 4's key goes all the way round, through 5, 6 and 7, to the command center." |
 | Optional | Pick **Tennessee 500 kV backbone** in the network list | "Statewide, eight spans are longer than 80 km: past what fiber QKD reaches without relays. That is where repeaters, or one day satellites, come in. It's on our roadmap, not in this build." |
 
 ## What to point at

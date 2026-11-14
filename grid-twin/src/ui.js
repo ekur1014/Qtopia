@@ -30,12 +30,15 @@ export function createUI({ panel, incidentsEl = null, net, networks = [], curren
   const engineIds = Object.keys(engines);
   const startedAt = performance.now();
   const opt = (m) => `<option value="${m.id}"${m.id === currentNetwork ? " selected" : ""}>${m.label} · ${m.nodes} sites</option>`;
-  const netOptions = `<optgroup label="Real grid">${networks.filter((m) => m.real).map(opt).join("")}</optgroup><optgroup label="Simulation lab">${networks.filter((m) => !m.real).map(opt).join("")}</optgroup>`;
+  const netOptions =
+    `<optgroup label="Real grid">${networks.filter((m) => m.real).map(opt).join("")}</optgroup>` +
+    `<optgroup label="Team design">${networks.filter((m) => m.design).map(opt).join("")}</optgroup>` +
+    `<optgroup label="Simulation lab">${networks.filter((m) => !m.real && !m.design).map(opt).join("")}</optgroup>`;
   panel.innerHTML = `
     <section class="section">
       <h2>Network</h2>
       <select class="select" data-input="network" aria-label="Choose a network">${netOptions}</select>
-      <div class="control__note">${net.meta?.note ?? ""}${net.meta?.real ? ` <a href="https://openinframap.org/#11.68/35.0463/-85.2892/A,B,L,P" target="_blank" rel="noopener">Open the same area on OpenInfraMap</a>.` : ""}</div>
+      <div class="control__note">${net.meta?.note ?? ""}${net.meta?.design_detail ? ` ${net.meta.design_detail}` : ""}${net.meta?.real ? ` <a href="https://openinframap.org/#11.68/35.0463/-85.2892/A,B,L,P" target="_blank" rel="noopener">Open the same area on OpenInfraMap</a>.` : ""}</div>
       <label class="field" for="coverage">QKD coverage</label>
       <select class="select" id="coverage" data-input="coverage" aria-label="Which fibers run QKD">
         <option value="backbone"${coverage === "backbone" ? " selected" : ""}>Backbone only: control centers and major substations (our design)</option>

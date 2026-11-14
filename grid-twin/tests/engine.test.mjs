@@ -287,3 +287,20 @@ test("Every fiber up to 80 km reaches the detector's minimum evidence within one
     assert.equal(r.status, "ok", `${km} km: no false alarm`);
   }
 });
+
+test("Dual ring (team design): one tapped fiber moves to its twin; both fibers of a span send the key the other way round", () => {
+  const raw = JSON.parse(fs.readFileSync(path.join(here, "../data/networks/dualring.json"), "utf8"));
+  const g = buildNetwork(raw);
+  assert.equal([...g.nodes.values()].filter((n) => n.type === "substation").length, 9, "nine supernodes");
+  assert.equal(raw.links.filter((l) => l.ring).length, 18, "two fibers per span");
+  assert.ok(raw.links.filter((l) => l.ring).every((l) => l.kind === "qkd"), "QKD on every ring fiber");
+  const ok = () => new Map([...g.links.keys()].map((id) => [id, { alarm: "ok", quarantined: false, risk: 0 }]));
+  const keyLinks = (st) => computeResponse(g, st).sites.get("N4").keyPath.links.map((l) => l.id);
+  assert.deepEqual(keyLinks(ok()), ["C3", "A3"]);
+  let st = ok();
+  st.set("A3", { alarm: "abort", quarantined: false, risk: 4 });
+  assert.deepEqual(keyLinks(st), ["C3", "B3"], "the twin fiber of the same span");
+  st.set("B3", { alarm: "abort", quarantined: false, risk: 4 });
+  assert.deepEqual(keyLinks(st), ["C7", "A6", "A5", "A4"], "the other way round the ring");
+});
+

@@ -67,13 +67,17 @@ async function boot() {
   const net = buildNetwork(raw);
   // Hero framing: the real grid gets the Tennessee title and the map-data credit the ODbL licence requires.
   const real = !!net.meta?.real;
-  document.body.classList.toggle("is-real", real);
-  document.querySelector(".brand__title").textContent = real ? "Tennessee Quantum Grid" : "Grid Twin";
-  document.querySelector(".brand__mark").textContent = real ? "QRYPT · REAL GRID" : "QRYPT · SIMULATION LAB";
+  const design = !!net.meta?.design;
+  document.body.classList.toggle("is-real", real); // shows the OpenStreetMap credit
+  document.body.classList.toggle("is-design", design);
+  document.querySelector(".brand__title").textContent = real ? "Tennessee Quantum Grid" : design ? "The Dual Ring" : "Grid Twin";
+  document.querySelector(".brand__mark").textContent = real ? "QRYPT · REAL GRID" : design ? "QRYPT · TEAM DESIGN" : "QRYPT · SIMULATION LAB";
   document.querySelector(".brand__sub").textContent = real
     ? `${net.meta.name.replace(" (real)", "")}: real substations and lines. Every green fiber runs BB84 live; tap one and the network defends itself.`
-    : "A quantum-secured utility network, live. Every green fiber runs BB84; every error is counted.";
-  document.title = real ? "Tennessee Quantum Grid · Qrypt" : "Grid Twin · Qrypt";
+    : design
+      ? "Nine supernodes in a dual ring around the command center, QKD on every ring fiber. Tap a ring fiber: traffic moves to its twin. Tap both: it goes the other way round."
+      : "A quantum-secured utility network, live. Every green fiber runs BB84; every error is counted.";
+  document.title = real ? "Tennessee Quantum Grid · Qrypt" : design ? "Dual Ring · Qrypt" : "Grid Twin · Qrypt";
   const centers = controlCenters(net);
 
   const sim = {

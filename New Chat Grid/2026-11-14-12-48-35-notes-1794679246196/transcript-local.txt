@@ -1,0 +1,95 @@
+Local re-transcription (whisper.cpp, small.en model) of audio.mp3, 7 min 22 s, made 14 Nov to check the app's transcript.
+The gaps are side conversation; nothing about the design is missing from transcription.pdf.
+
+[INAUDIBLE]
+Sounds good.
+Hey, y'all.
+Yeah.
+What problems are you doing?
+One, secure the grid.
+Huh?
+Secure the grid.
+All right.
+I'm on.
+Oh.
+Huh?
+[INAUDIBLE]
+So you're doing the-- you guys are doing the pitch deck, right?
+I don't know what-- this thing hallucinated a pitch deck,
+so I'm going to remove that.
+That's fine.
+Yeah.
+Well, that's not--
+Yeah.
+I don't know.
+No, hitting built-in button.
+OK.
+Y'all can hear us over there, can't you?
+Just a little bit.
+That's all right.
+We're-- OK.
+Sorry.
+[INAUDIBLE]
+They're doing a different problem set anyway.
+So, like, what's the--
+that's crazy.
+[INAUDIBLE]
+[SIDE CONVERSATION]
+[SIDE CONVERSATION]
+OK.
+[SIDE CONVERSATION]
+[SIDE CONVERSATION]
+[SIDE CONVERSATION]
+[SIDE CONVERSATION]
+[SIDE CONVERSATION]
+[SIDE CONVERSATION]
+[SIDE CONVERSATION]
+[SIDE CONVERSATION]
+[SIDE CONVERSATION]
+[SIDE CONVERSATION]
+All right, guys.
+So, I guess patting is a little different.
+Instead of, like, it's pretty similar to what I was describing,
+but, like, the actual network, I mean,
+operates on, like, a structure where there's, like,
+a central command center, like, you have to do.
+But what we're more concerned with,
+rather than, like, the substations themselves,
+is these are all--
+there are nine super nodes in a ring around the command center.
+They're actually two rings, so that anything
+can travel in two directions.
+And all of these are linked to a bunch of substations.
+So, I mean, that--
+what we've been working on is kind of, like, is, like,
+this part, is, like, making sure that, like,
+the substations that are hooked up to whatever central command
+is here, like, all that QKD is fine.
+But I think it's also important to take a look at, like--
+because this is where everything that is important
+is happening within this ring.
+So we want these connections to be secure.
+So maybe if we could do a very similar simulation
+to what we had, but just with this simple architecture.
+And it's a dual ring.
+So maybe I should have-- you can do this one.
+Just set it up in this format.
+And not even really worry about these substations too much.
+Just, like, if all of these-- they're
+two connections per super node.
+And they go in different directions.
+So what we can do is, like, do QKD for all of these.
+Get them all connected through QKD.
+And then we can do, like, a best path for--
+like, if one of these error rates gets too high,
+we know we can't go that way.
+So do we have to go all the way around and whatnot
+to get to the command center?
+I guess just start off with--
+are you working on anything right now?
+I'm starting.
+Start on that, like, get the basic model set up.
+And I'll keep looking into, like, how it works
+so we make sure what we're doing is justified.
+Because that's different than the actual all these
+substations that both get things to be prepared.
