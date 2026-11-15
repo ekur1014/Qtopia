@@ -56,7 +56,6 @@ The team's entry for the **Tennessee Quantum Hackathon, "Secure the Grid" track*
 | `2b_grover_symmetric_keys.ipynb` | Step 2 Part 5: Grover key search (N = 4, 8, 16). Checked by `check_grover.py` |
 | `3_secure_grid_link.ipynb` | Step 3: teleportation link on Aer, the IonQ simulator, the H2 emulator and Rigetti (saved outputs) |
 | `WRITEUP.md` | **The single write-up**: Steps 1–3 by Part, plus the full run record. The source of truth for numbers |
-| `slides.md` | Deck plan and draft text for the organizers' 5-slide template (`Quantum_Hackathon_Five_Slide_Genric-Template.pptx`) |
 | `grid-twin/` | The live 3D grid (Three.js). `src/` holds the physics, routing (`response.js`), UI and scene; `data/networks/` the Chattanooga, Tennessee 500 kV, IEEE and dual-ring networks; `sim/` the Python bridge that runs fibers on Qiskit, CUDA-Q, Guppy and qBraid; `tests/` the Node tests |
 | Site pages | `index.html` (home), `chattanooga_quantum_map.html` (real map), `bb84_visualizer.html` (photon line), `threejs_quantum_grid.html` (quantum lab), `grid_twin.html` (the live grid as one file, built by `grid-twin/tools/build_standalone.mjs`). The 2D monitor prototype was deleted on 14 Nov; `dual_ring_quantum_routing.html` stays in the repo but `vercel.json` redirects it to the real map. All share `shared/qtopia.css` and `shared/qbar.js` (top bar and journey order) |
 | `docs/` | Audits, mentor notes, tech options, work log, and this file. `REMOVE_RING_PLAN.md` is the ring plan |
@@ -143,7 +142,7 @@ bash tools/build_site.sh                                        # build site/ (V
 
 ## 7. Open work before the deadline
 
-1. **The deck:** fill the 5-slide template from `slides.md`. Slide 3 still describes the old stylized city; update it to Chattanooga.
+1. **The deck:** the team made its pitch deck outside the repo. `slides.md` and `presentation_deck.html` were deleted on 14 Nov (both are in git history).
 2. **`[TEAM]` items in `WRITEUP.md`:** confirm the rollout plan (Step 3 Part 4), and save Grid Twin screenshots as images for the Solution slide.
 3. **The route search** (`grid-twin/src/route.js`, `chattanooga_router.py`, `3b_grover_route_search.ipynb`) is built. Its two early bugs are fixed: Grover now uses `floor(π / (4θ))` with θ = asin(√(M/N)), so it is never worse than a random pick; and fibers still on probation can't carry a QKD key.
 4. **`bb84_visualizer.html`** now quotes the notebook's saved Eve result, 0.258 (it said 0.247 before 14 Nov).
