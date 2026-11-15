@@ -111,6 +111,7 @@ Also open to your team: the [qBraid Award](../4-qbraid-award) for the most creat
 
 ## Links
 
+- **Live site:** [qtopia-kappa.vercel.app](https://qtopia-kappa.vercel.app) (Vercel project `qtopia`, deploys from `main`)
 - UTC's original problem set and what changed: [`background/`](./background/)
 - [qBraid device catalog](https://account.qbraid.com/devices) (qubit counts, prices, status)
 - [NIST post-quantum cryptography](https://csrc.nist.gov/projects/post-quantum-cryptography), and its [FAQ](https://csrc.nist.gov/projects/post-quantum-cryptography/faqs) (including what Grover's search means for AES)
