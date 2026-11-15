@@ -92,7 +92,7 @@
     }
     var want = open == null ? !keysDialog.open : open;
     if (!want) { if (keysDialog.open) keysDialog.close(); return; }
-    var global = [["1 / 2 / 3 / 4", "Open step 1 to 4: real map, live grid, photon line, quantum lab"], ["0", "Home"], ["T", "Light or dark"], ["D", "Simple or Detailed"], ["?", "Show or hide this list"]];
+    var global = [["1 / 2 / 3 / 4", "Open step 1 to 4: real map, live grid, photon line, quantum lab"], ["0 / Esc", "Home (Esc first closes or clears what is open)"], ["T", "Light or dark"], ["D", "Simple or Detailed"], ["?", "Show or hide this list"]];
     keysDialog.innerHTML =
       '<div class="qkeys__head"><h2 id="qkeys-h">Keyboard shortcuts</h2><button type="button" class="qkeys__close" data-close aria-label="Close">Close</button></div>' +
       (pageKeys.length ? '<h3>On this page</h3><dl>' + rows(pageKeys) + "</dl>" : "") +
@@ -102,7 +102,15 @@
   document.addEventListener("keydown", function (e) {
     if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) return;
     if (e.key === "?") { e.preventDefault(); toggleKeys(); return; }
+    if (e.key === "Escape" && keysDialog && keysDialog.open) { e.preventDefault(); keysDialog.close(); return; }
     if (typing(e) || (keysDialog && keysDialog.open)) return;
+    if (e.key === "Escape") {
+      // Pages use Esc first (the live grid clears its selection and marks the key as handled); only an
+      // unhandled Esc goes home. Checked after every other listener has run.
+      if (page === "home") return;
+      setTimeout(function () { if (!e.defaultPrevented && !document.querySelector("dialog[open]")) location.href = root + PAGES[0].href; }, 0);
+      return;
+    }
     var k = e.key.toLowerCase();
     if (/^[0-9]$/.test(k)) {
       var target = k === "0" ? PAGES[0] : PAGES.filter(function (p) { return p.step === Number(k); })[0];

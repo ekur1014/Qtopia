@@ -702,8 +702,16 @@ async function boot() {
     else if (k === "o") viewAction("orbit");
     else if (k === "m") setDragMode(scene.dragMode === "move" ? "rotate" : "move");
     else if (e.key === "Escape") {
-      sim.selected = null;
-      refresh();
+      // First Esc clears what is shown (selection, then route); with nothing left, the top bar takes it home.
+      if (sim.selected || sim.route) {
+        e.preventDefault();
+        if (sim.selected) sim.selected = null;
+        else {
+          sim.route = null;
+          ui.resetRoute?.();
+        }
+        refresh();
+      }
     } else if (e.key === " ") {
       if (e.target instanceof Element && e.target.closest("button, a, summary")) return; // Space presses a focused button
       e.preventDefault();
@@ -785,7 +793,7 @@ async function boot() {
     ["F", "Focus on the selection"],
     ["O", "Auto-turn on or off"],
     ["Space", "Pause or resume the simulation"],
-    ["Esc", "Clear the selection"],
+    ["Esc", "Clear the selection, then the route; with nothing selected, go home"],
   ]);
 
   // A small handle for scripted demos and browser tests, e.g. gridTwin.tap("L11"); gridTwin.select("node", "S6").

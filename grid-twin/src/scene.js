@@ -42,6 +42,13 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
   const zs = [...net.nodes.values()].map((n) => n.pos[1]);
   const center = new THREE.Vector3((Math.min(...xs) + Math.max(...xs)) / 2, 0, (Math.min(...zs) + Math.max(...zs)) / 2);
   const span = Math.max(30, Math.max(...xs) - Math.min(...xs), Math.max(...zs) - Math.min(...zs));
+  // The opening view fills the screen with the core of the network: the middle 92% of sites in each direction.
+  // A few outlying sites (a plant out of town) would otherwise force the camera far back. Recenter returns here.
+  const pct = (arr, p) => [...arr].sort((a, b) => a - b)[Math.floor(p * (arr.length - 1))];
+  const core = nodeCount > 12
+    ? { x0: pct(xs, 0.04), x1: pct(xs, 0.96), z0: pct(zs, 0.04), z1: pct(zs, 0.96) }
+    : { x0: Math.min(...xs), x1: Math.max(...xs), z0: Math.min(...zs), z1: Math.max(...zs) };
+  const viewCenter = new THREE.Vector3((core.x0 + core.x1) / 2, 0, (core.z0 + core.z1) / 2);
   // Size factor for nodes, fibers and photons. Real maps set nodeScale: substations there can sit a few hundred metres apart.
   const S = THREE.MathUtils.clamp(Math.sqrt(span / 55), 1, 2.2) * (net.meta?.nodeScale ?? 1);
 
@@ -65,7 +72,7 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
   const camera = new THREE.PerspectiveCamera(42, container.clientWidth / container.clientHeight, 0.1, span * 12);
 
   const controls = new OrbitControls(camera, renderer.domElement);
-  controls.target.copy(center);
+  controls.target.copy(viewCenter);
   controls.enableDamping = true;
   controls.dampingFactor = 0.06;
   controls.minDistance = 6 * S;
@@ -92,21 +99,25 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
   // the network is centered in what is left, and the camera distance is searched so every site fits there.
   let insets = { right: 0, bottom: 0 };
   const restDir = new THREE.Vector3(-span * 0.1, span * 0.5, span * 0.56);
-  const fitPoints = [...net.nodes.values()].flatMap((n) => [new THREE.Vector3(n.pos[0], 0, n.pos[1]), new THREE.Vector3(n.pos[0], 3 * S, n.pos[1])]);
+  const fitPoints = [...net.nodes.values()]
+    .filter((n) => n.pos[0] >= core.x0 && n.pos[0] <= core.x1 && n.pos[1] >= core.z0 && n.pos[1] <= core.z1)
+    .flatMap((n) => [new THREE.Vector3(n.pos[0], 0, n.pos[1]), new THREE.Vector3(n.pos[0], 3 * S, n.pos[1])]);
   const probe = new THREE.PerspectiveCamera(42, 1, 0.1, span * 12);
   function framing() {
     const W = Math.max(1, container.clientWidth);
     const H = Math.max(1, container.clientHeight);
     probe.aspect = W / H;
     probe.setViewOffset(W, H, insets.right / 2, insets.bottom / 2, W, H);
-    const xMax = ((W - insets.right) / W) * 0.9;
-    const yMax = ((H - insets.bottom) / H) * 0.84;
+    // On desktop the bottom toolbar covers about 90 px: keep the network above it.
+    const bottom = insets.bottom || (W > 860 ? 90 : 0);
+    const xMax = ((W - insets.right) / W) * 0.96;
+    const yMax = ((H - bottom) / H) * 0.92;
     const cx = -insets.right / W; // center of the free area in normalized screen coordinates
-    const cy = insets.bottom / H;
+    const cy = bottom / H;
     const v = new THREE.Vector3();
     const fits = (k) => {
-      probe.position.copy(center).addScaledVector(restDir, k);
-      probe.lookAt(center);
+      probe.position.copy(viewCenter).addScaledVector(restDir, k);
+      probe.lookAt(viewCenter);
       probe.updateMatrixWorld();
       probe.updateProjectionMatrix();
       return fitPoints.every((p) => {
@@ -123,7 +134,7 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
         else lo = mid;
       }
     }
-    return center.clone().addScaledVector(restDir, hi);
+    return viewCenter.clone().addScaledVector(restDir, hi);
   }
   function applyViewOffset() {
     const w = container.clientWidth;
@@ -131,9 +142,9 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
     camera.setViewOffset(w, h, insets.right / 2, insets.bottom / 2, w, h);
   }
   let restPos = framing();
-  const startPos = center.clone().add(new THREE.Vector3(span * 0.9, span * 2.2, span * 1.6));
+  const startPos = viewCenter.clone().add(new THREE.Vector3(span * 0.9, span * 2.2, span * 1.6));
   camera.position.copy(reduceMotion ? restPos : startPos);
-  camera.lookAt(center);
+  camera.lookAt(viewCenter);
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
@@ -401,7 +412,7 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
   // Glide: when something is selected, the orbit target eases toward it and the camera keeps its angle.
   // Fly: a timed move of both camera and target (Fit, Focus). Dolly: an eased zoom (+ and − buttons).
   // Cinematic orbit: a slow turn around the target that stops on any interaction and resumes when idle.
-  const targetGoal = center.clone();
+  const targetGoal = viewCenter.clone();
   let gliding = false; // easing the target toward a new selection; any drag or key move cancels it
   let fly = null;
   let dollyGoal = null;
@@ -621,7 +632,7 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
       intro.t = Math.min(1, intro.t + dt / 3.2);
       const e = 1 - Math.pow(1 - intro.t, 3); // ease-out cubic
       camera.position.lerpVectors(startPos, restPos, e);
-      camera.lookAt(center);
+      camera.lookAt(viewCenter);
       if (intro.t === 1) {
         controls.enabled = true;
         lastInteract = time - ORBIT_IDLE_S + 2; // the cinematic orbit starts two seconds after the intro
@@ -812,7 +823,7 @@ export function createScene({ container, net, onPick, onHover, theme = "light", 
     /** Fly back to the framed overview of the whole network (Fit, the H key). */
     frameAll() {
       focusMode = false;
-      flyTo(restPos.clone(), center.clone());
+      flyTo(restPos.clone(), viewCenter.clone());
       if (view) update(view);
     },
     /** Focus mode: fly close to the selection and fade everything unrelated (the F key). */
