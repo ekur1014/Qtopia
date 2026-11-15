@@ -232,6 +232,17 @@
 
     <div id="sidebar">
       
+      <!-- ONE-CLICK HANDS-FREE AUTOPLAY DEMO -->
+      <div class="card" style="border: 2px solid #00f2fe; background: linear-gradient(135deg, rgba(0,242,254,0.15) 0%, rgba(147,51,234,0.15) 100%); box-shadow: 0 0 15px rgba(0,242,254,0.3);">
+        <div class="card-title" style="color: #00f2fe; font-size: 13px;">⚡ ONE-CLICK JUDGES DEMO</div>
+        <button id="btn-auto-demo" class="btn" style="background: #00f2fe; color: #000; font-size: 13px; font-weight: 800; padding: 10px; border-radius: 6px; box-shadow: 0 0 12px rgba(0,242,254,0.5);" onclick="toggleAutoDemo()">
+          ▶️ RUN 45s HANDS-FREE DEMO
+        </button>
+        <div id="demo-caption" style="display: none; margin-top: 8px; font-size: 11px; font-weight: 700; color: #fff; background: rgba(0,0,0,0.6); padding: 8px; border-radius: 4px; border-left: 3px solid #00f2fe; line-height: 1.4;">
+          Ready to run.
+        </div>
+      </div>
+      
       <!-- Start and End Node Selectors -->
       <div class="card">
         <div class="card-title">1. Start Node (Source)</div>
@@ -838,6 +849,100 @@ Optimal ground route discovered via counter-rotating ring.
         }
       });
     });
+
+    // -------------------------------------------------------------
+    // AUTOPLAY HANDS-FREE DEMO ENGINE
+    // -------------------------------------------------------------
+    let autoDemoRunning = false;
+    let autoDemoTimer = null;
+
+    function setDemoCaption(text, color = '#00f2fe') {
+      const cap = document.getElementById('demo-caption');
+      if (cap) {
+        cap.style.display = 'block';
+        cap.style.borderLeftColor = color;
+        cap.innerHTML = text;
+      }
+    }
+
+    function toggleAutoDemo() {
+      const btn = document.getElementById('btn-auto-demo');
+      if (autoDemoRunning) {
+        clearTimeout(autoDemoTimer);
+        autoDemoRunning = false;
+        btn.innerText = '▶️ RUN 45s HANDS-FREE DEMO';
+        btn.style.background = '#00f2fe';
+        btn.style.color = '#000';
+        clearAllAttacks();
+        setDemoCaption('Demo stopped and reset to baseline.', '#00f2fe');
+        return;
+      }
+
+      autoDemoRunning = true;
+      btn.innerText = '⏹️ STOP AUTO-DEMO';
+      btn.style.background = '#ef4444';
+      btn.style.color = '#fff';
+
+      // Step 1: Normal Operation (0s)
+      setStart(1);
+      setEnd(5);
+      clearAllAttacks();
+      setDemoCaption('<strong>Step 1/5: Healthy Grid Ring</strong><br>All 9 spans secure. Baseline QBER = 1.8%, Cascade error correction active. Real SCADA keys flow nominal.', '#10b981');
+
+      // Step 2: Optical Tap on Link 1-2 (6s)
+      autoDemoTimer = setTimeout(() => {
+        if (!autoDemoRunning) return;
+        cutPrimaryPath();
+        setDemoCaption('<strong>Step 2/5: Optical Tap Detected! 🚨</strong><br>Eve attaches macro-bend tap on Link 1-2. QBER jumps to 26.2% (> 11% Shor-Preskill limit). First Alarm fires! Sub-12ms ring wrap reroutes to Protection Ring.', '#ef4444');
+
+        // Step 3: Decoy Probing (13s)
+        autoDemoTimer = setTimeout(() => {
+          if (!autoDemoRunning) return;
+          simulateDecoyProbeStream();
+          setDemoCaption('<strong>Step 3/5: Decoy Probing Active 🛰️</strong><br>Laser is NOT cut! Sacrificial dummy random bits stream across tapped line to monitor QBER. Eve intercepts zero grid keys.', '#00f2fe');
+
+          // Step 4: Dispatch Crew (20s)
+          autoDemoTimer = setTimeout(() => {
+            if (!autoDemoRunning) return;
+            dispatchFieldCrew();
+            setDemoCaption('<strong>Step 4/5: Field Crew Dispatched 🚒</strong><br>OTDR echo pinpoints tap at Mile 4.2. Linemen remove optical coupler...', '#f59e0b');
+
+            // Step 4b: Link Recovery (26s)
+            autoDemoTimer = setTimeout(() => {
+              if (!autoDemoRunning) return;
+              simulateTapRemovalAndRecovery();
+              setDemoCaption('<strong>Step 4b: Self-Healing Recovery ✅</strong><br>Decoy probe confirms QBER dropped to 1.8%. Link automatically re-admitted to primary ring!', '#10b981');
+
+              // Step 5: Double Cut -> 2nd Alarm (33s)
+              autoDemoTimer = setTimeout(() => {
+                if (!autoDemoRunning) return;
+                const l1 = links.find(l => (l.u === 4 && l.v === 5) || (l.u === 5 && l.v === 4));
+                const l2 = links.find(l => (l.u === 5 && l.v === 6) || (l.u === 6 && l.v === 5));
+                if (l1) { l1.eve = true; l1.qber = 0.262; }
+                if (l2) { l2.eve = true; l2.qber = 0.262; }
+                updateHUD();
+                setDemoCaption('<strong>Step 5/5: Double-Cut Partition (2ND ALARM) 🚨</strong><br>Both fiber paths to Node 5 cut! 2ND ALARM triggers: Autonomous failover to NIST FIPS 203 ML-KEM-768 lattice tunnel. Zero blackout!', '#ef4444');
+
+                // Finish (43s)
+                autoDemoTimer = setTimeout(() => {
+                  if (!autoDemoRunning) return;
+                  setDemoCaption('<strong>🏆 Demo Complete!</strong><br>Demonstrated: 11% QBER Cutoff, Decoy Probing, Self-Healing Restore, and 2nd Alarm Partition Resilience.', '#10b981');
+                  btn.innerText = '🔄 REPLAY DEMO';
+                  btn.style.background = '#00f2fe';
+                  btn.style.color = '#000';
+                  autoDemoRunning = false;
+                }, 9000);
+
+              }, 7000);
+
+            }, 6000);
+
+          }, 7000);
+
+        }, 7000);
+
+      }, 6000);
+    }
 
     updateHUD();
     render();
