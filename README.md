@@ -116,3 +116,4 @@ Also open to your team: the [qBraid Award](../4-qbraid-award) for the most creat
 - [NIST post-quantum cryptography](https://csrc.nist.gov/projects/post-quantum-cryptography), and its [FAQ](https://csrc.nist.gov/projects/post-quantum-cryptography/faqs) (including what Grover's search means for AES)
 - Evans et al., ["Trusted Node QKD at an Electrical Utility"](https://arxiv.org/abs/2103.09877), IEEE Access, 2021: a field test of three QKD systems on an electric utility's fiber network (distance, key rate, trusted nodes)
 - [EPB Quantum Network](https://quantum.epb.com) (Chattanooga's commercial quantum network)
+- [Coherence](./COHERENCE.md), our qBraid Award entry: a quantum game by Ethan B. Chen built on this track's qBraid runs (play it, video, slides, code)
