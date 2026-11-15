@@ -601,7 +601,17 @@ Optimal ground route discovered via counter-rotating ring.
         alarmSummary.innerHTML = `<span style="color: var(--danger-red);">PHYSICAL FIBER TAP ON SPAN ${uIP} &harr; ${vIP}</span>`;
         snmpBox.style.borderColor = 'rgba(239, 68, 68, 0.4)';
         snmpBox.style.color = '#fca5a5';
-        snmpBox.innerText = `[SNMP-TRAP] OID: 1.3.6.1.4.1.EPB.QIDS.1 · Event: PHYSICAL_OPTICAL_TAP\nSpan: ${uIP} <-> ${vIP} | QBER = ${(tappedLink.qber * 100).toFixed(1)}% >= ${(qberThreshold * 100).toFixed(1)}%\nAction: Dynamic Reroute (<12 ms) + Decoy Probe Stream Active\nStatus: Link Quarantined · Sending Dummy Bits to Track QBER`;
+
+        // Check if there's no ground path to the node (Trigger 2nd Alarm!)
+        if (res.tier !== 'TIER_1_GROUND') {
+          alarmBadge.innerText = '2ND ALARM: NODE ISOLATED';
+          alarmBadge.style.background = 'rgba(239, 68, 68, 0.4)';
+          alarmSummary.innerHTML = `<span style="color: var(--danger-red);">🚨 2ND ALARM: NO GROUND PATH TO NODE! DUAL-RING PARTITION</span>`;
+          snmpBox.innerText = `[2ND ALARM: EMERGENCY SEV-0]\nEvent: DUAL_RING_PARTITION · No Ground Path Exists!\nStatus: Both Paths in Decoy Probing Mode (Streaming Dummy Bits)\nAction: Autonomous Failover to LEO Satellite & NIST ML-KEM-768\nOutcome: 100% SCADA Teleprotection Maintained (Zero Blackout)`;
+        } else {
+          snmpBox.innerText = `[SNMP-TRAP] OID: 1.3.6.1.4.1.EPB.QIDS.1 · Event: PHYSICAL_OPTICAL_TAP\nSpan: ${uIP} <-> ${vIP} | QBER = ${(tappedLink.qber * 100).toFixed(1)}% >= ${(qberThreshold * 100).toFixed(1)}%\nAction: Dynamic Reroute Through 2nd Path (<12 ms)\nStatus: 1st Link Quarantined · Sending Dummy Bits to Track QBER`;
+        }
+
         if (btnDispatch) btnDispatch.style.display = 'block';
         if (btnDecoyProbe) btnDecoyProbe.style.display = 'block';
         if (btnRecoverLink) btnRecoverLink.style.display = 'block';

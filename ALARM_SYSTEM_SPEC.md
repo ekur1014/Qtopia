@@ -127,8 +127,11 @@ When QBER $\ge 11.0\%$, the transmitting optical transceiver broadcasts an authe
    * **Adversary Neutralization:** The attacker's clip-on coupler siphons only worthless pseudo-random noise.
    * **Continuous QBER Tracking:** Alice and Bob continuously measure the empirical QBER on the decoy probe stream.
    * **Automated Link Restoration / Re-admittance:** The moment field linemen locate and remove the tap (or optical disturbance clears), the measured QBER drops from ~26% back to baseline ($1.8\% < 11.0\%$). Central Command automatically re-admits the link to the active working ring and emits an SNMP recovery notification (`LINK_RECOVERED_BELOW_QBER_THRESHOLD`).
-3. **Partition Fail-Safe (Double Cut):**
-   * If an adversary cuts or taps both ring directions simultaneously, the isolated node instantly establishes a **Tier 3 Fallback Tunnel using NIST FIPS 203 (ML-KEM-768)** post-quantum lattice cryptography, guaranteeing zero blackout of grid teleprotection.
+3. **Partition Fail-Safe & The "Second Alarm" (Double Cut / No Path to Node):**
+   * **1st Alarm (Primary Path Down):** When an optical tap is detected on the primary link (QBER $\ge 11.0\%$), Alarm 1 fires. The primary link enters Decoy Probing Mode (continuous sacrificial dummy states to track QBER) while SCADA traffic wraps around to the **second path** (counter-clockwise ring).
+   * **2nd Alarm (No Ground Path to Node):** If an adversary simultaneously cuts or taps the second path, the system detects that **no ground path exists to that node**. This immediately triggers the **Second Alarm: `SEV-0 DUAL_RING_PARTITION_EMERGENCY`** broadcast to Central Command.
+   * **Continuous Multi-Path Decoy Probing:** Both compromised ground paths continue transmitting decoy states to monitor for tap removal.
+   * **Zero Grid Blackout:** The isolated supernode automatically initiates an encrypted tunnel using **NIST FIPS 203 (ML-KEM-768)** post-quantum lattice cryptography (or LEO Satellite Quantum Hub), guaranteeing teleprotection stays active with zero power outage.
 
 ---
 

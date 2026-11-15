@@ -18,8 +18,10 @@ import random
 from typing import Dict, List, Tuple, Any, Optional
 
 class QuantumGridAlarmSystem:
-    def __init__(self, qber_threshold: float = 0.11):
-        # 11.0% Shor-Preskill bound for one-way BB84
+    def __init__(self, qber_threshold: float = 0.11, warning_threshold: float = 0.08):
+        # 8.0% Utility Operational Warning Bound (Stage 1 Alarm)
+        self.warning_threshold = warning_threshold
+        # 11.0% Shor-Preskill Hard Bound for one-way BB84 (Stage 2 Critical Alarm)
         self.qber_threshold = qber_threshold
         
         # 9 Transmission Supernodes with assigned IP ranges on utility 10.161.x.x SCADA VLAN
@@ -85,8 +87,8 @@ class QuantumGridAlarmSystem:
         src = self.supernodes[u]
         dst = self.supernodes[v]
         
-        if qber < self.qber_threshold:
-            # --- BELOW 11% THRESHOLD: TOLERATE & CLEAN ---
+        if qber < self.warning_threshold:
+            # --- BELOW 8% THRESHOLD: NOMINAL SECURE (TOLERATE & CLEAN) ---
             key_fraction = self.calculate_secret_key_rate(qber)
             raw_bits = 10000
             err_bits = int(raw_bits * qber)
@@ -100,7 +102,7 @@ class QuantumGridAlarmSystem:
                 "qber_measured_pct": round(qber * 100, 2),
                 "threshold_pct": round(self.qber_threshold * 100, 1),
                 "explanation": (
-                    f"Measured QBER ({round(qber*100,2)}%) is below the {round(self.qber_threshold*100,1)}% Shor-Preskill bound. "
+                    f"Measured QBER ({round(qber*100,2)}%) is below the {round(self.warning_threshold*100,1)}% operational warning threshold. "
                     f"Background noise is completely resolved by classical Cascade error correction "
                     f"(fixing ~{err_bits} bit flips) and Toeplitz Privacy Amplification "
                     f"(yielding ~{clean_secret_bits} secure bits per {raw_bits} raw photons)."
@@ -108,26 +110,71 @@ class QuantumGridAlarmSystem:
                 "secret_key_rate_fraction": round(key_fraction, 4),
                 "alarm_triggered": False
             }
+        elif qber < self.qber_threshold:
+            # --- 8.0% <= QBER < 11.0%: STAGE 1 WARNING ALARM (PRE-EMPTIVE NOTICE) ---
+            key_fraction = self.calculate_secret_key_rate(qber)
+            warning_trap = {
+                "snmp_oid": "1.3.6.1.4.1.58921.1.0.1", # Warning OID
+                "trap_type": "QBER_ELEVATED_STAGE_1_WARNING",
+                "source_ip": src["ip"],
+                "target_ip": dst["ip"],
+                "central_command_ip": self.central_command["ip"],
+                "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "severity": "WARNING / SEV-2",
+                "qber_measured": f"{round(qber*100, 2)}%",
+                "warning_threshold": f"{round(self.warning_threshold*100, 1)}%",
+                "critical_threshold": f"{round(self.qber_threshold*100, 1)}%",
+                "recommended_action": "TIGHTEN_PRIVACY_AMPLIFICATION_AND_STANDBY_APS_REROUTE"
+            }
+            return {
+                "action": "STAGE_1_WARNING_NOTIFICATION",
+                "status": "ELEVATED_NOISE_WARNING",
+                "link": f"{src['name']} <-> {dst['name']}",
+                "ip_endpoints": f"{src['ip']} <-> {dst['ip']}",
+                "qber_measured_pct": round(qber * 100, 2),
+                "threshold_pct": round(self.qber_threshold * 100, 1),
+                "alarm_triggered": True,
+                "alarm_stage": "STAGE_1_PREEMPTIVE_WARNING",
+                "snmp_trap": warning_trap,
+                "explanation": (
+                    f"Measured QBER ({round(qber*100, 2)}%) exceeds the 8.0% utility warning threshold but remains below 11.0%. "
+                    f"Privacy amplification is tightened. Central Command is placed on high alert for possible microbending."
+                ),
+                "secret_key_rate_fraction": round(key_fraction, 4)
+            }
         else:
-            # --- ABOVE 11% THRESHOLD: CUT REAL KEYS, DIVERT TRAFFIC, & START DECOY PROBING ---
+            # --- ABOVE 11% THRESHOLD: STAGE 2 CRITICAL ALARM & REROUTE ---
             link["status"] = "QUARANTINE_DECOY_PROBING"
             link["tapped"] = True
             link["transmitting_decoy_probes"] = True
             link["payload_traffic"] = "DIVERTED_TO_COUNTER_CLOCKWISE_RING"
             
-            # 1. Generate SNMPv3 Trap / Syslog Payload
+            # 1. Calculate counter-clockwise path & check if backup path is ALSO compromised (Double-Cut / Partition)
+            alt_path = self._calculate_counter_clockwise_path(u, v)
+            alt_path_viable = True
+            for i in range(len(alt_path) - 1):
+                p_u, p_v = alt_path[i], alt_path[i+1]
+                if self.links.get((p_u, p_v), {}).get("qber", 0.0) >= self.qber_threshold:
+                    alt_path_viable = False
+                    break
+            
+            is_double_cut = not alt_path_viable
+            trap_severity = "EMERGENCY / SEV-0 (DOUBLE_CUT_PARTITION)" if is_double_cut else "CRITICAL / SEV-1"
+            trap_action = "NIST_ML_KEM_768_POST_QUANTUM_FAILOVER" if is_double_cut else "AUTOMATIC_PROTECTION_SWITCHING_AND_DECOY_PROBING_ACTIVE"
+
+            # 2. Generate SNMPv3 Trap / Syslog Payload
             snmp_trap = {
-                "snmp_oid": "1.3.6.1.4.1.58921.1.1.0", # Private Enterprise OID for EPB Quantum Alarm
-                "trap_type": "QBER_THRESHOLD_EXCEEDED_CRITICAL",
+                "snmp_oid": "1.3.6.1.4.1.58921.1.1.0" if not is_double_cut else "1.3.6.1.4.1.58921.1.9.9",
+                "trap_type": "QBER_THRESHOLD_EXCEEDED_CRITICAL" if not is_double_cut else "DUAL_RING_PARTITION_EMERGENCY",
                 "source_ip": src["ip"],
                 "target_ip": dst["ip"],
                 "central_command_ip": self.central_command["ip"],
                 "timestamp_utc": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-                "severity": "CRITICAL / SEV-1",
+                "severity": trap_severity,
                 "qber_measured": f"{round(qber*100, 2)}%",
                 "threshold_limit": f"{round(self.qber_threshold*100, 1)}%",
                 "nerc_cip_violation": "NERC CIP-014 Physical Security & CIP-005 Electronic Security Perimeter",
-                "recommended_action": "AUTOMATIC_PROTECTION_SWITCHING_AND_DECOY_PROBING_ACTIVE"
+                "recommended_action": trap_action
             }
             
             # 2. Dual-Ring Protection Switching (Counter-Clockwise Reroute)
@@ -151,26 +198,54 @@ class QuantumGridAlarmSystem:
                 "traffic_type": "SACRIFICIAL_DUMMY_QUANTUM_BITS",
                 "purpose": "Continuously track physical QBER until tap is removed, while exposing zero sensitive grid data to eavesdropper.",
                 "hacker_intercept_data": "WORTHLESS_RANDOM_NOISE",
-                "real_grid_scada_status": "100% PROTECTED — Rerouted through counter-clockwise dual ring."
+                "real_grid_scada_status": "100% PROTECTED — Rerouted through second path (counter-clockwise ring)." if not is_double_cut else "100% PROTECTED — Failover to NIST ML-KEM-768 lattice tunnel."
             }
             
-            return {
-                "action": "DIVERT_KEYS_AND_START_DECOY_PROBING",
-                "status": "QUARANTINE_DECOY_PROBING",
-                "link": f"{src['name']} <-> {dst['name']}",
-                "ip_endpoints": f"{src['ip']} <-> {dst['ip']}",
-                "qber_measured_pct": round(qber * 100, 2),
-                "threshold_pct": round(self.qber_threshold * 100, 1),
-                "alarm_triggered": True,
-                "snmp_trap": snmp_trap,
-                "decoy_probing_stream": decoy_probe,
-                "failover_reroute": {
-                    "primary_link_status": "QUARANTINE_DECOY_PROBING",
-                    "reroute_latency_ms": 11.4, # Sub-cycle: under 16 ms grid standard
-                    "new_active_path": alt_path
-                },
-                "field_dispatch_order": work_order
-            }
+            if is_double_cut:
+                # --- SECOND ALARM: NO GROUND PATH TO NODE (ALL PATHS EXCEED THRESHOLD) ---
+                return {
+                    "action": "SECOND_ALARM_NODE_ISOLATION_EMERGENCY",
+                    "status": "SEV_0_NO_GROUND_PATH_TO_NODE",
+                    "link": f"{src['name']} <-> {dst['name']}",
+                    "ip_endpoints": f"{src['ip']} <-> {dst['ip']}",
+                    "qber_measured_pct": round(qber * 100, 2),
+                    "threshold_pct": round(self.qber_threshold * 100, 1),
+                    "alarm_triggered": True,
+                    "first_alarm": "PRIMARY_PATH_DOWN (Sending decoy states to track QBER)",
+                    "second_alarm": f"SECOND_PATH_DOWN (No alternative ground route to Node {v} exists!)",
+                    "snmp_trap": snmp_trap,
+                    "decoy_probing_stream": decoy_probe,
+                    "failover_reroute": {
+                        "primary_path_status": "QUARANTINE_DECOY_PROBING",
+                        "second_path_status": "QUARANTINE_DECOY_PROBING",
+                        "ground_routes_available": False,
+                        "failover_protocol": "NIST_FIPS_203_ML_KEM_768_POST_QUANTUM_TUNNEL",
+                        "explanation": f"Node {v} is completely isolated on ground fiber ring. Both paths are in decoy probe mode. SCADA automatically encrypted via Post-Quantum ML-KEM-768 to prevent blackout."
+                    },
+                    "field_dispatch_order": work_order
+                }
+            else:
+                # --- FIRST ALARM: REROUTE THROUGH SECOND PATH WHILE PROBING FIRST ---
+                return {
+                    "action": "FIRST_ALARM_REROUTE_TO_SECOND_PATH",
+                    "status": "QUARANTINE_DECOY_PROBING",
+                    "link": f"{src['name']} <-> {dst['name']}",
+                    "ip_endpoints": f"{src['ip']} <-> {dst['ip']}",
+                    "qber_measured_pct": round(qber * 100, 2),
+                    "threshold_pct": round(self.qber_threshold * 100, 1),
+                    "alarm_triggered": True,
+                    "first_alarm": "PRIMARY_PATH_DOWN (Sending decoy states to track QBER)",
+                    "second_alarm": "INACTIVE (Second path is healthy and carrying SCADA traffic)",
+                    "snmp_trap": snmp_trap,
+                    "decoy_probing_stream": decoy_probe,
+                    "failover_reroute": {
+                        "primary_link_status": "QUARANTINE_DECOY_PROBING",
+                        "reroute_latency_ms": 11.4, # Sub-cycle: under 16 ms grid standard
+                        "second_path_active": alt_path,
+                        "new_active_path": alt_path
+                    },
+                    "field_dispatch_order": work_order
+                }
 
     def poll_decoy_probes_and_attempt_recovery(self, u: int, v: int, simulate_tap_removed: bool = False) -> dict:
         """
@@ -441,4 +516,25 @@ if __name__ == "__main__":
     print(f"    Explanation: {poll_recovered['explanation']}")
     print(f"    Link Status: {poll_recovered['link_status']}")
     print(f"    Recovery SNMP Trap: {poll_recovered['recovery_trap']['trap_type']} emitted to {poll_recovered['recovery_trap']['central_command_ip']}")
+    print("================================================================================\n")
+
+    # -------------------------------------------------------------------------
+    # SCENARIO 6: 2nd Alarm Triggered — No 2nd Path Available (Double Cut)
+    # -------------------------------------------------------------------------
+    print(">>> [SCENARIO 6] SECOND ALARM (NO SECOND PATH AVAILABLE / NODE ISOLATED)")
+    print("    Teammate Requirement: 'Go through 2nd path, and if there's no 2nd path, give a 2nd alarm!'\n")
+    
+    # 6a: Cut Primary Path (Link 1-2)
+    ids.links[(1, 2)]["qber"] = 0.265 # Primary path down
+    # 6b: ALSO Cut the Second Path (Link 1-9) -> No alternative ground path exists to Node 1!
+    ids.links[(1, 9)]["qber"] = 0.272 # Second path down
+    
+    res6 = ids.evaluate_link_security(1, 2)
+    print(f"    Action: {res6['action']}")
+    print(f"    1st Alarm Status: {res6['first_alarm']}")
+    print(f"    2nd Alarm Status: {res6['second_alarm']}")
+    print(f"    SNMP Trap Emitted: {res6['snmp_trap']['trap_type']} ({res6['snmp_trap']['severity']})")
+    print(f"    Decoy Probing: Both paths actively streaming dummy bits to monitor recovery.")
+    print(f"    Emergency Failover Protocol: {res6['failover_reroute']['failover_protocol']}")
+    print(f"    Grid Continuity Explanation: {res6['failover_reroute']['explanation']}")
     print("================================================================================")
