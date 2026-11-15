@@ -212,7 +212,7 @@ class QuantumGridAlarmSystem:
                     "threshold_pct": round(self.qber_threshold * 100, 1),
                     "alarm_triggered": True,
                     "first_alarm": "PRIMARY_PATH_DOWN (Sending decoy states to track QBER)",
-                    "second_alarm": f"SECOND_PATH_DOWN (No alternative ground route to Node {v} exists!)",
+                    "second_alarm": f"SECOND_PATH_DOWN (No ground route left between Node {u} and Node {v}!)",
                     "snmp_trap": snmp_trap,
                     "decoy_probing_stream": decoy_probe,
                     "failover_reroute": {
@@ -220,7 +220,7 @@ class QuantumGridAlarmSystem:
                         "second_path_status": "QUARANTINE_DECOY_PROBING",
                         "ground_routes_available": False,
                         "failover_protocol": "NIST_FIPS_203_ML_KEM_768_POST_QUANTUM_TUNNEL",
-                        "explanation": f"Node {v} is completely isolated on ground fiber ring. Both paths are in decoy probe mode. SCADA automatically encrypted via Post-Quantum ML-KEM-768 to prevent blackout."
+                        "explanation": f"The ground fiber ring is cut on both sides: Node {u} and Node {v} have no clean ground route between them. Both paths are in decoy probe mode. SCADA automatically encrypted via Post-Quantum ML-KEM-768 to prevent blackout."
                     },
                     "field_dispatch_order": work_order
                 }
@@ -370,11 +370,15 @@ class QuantumGridAlarmSystem:
             }
 
     def _calculate_counter_clockwise_path(self, u: int, v: int) -> List[int]:
-        """Calculates reverse path around the 9-node ring to reach destination without using (u, v)."""
+        """Calculates the other way around the 9-node ring from u to v, without using the direct span (u, v)."""
+        # Walk the direction that does not start with the direct hop: from 5 to 4, walking down would be
+        # the tapped span itself, so walk up (5, 6, ..., 9, 1, ..., 4) instead.
+        down = 9 if u == 1 else u - 1
+        step = (lambda n: 1 if n == 9 else n + 1) if down == v else (lambda n: 9 if n == 1 else n - 1)
         curr = u
         path = [curr]
         while curr != v:
-            curr = 9 if curr == 1 else curr - 1
+            curr = step(curr)
             path.append(curr)
         return path
 

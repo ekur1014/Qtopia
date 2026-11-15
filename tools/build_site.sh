@@ -20,7 +20,6 @@ cp -r shared/kit                 site/shared/kit                  # the home pag
 cp chattanooga_quantum_map.html  site/                            # Real map
 cp bb84_visualizer.html          site/                            # Photon line (notebook 1, one fiber)
 cp threejs_quantum_grid.html     site/                            # Quantum lab
-cp interactive_grid_monitor.html site/                            # first prototype, linked from home
 cp grid_twin.html                site/                            # the live grid as one downloadable file
 
 cp grid-twin/index.html grid-twin/style.css site/grid-twin/       # Live grid

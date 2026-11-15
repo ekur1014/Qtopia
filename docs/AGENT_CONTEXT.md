@@ -58,9 +58,9 @@ The team's entry for the **Tennessee Quantum Hackathon, "Secure the Grid" track*
 | `WRITEUP.md` | **The single write-up**: Steps 1–3 by Part, plus the full run record. The source of truth for numbers |
 | `slides.md` | Deck plan and draft text for the organizers' 5-slide template (`Quantum_Hackathon_Five_Slide_Genric-Template.pptx`) |
 | `grid-twin/` | The live 3D grid (Three.js). `src/` holds the physics, routing (`response.js`), UI and scene; `data/networks/` the Chattanooga, Tennessee 500 kV, IEEE and dual-ring networks; `sim/` the Python bridge that runs fibers on Qiskit, CUDA-Q, Guppy and qBraid; `tests/` the Node tests |
-| Site pages | `index.html` (home), `chattanooga_quantum_map.html` (real map), `bb84_visualizer.html` (photon line), `threejs_quantum_grid.html` (quantum lab), `interactive_grid_monitor.html` (first prototype), `dual_ring_quantum_routing.html` (dual ring, slated for removal). All share `shared/qrypt.css` and `shared/qbar.js` (top bar and journey order) |
+| Site pages | `index.html` (home), `chattanooga_quantum_map.html` (real map), `bb84_visualizer.html` (photon line), `threejs_quantum_grid.html` (quantum lab), `grid_twin.html` (the live grid as one file, built by `grid-twin/tools/build_standalone.mjs`). The 2D monitor prototype was deleted on 14 Nov; `dual_ring_quantum_routing.html` stays in the repo but `vercel.json` redirects it to the real map. All share `shared/qrypt.css` and `shared/qbar.js` (top bar and journey order) |
 | `docs/` | Audits, mentor notes, tech options, work log, and this file. `REMOVE_RING_PLAN.md` is the ring plan |
-| Recordings | `Idea/`, `New Chat Grid/`, `remove the ring/`, `Additional Mentor Recordings IMPORTANT/`: team and mentor recordings, transcripts and photos. `Video Resources/` is ignored by git (too large) |
+| Recordings | `Additional Mentor Recordings IMPORTANT/`; `Idea/`, `New Chat Grid/` and `remove the ring/` were removed in `b7d4733` and are still in git history (`git checkout f21177c -- "Idea"`): team and mentor recordings, transcripts and photos. `Video Resources/` is ignored by git (too large) |
 
 ## 5. How to run and check things
 
