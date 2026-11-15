@@ -2,7 +2,7 @@
 ## Tennessee Quantum Hackathon — UTC Track 1: Secure the Grid
 **Authors:** Team Qtopia (Asheb, Ethan Kur, and Team)  
 **Target Architecture:** 9-Supernode Dual-Ring Bulk Transmission Network (EPB / TVA Grid Backbone)  
-**Implementation Modules:** `quantum_alarm_system.py`, `dual_ring_router.py`, `dual_ring_quantum_routing.html`
+**Implementation Modules:** `quantum_alarm_system.py`, `dual_ring_quantum_routing.html`, and `chattanooga_router.py` (the port of `dual_ring_router.py` onto the real Chattanooga grid; the ring router was removed with the dual ring on 14 Nov)
 
 ---
 
@@ -141,9 +141,9 @@ When QBER $\ge 11.0\%$, the transmitting optical transceiver broadcasts an authe
   ```bash
   python quantum_alarm_system.py
   ```
-* **Generalized Multi-Tier Mesh Router:**
+* **Route search on the real Chattanooga grid** (port of the removed `dual_ring_router.py`):
   ```bash
-  python dual_ring_router.py
+  python chattanooga_router.py
   ```
 * **Interactive 2D Visualizer:**
   Open `dual_ring_quantum_routing.html` in any web browser to test the interactive threshold slider, live SNMP alert cards, and field technician truck dispatch button.
