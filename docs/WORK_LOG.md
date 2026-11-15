@@ -1,4 +1,4 @@
-# Work log: our contributions to Qrypt
+# Work log: our contributions to Qtopia
 
 Everything this part of the team built for the Tennessee Quantum Hackathon (Secure the Grid track), in order, with where it lives and how it was checked. Teammates' work (notebook 1, notebook 3, `WRITEUP.md`, `interactive_grid_monitor.html`) is theirs and not described here except where it affects ours.
 

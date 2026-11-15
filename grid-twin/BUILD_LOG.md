@@ -168,7 +168,7 @@ Every QIR result is within 1.2σ of theory. Job IDs are logged by the server; th
 
 User request: fix the teammates' pages and "make sure everything is like 1 thing".
 
-- **Shared design system and top bar** (`shared/qrypt.css`, `shared/qbar.js`) on every page:
+- **Shared design system and top bar** (`shared/qtopia.css`, `shared/qbar.js`) on every page:
   - The bar links Home, Live grid, Real map, Quantum lab and Pitch deck.
   - Light is the default; the light/dark choice is shared and announced to the 3D grid.
 - **Home page** (`index.html` at the repo root): what the project is, key numbers, the four pages, and how to run it.

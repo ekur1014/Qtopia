@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="shared/qrypt.css" />
+  <link rel="stylesheet" href="shared/qtopia.css" />
   <script src="shared/qbar.js" data-page="lab" data-root="./"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="grid-twin/data/networks/chattanooga.js"></script>
@@ -569,7 +569,7 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
       camera.updateProjectionMatrix();
     }
     window.addEventListener("resize", resize);
-    window.addEventListener("qrypt:theme", paint);
+    window.addEventListener("qtopia:theme", paint);
 
     // Screen positions for the HTML labels: poles beside each sphere, names and results below.
     var _v = new THREE.Vector3();
@@ -685,7 +685,7 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
       { id: "r", label: "Ry(π/3)", word: "tilted 60°", theta: Math.PI / 3, phi: 0 },
     ];
     var teleState = STATES[4];
-    var net = (window.QRYPT_NETWORKS || {}).chattanooga;
+    var net = (window.QTOPIA_NETWORKS || {}).chattanooga;
     var hub = null, routeTo = null;
     var nodes = {};
     var adj = {};
@@ -955,7 +955,7 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
       var next = tabs[(i + (e.key === "ArrowRight" ? 1 : tabs.length - 1)) % tabs.length];
       if (next) { e.preventDefault(); next.click(); next.focus(); }
     });
-    if (window.qrypt) window.qrypt.addShortcuts([["← / →", "Previous or next experiment"], ["Enter", "Run the focused button"]]);
+    if (window.qtopia) window.qtopia.addShortcuts([["← / →", "Previous or next experiment"], ["Enter", "Run the focused button"]]);
   })();
 </script>
 </body>

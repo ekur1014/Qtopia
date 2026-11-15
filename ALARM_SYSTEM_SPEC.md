@@ -1,6 +1,6 @@
 # Quantum Intrusion Detection System (Q-IDS) & Grid Security Alarm Specification
 ## Tennessee Quantum Hackathon — UTC Track 1: Secure the Grid
-**Authors:** Team Qrypt (Asheb, Ethan Kur, and Team)  
+**Authors:** Team Qtopia (Asheb, Ethan Kur, and Team)  
 **Target Architecture:** 9-Supernode Dual-Ring Bulk Transmission Network (EPB / TVA Grid Backbone)  
 **Implementation Modules:** `quantum_alarm_system.py`, `dual_ring_router.py`, `dual_ring_quantum_routing.html`
 

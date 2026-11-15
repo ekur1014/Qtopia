@@ -70,11 +70,11 @@ async function boot() {
   const real = !!net.meta?.real;
   document.body.classList.toggle("is-real", real); // shows the OpenStreetMap credit
   document.querySelector(".brand__title").textContent = real ? "Tennessee Quantum Grid" : "Grid Twin";
-  document.querySelector(".brand__mark").textContent = real ? "QRYPT · REAL GRID" : "QRYPT · TEST NETWORK";
+  document.querySelector(".brand__mark").textContent = real ? "QTOPIA · REAL GRID" : "QTOPIA · TEST NETWORK";
   document.querySelector(".brand__sub").textContent = real
     ? `${net.meta.name.replace(" (real)", "")}: real substations and lines. Every green fiber runs BB84 live; tap one and the network defends itself.`
     : "A quantum-secured utility network, live. Every green fiber runs BB84; every error is counted.";
-  document.title = real ? "Tennessee Quantum Grid · Qrypt" : "Grid Twin · Qrypt";
+  document.title = real ? "Tennessee Quantum Grid · Qtopia" : "Grid Twin · Qtopia";
   const centers = controlCenters(net);
   // Route search defaults: the substation whose QKD key path to a control center passes the most trusted sites,
   // so the first route shown has something to compare. Falls back to the first two sites.
@@ -745,7 +745,7 @@ async function boot() {
   }
   // One theme for the whole project: the shared top bar (shared/qbar.js) owns it and announces changes.
   function setTheme(theme) {
-    if (window.qrypt) window.qrypt.setTheme(theme); // announces "qrypt:theme", handled below
+    if (window.qtopia) window.qtopia.setTheme(theme); // announces "qtopia:theme", handled below
     else applyTheme(theme);
   }
   function applyTheme(theme) {
@@ -754,7 +754,7 @@ async function boot() {
     refresh();
     syncDock();
   }
-  window.addEventListener("qrypt:theme", (e) => applyTheme(e.detail === "dark" ? "dark" : "light"));
+  window.addEventListener("qtopia:theme", (e) => applyTheme(e.detail === "dark" ? "dark" : "light"));
   function viewAction(v) {
     if (v === "zoom-in") scene.zoom(0.72);
     else if (v === "zoom-out") scene.zoom(1.38);
@@ -784,7 +784,7 @@ async function boot() {
   }
 
   // Keys for the ? list in the top bar (1-4, 0, T and D are handled there for every page).
-  window.qrypt?.addShortcuts([
+  window.qtopia?.addShortcuts([
     ["I / E", "Inspect tool or Eavesdrop tool"],
     ["M", "Swap what dragging does: move or rotate"],
     ["Arrows", "Move the view (click the map first)"],

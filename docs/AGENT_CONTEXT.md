@@ -1,4 +1,4 @@
-# Agent context: Qrypt (read this first)
+# Agent context: Qtopia (read this first)
 
 A shared briefing for any AI agent working in this repo. It is optional: point an agent at it ("read docs/AGENT_CONTEXT.md first"). It is not loaded automatically.
 
@@ -12,13 +12,13 @@ The team's entry for the **Tennessee Quantum Hackathon, "Secure the Grid" track*
 
 - **Due: Sunday 15 Nov 2026, 9:00 AM.** One 5-slide pitch deck and a ZIP of this folder, with the notebooks run and `WRITEUP.md`.
 - **Judges score:** understanding, presentation, whether it works (plus the tools built), and **honesty about what failed**. Code counts less than clarity.
-- **Repo:** `github.com/ekur1014/Qrypt`, branch `main`. Track rules: `README.md`. UTC's original problems: `background/`.
+- **Repo:** `github.com/ekur1014/Qtopia`, branch `main`. Track rules: `README.md`. UTC's original problems: `background/`.
 
 ## 2. Hard rules for agents
 
 1. **Don't overclaim.** Every number needs a source: a notebook output, a job ID, the data, or a cited paper. If you can't verify something, say so or leave it out. Label simulators and emulators as such, never as hardware.
 2. **Hardware runs.** Cap each run at 200 shots (track rule), and log every job ID in `WRITEUP.md` (run record at the end).
-3. **Secrets.** The qBraid API key lives in `~/.qrypt.env`, outside the repo. Load it with `set -a; . ~/.qrypt.env; set +a`. Never print it, commit it, or copy it into a file.
+3. **Secrets.** The qBraid API key lives in `~/.qtopia.env`, outside the repo. Load it with `set -a; . ~/.qtopia.env; set +a`. Never print it, commit it, or copy it into a file.
 4. **Git**
    - Author: the user's GitHub noreply identity (already set in git config).
    - **No AI or Claude attribution lines** in commits or PRs.
@@ -58,22 +58,22 @@ The team's entry for the **Tennessee Quantum Hackathon, "Secure the Grid" track*
 | `WRITEUP.md` | **The single write-up**: Steps 1–3 by Part, plus the full run record. The source of truth for numbers |
 | `slides.md` | Deck plan and draft text for the organizers' 5-slide template (`Quantum_Hackathon_Five_Slide_Genric-Template.pptx`) |
 | `grid-twin/` | The live 3D grid (Three.js). `src/` holds the physics, routing (`response.js`), UI and scene; `data/networks/` the Chattanooga, Tennessee 500 kV, IEEE and dual-ring networks; `sim/` the Python bridge that runs fibers on Qiskit, CUDA-Q, Guppy and qBraid; `tests/` the Node tests |
-| Site pages | `index.html` (home), `chattanooga_quantum_map.html` (real map), `bb84_visualizer.html` (photon line), `threejs_quantum_grid.html` (quantum lab), `grid_twin.html` (the live grid as one file, built by `grid-twin/tools/build_standalone.mjs`). The 2D monitor prototype was deleted on 14 Nov; `dual_ring_quantum_routing.html` stays in the repo but `vercel.json` redirects it to the real map. All share `shared/qrypt.css` and `shared/qbar.js` (top bar and journey order) |
+| Site pages | `index.html` (home), `chattanooga_quantum_map.html` (real map), `bb84_visualizer.html` (photon line), `threejs_quantum_grid.html` (quantum lab), `grid_twin.html` (the live grid as one file, built by `grid-twin/tools/build_standalone.mjs`). The 2D monitor prototype was deleted on 14 Nov; `dual_ring_quantum_routing.html` stays in the repo but `vercel.json` redirects it to the real map. All share `shared/qtopia.css` and `shared/qbar.js` (top bar and journey order) |
 | `docs/` | Audits, mentor notes, tech options, work log, and this file. `REMOVE_RING_PLAN.md` is the ring plan |
 | Recordings | `Additional Mentor Recordings IMPORTANT/`; `Idea/`, `New Chat Grid/` and `remove the ring/` were removed in `b7d4733` and are still in git history (`git checkout f21177c -- "Idea"`): team and mentor recordings, transcripts and photos. `Video Resources/` is ignored by git (too large) |
 
 ## 5. How to run and check things
 
 ```bash
-cd ~/VSCode/Qrypt
+cd ~/VSCode/Qtopia
 cd grid-twin && node --test tests/*.test.mjs && cd ..          # all must pass (40 as of the 14 Nov audit fixes)
 python3 -m http.server 8000                                     # site at http://localhost:8000
 python3 grid-twin/start.py                                      # live grid + quantum-code buttons
 bash tools/build_site.sh                                        # build site/ (Vercel runs this too)
-~/VSCode/qrypt-venv/bin/python check_grover.py                  # 0 mismatches expected
+~/VSCode/qtopia-venv/bin/python check_grover.py                  # 0 mismatches expected
 ```
 
-- **Python environment:** `~/VSCode/qrypt-venv` (Qiskit 2.6.2, Qiskit Aer 0.18.2, qBraid SDK 0.13.0, `openqasm3` pinned to 1.0.1: version 1.0.2 breaks QASM 2 submission).
+- **Python environment:** `~/VSCode/qtopia-venv` (Qiskit 2.6.2, Qiskit Aer 0.18.2, qBraid SDK 0.13.0, `openqasm3` pinned to 1.0.1: version 1.0.2 breaks QASM 2 submission).
 - **Re-checking a job:** `from qbraid.runtime import QbraidJob; QbraidJob(id).result().data.get_counts()`. Counts come back in Qiskit order (qubit 0 is the last character).
 
 ## 6. Verified numbers (use these; the sources are in `WRITEUP.md`)

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Tennessee Quantum Grid · Qrypt</title>
+  <title>Tennessee Quantum Grid · Qtopia</title>
   <meta name="description" content="Quantum keys for Chattanooga's real power grid: a real map, a live 3D twin with BB84 on every QKD fiber and a route search that uses the fewest trusted sites, a photon-by-photon walkthrough and a quantum lab." />
   <meta name="page-type" content="software" />
   <meta name="site-kind" content="software" />
@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="shared/qrypt.css" />
+  <link rel="stylesheet" href="shared/qtopia.css" />
   <script src="shared/qbar.js" data-page="home" data-root="./"></script>
   <style>
     * { box-sizing: border-box; }
@@ -386,7 +386,7 @@
 
   <footer class="foot">
     <div class="wrap foot__row">
-      <span>Qrypt · Tennessee Quantum Hackathon, Secure the Grid track, 2026</span>
+      <span>Qtopia · Tennessee Quantum Hackathon, Secure the Grid track, 2026</span>
       <span>Map data © <a class="q-link" href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, ODbL · Prism light effect from tasteskill, MIT licence</span>
     </div>
   </footer>
@@ -422,7 +422,7 @@
       placeRail();
       if (window.ResizeObserver) new ResizeObserver(placeRail).observe(path);
       else window.addEventListener("resize", placeRail);
-      window.addEventListener("qrypt:mode", placeRail);
+      window.addEventListener("qtopia:mode", placeRail);
 
       var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
       if (reduced || !("IntersectionObserver" in window)) return;

@@ -6,7 +6,7 @@
 #   vercel deploy site                  preview deploy
 #   vercel deploy site --prod           production deploy
 #
-# The site is one project: every page shares shared/qrypt.css and the top bar in shared/qbar.js, whose links
+# The site is one project: every page shares shared/qtopia.css and the top bar in shared/qbar.js, whose links
 # use these exact file names, so pages keep their repo names here.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -15,7 +15,7 @@ rm -rf site/grid-twin site/shared site/*.html
 mkdir -p site/grid-twin/data site/shared
 
 cp index.html                    site/index.html                  # home: links every page below
-cp shared/qrypt.css shared/qbar.js site/shared/                   # one design system and top bar
+cp shared/qtopia.css shared/qbar.js site/shared/                   # one design system and top bar
 cp -r shared/kit                 site/shared/kit                  # the home page's effect module (shared/kit/effects/fx.js)
 cp chattanooga_quantum_map.html  site/                            # Real map
 cp bb84_visualizer.html          site/                            # Photon line (notebook 1, one fiber)

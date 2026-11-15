@@ -209,7 +209,7 @@ footer { color: var(--muted); font-size: 14px; max-width: 75ch; border-top: 1px 
 </style>
 <!-- Shared Tennessee Quantum Grid system: fonts, tokens, top bar, Simple/Detailed switch, motion layer. -->
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="shared/qrypt.css">
+<link rel="stylesheet" href="shared/qtopia.css">
 <script src="shared/qbar.js" data-page="photon" data-root="./"></script>
 </head>
 <body>
@@ -382,7 +382,7 @@ if basis == 1:
     </div>
   </section>
 
-  <footer>Built from <span class="mono">1_bb84_eavesdropper.ipynb</span> in the Qrypt repo. The stage and the sweep run in your browser with fresh random bits, so their numbers change from run to run. The Step 6 results are saved cloud and hardware jobs from notebook 1.</footer>
+  <footer>Built from <span class="mono">1_bb84_eavesdropper.ipynb</span> in the Qtopia repo. The stage and the sweep run in your browser with fresh random bits, so their numbers change from run to run. The Step 6 results are saved cloud and hardware jobs from notebook 1.</footer>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -565,7 +565,7 @@ if basis == 1:
     haloMat.color.set(css(haloKey) || "#888");
   }
   applyTheme();
-  window.addEventListener("qrypt:theme", () => requestAnimationFrame(applyTheme));
+  window.addEventListener("qtopia:theme", () => requestAnimationFrame(applyTheme));
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => requestAnimationFrame(applyTheme));
   new MutationObserver(() => requestAnimationFrame(applyTheme)).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "class"] });
 
@@ -682,7 +682,7 @@ if basis == 1:
       e.preventDefault();
       document.getElementById(id).click();
     });
-    if (window.qrypt) window.qrypt.addShortcuts([["S", "Send one photon"], ["K", "Keep sending, or stop"], ["B", "Send 200 at once"], ["E", "Turn the spy (Eve) on or off"], ["C", "Clear all results"]]);
+    if (window.qtopia) window.qtopia.addShortcuts([["S", "Send one photon"], ["K", "Keep sending, or stop"], ["B", "Send 200 at once"], ["E", "Turn the spy (Eve) on or off"], ["C", "Clear all results"]]);
   })();
 </script>
 </body>

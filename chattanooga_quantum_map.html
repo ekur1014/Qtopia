@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="shared/qrypt.css" />
+  <link rel="stylesheet" href="shared/qtopia.css" />
   <script src="shared/qbar.js" data-page="map" data-root="./"></script>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="grid-twin/data/networks/chattanooga.js"></script>
@@ -241,7 +241,7 @@
     var pct = function (x, d) { return (100 * x).toFixed(d == null ? 1 : d) + "%"; };
 
     // Shared data: the same networks the 3D grid draws ----------------------------------------------------
-    var NETS = window.QRYPT_NETWORKS || {};
+    var NETS = window.QTOPIA_NETWORKS || {};
     var region = new URLSearchParams(location.search).get("net") === "tennessee500" ? "tennessee500" : "chattanooga";
     var css = function (name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); };
     var isDark = function () { return document.documentElement.dataset.theme === "dark"; };
@@ -279,7 +279,7 @@
     function drawBase() {
       baseLayer.clearLayers();
       placeLayer.clearLayers();
-      var B = (window.QRYPT_BASEMAP || {})[region];
+      var B = (window.QTOPIA_BASEMAP || {})[region];
       if (!B) return;
       var opt = function (o) { o.renderer = baseR; o.pane = "base"; o.interactive = false; return o; };
       var city = region === "chattanooga";
@@ -591,7 +591,7 @@
     document.querySelectorAll("[data-region]").forEach(function (b) {
       b.addEventListener("click", function () { if (region === b.dataset.region) return; region = b.dataset.region; tap = 0; draw(); });
     });
-    window.addEventListener("qrypt:theme", function () { var keep = selected && selected.link.id; setTiles(); draw(keep); });
+    window.addEventListener("qtopia:theme", function () { var keep = selected && selected.link.id; setTiles(); draw(keep); });
     setTiles();
     draw();
 
@@ -603,7 +603,7 @@
       if (k === "r" && homeBounds) { e.preventDefault(); map.fitBounds(homeBounds, { padding: [32, 32] }); }
       else if (k === "g") { e.preventDefault(); region = region === "chattanooga" ? "tennessee500" : "chattanooga"; tap = 0; draw(); }
     });
-    if (window.qrypt) window.qrypt.addShortcuts([["R", "Recenter on the whole grid"], ["G", "Switch between Chattanooga and Tennessee"], ["Arrows / + / −", "Move and zoom the map (click it first)"]]);
+    if (window.qtopia) window.qtopia.addShortcuts([["R", "Recenter on the whole grid"], ["G", "Switch between Chattanooga and Tennessee"], ["Arrows / + / −", "Move and zoom the map (click it first)"]]);
   </script>
 </body>
 </html>

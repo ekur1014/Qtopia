@@ -35,7 +35,7 @@ Found by searching every tracked file for `dual ring`, `dualring`, `dual_ring`, 
 | File | Line(s) today | Change |
 |---|---|---|
 | `grid-twin/data/networks/index.json` | entry `dualring` (first in the list) | Remove the entry. Chattanooga is already the default (`main.js:57`) |
-| `grid-twin/src/main.js` | 70-80 (`design` flag, "The Dual Ring" title, ring subtitle, "Dual Ring · Qrypt"), 191 (`dualring: "R3"` demo fiber) | Remove the `design` branch; keep the `real` / test-network branches. Remove `dualring` from the demo map |
+| `grid-twin/src/main.js` | 70-80 (`design` flag, "The Dual Ring" title, ring subtitle, "Dual Ring · Qtopia"), 191 (`dualring: "R3"` demo fiber) | Remove the `design` branch; keep the `real` / test-network branches. Remove `dualring` from the demo map |
 | `grid-twin/src/ui.js` | 32 (`FOOT.design`), 42 ("Team design" optgroup), 114 (`teamDesign` footer pick) | Remove the design footer and optgroup; the footer becomes `real ? "real" : "lab"` |
 | `grid-twin/style.css` | 331-332 (`.is-real .brand, .is-design .brand` and the title rule) | Drop only the `.is-design` selectors and keep `.is-real`. The body class is set in `main.js:72` |
 | `grid-twin/tests/engine.test.mjs` | 291-304, the ring test | **Replace, don't just delete.** It is the only test that checks that a tapped fiber moves a key path onto another route. New test on Chattanooga: see section 5 |

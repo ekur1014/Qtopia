@@ -1,4 +1,4 @@
-/* Qrypt design system: one set of colors, type and the top bar, shared by every page of the project
+/* Qtopia design system: one set of colors, type and the top bar, shared by every page of the project
    (home, live 3D grid, real map, photon line, quantum lab, monitor). Light is the default; dark via the toggle. */
 :root {
   color-scheme: light;
@@ -78,6 +78,9 @@
 .qbar__theme svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 @media (max-width: 1100px) { .qbar__name { display: none; } }
 @media (max-width: 860px) { .qbar__link { padding: 7px 8px; font-size: 12px; } .qbar__step { display: none; } }
+/* Phones: the page links have no room beside the mode switch (they showed as a sliver), so the bar keeps the
+   logo, which goes home, where every page is linked. */
+@media (max-width: 520px) { .qbar__nav { display: none; } .qbar__brand { margin-right: auto; } }
 
 /* Shared pieces the pages use */
 .q-pill { display: inline-block; padding: 2px 9px; border-radius: 999px; font-family: var(--q-mono); font-size: 11px; font-weight: 600; letter-spacing: .04em; }

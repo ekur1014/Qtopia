@@ -53,9 +53,9 @@ const swap = (a, b) => {
 };
 swap('<link rel="stylesheet" href="style.css" />', `<style>\n${css}\n</style>`);
 // The shared project bar and tokens (shared/), inlined too; links point at the repo root, where this file lives.
-const siteCss = readFileSync(join(root, "../shared/qrypt.css"), "utf8");
+const siteCss = readFileSync(join(root, "../shared/qtopia.css"), "utf8");
 const siteBar = readFileSync(join(root, "../shared/qbar.js"), "utf8");
-swap('<link rel="stylesheet" href="../shared/qrypt.css" />', `<style>\n${siteCss}\n</style>`);
+swap('<link rel="stylesheet" href="../shared/qtopia.css" />', `<style>\n${siteCss}\n</style>`);
 swap(
   '<script src="../shared/qbar.js" data-page="grid" data-root="../"></script>',
   // document.currentScript is the inline script itself, so its data attributes still work.

@@ -46,7 +46,7 @@ To re-run any fiber as real quantum code from the page, serve it with the bridge
 python grid-twin/sim/live_server.py 8000   # serves the repo root; the grid is at /grid-twin/
 ```
 
-A fiber's inspector then shows **Run this fiber as real quantum code**: Qiskit Aer, NVIDIA CUDA-Q and Quantinuum Guppy on the Selene emulator each run 4,000 photons with that fiber's current noise and tap. Two more engines: **qBraid · IonQ simulator** runs the fiber as a real cloud job on qBraid's free IonQ simulator (needs `QBRAID_API_KEY` in the server's environment, for example `source ~/.qrypt.env` first; about 45 s with the queue), and **Team notebook 1** runs the team's own `encode()` and `measure()` from `1_bb84_eavesdropper.ipynb` (the team's finished code), and the error rates appear next to the browser's live value and the theory. Example (L11, 40% tap, theory 12.64%): Qiskit 13.52%, CUDA-Q 12.11%, Guppy 11.15%, each on about 2,000 sifted bits (±0.7%).
+A fiber's inspector then shows **Run this fiber as real quantum code**: Qiskit Aer, NVIDIA CUDA-Q and Quantinuum Guppy on the Selene emulator each run 4,000 photons with that fiber's current noise and tap. Two more engines: **qBraid · IonQ simulator** runs the fiber as a real cloud job on qBraid's free IonQ simulator (needs `QBRAID_API_KEY` in the server's environment, for example `source ~/.qtopia.env` first; about 45 s with the queue), and **Team notebook 1** runs the team's own `encode()` and `measure()` from `1_bb84_eavesdropper.ipynb` (the team's finished code), and the error rates appear next to the browser's live value and the theory. Example (L11, 40% tap, theory 12.64%): Qiskit 13.52%, CUDA-Q 12.11%, Guppy 11.15%, each on about 2,000 sifted bits (±0.7%).
 
 ## What you can do
 
@@ -119,7 +119,7 @@ The IEEE grids are public test systems (MATPOWER, UW Power Systems Test Case Arc
 ```bash
 cd grid-twin
 node --test tests/*.test.mjs                       # physics, detector, networks, response policy, route search
-~/vscode/qrypt-venv/bin/python sim/bb84_reference.py # regenerate the Qiskit Aer reference (about 20 s)
+~/vscode/qtopia-venv/bin/python sim/bb84_reference.py # regenerate the Qiskit Aer reference (about 20 s)
 ```
 
 ## Files
@@ -145,11 +145,11 @@ grid-twin/
 
 ## Part of one project site
 
-Every page shares one design system and one top bar (`shared/qrypt.css`, `shared/qbar.js`): Home (`index.html`), Live grid (this folder), Real map (`chattanooga_quantum_map.html`), Photon line (`bb84_visualizer.html`) and Quantum lab (`threejs_quantum_grid.html`). The light/dark choice is shared. Other pages link straight to a fiber or site here with `?net=chattanooga&select=link:L6` or `select=node:T23`.
+Every page shares one design system and one top bar (`shared/qtopia.css`, `shared/qbar.js`): Home (`index.html`), Live grid (this folder), Real map (`chattanooga_quantum_map.html`), Photon line (`bb84_visualizer.html`) and Quantum lab (`threejs_quantum_grid.html`). The light/dark choice is shared. Other pages link straight to a fiber or site here with `?net=chattanooga&select=link:L6` or `select=node:T23`.
 
 ## qBraid engines
 
-With `QBRAID_API_KEY` set (for example `source ~/.qrypt.env` before `start.py`), a fiber's inspector also offers:
+With `QBRAID_API_KEY` set (for example `source ~/.qtopia.env` before `start.py`), a fiber's inspector also offers:
 - **qBraid · IonQ simulator** and **qBraid · QIR simulator** (both free cloud simulators).
 - **Team notebook 1 on qBraid · QIR simulator:** notebook 1's own `encode()` and `qber_from_counts()`, with the fiber's tap and noise added.
 
