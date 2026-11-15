@@ -201,7 +201,7 @@ All within 1.3σ. The qBraid QIR job at 40% is `qbraid:qbraid:sim:qir-sv-a7ae-qj
 
 The teammates own the pitch deck entirely, so it is no longer part of this site:
 - It is gone from the shared top bar, the home page and the README.
-- `presentation_deck.html` stays in the repo as the teammates' file. The Vercel build still publishes it at its original `/deck.html`, unlinked.
+- `presentation_deck.html` was deleted on 14 Nov: the team made its final deck outside the repo.
 
 ## Second opinion from Opus (qBraid AI gateway)
 

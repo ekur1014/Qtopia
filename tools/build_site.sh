@@ -35,8 +35,8 @@ cp docs/MENTOR_NOTES.md docs/TECH_RANKED.md site/docs/
 cp grid-twin/DESIGN.md grid-twin/README.md site/grid-twin/
 mkdir -p site/grid-twin/sim && cp grid-twin/sim/engines.py site/grid-twin/sim/   # the lab links to it (source only; it runs locally)
 
-# Old public path from the first version of this site still works. The pitch deck is no longer published: the team
-# removed it from this project (presentation_deck.html stays in the repo).
+# Old public path from the first version of this site still works. The team made its pitch deck outside the repo,
+# so no deck is published here (presentation_deck.html was deleted on 14 Nov).
 cp bb84_visualizer.html          site/bb84.html
 
 printf ".env*\n.vercel\n" > site/.vercelignore   # never upload local tokens
