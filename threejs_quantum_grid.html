@@ -560,15 +560,42 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
     }
     var W = 1, Hh = 1;
     function resize() {
-      W = stage.clientWidth; Hh = stage.clientHeight;
+      W = Math.max(1, stage.clientWidth); Hh = Math.max(1, stage.clientHeight);
       renderer.setSize(W, Hh);
+      frame();
+    }
+    // Fit both spheres, with their pole labels above and their name and result labels below, into the space
+    // between the stage heading and the key at the bottom, so nothing overlaps on short or narrow windows.
+    var _f = new THREE.Vector3();
+    function onScreen(x, y) { _f.set(x, y, 0).project(camera); return { x: (_f.x + 1) / 2 * W, y: (1 - _f.y) / 2 * Hh }; }
+    function frame() {
+      var head = document.querySelector(".stage-head"), key = $("stage-key");
+      var top = head.offsetTop + head.offsetHeight + 30;                    // room for the |0⟩ labels
+      var keyRoom = key.offsetParent ? key.offsetHeight + 20 + 14 : 12;      // the key is hidden on small screens
+      var labRoom = Math.max($("lab-left").offsetHeight, $("lab-right").offsetHeight) + 16 + 10;
+      var bottom = Hh - keyRoom - labRoom;
+      var boxH = Math.max(60, bottom - top), boxW = Math.max(60, W - 48);
       camera.aspect = W / Hh;
-      var z = Math.max(13.2 / camera.aspect, 10.5);
-      camera.position.set(0, 1.4, z);
-      camera.lookAt(0, 0.35, 0);
+      camera.clearViewOffset();
+      var z = 10.5, a, b, l, r;
+      for (var i = 0; i < 80; i++) {
+        camera.position.set(0, 1.4, z);
+        camera.lookAt(0, 0.35, 0);
+        camera.updateMatrixWorld();
+        camera.updateProjectionMatrix();
+        a = onScreen(0, 1.45); b = onScreen(0, -2.05);                     // the two poles
+        l = onScreen(-3.85, -0.3); r = onScreen(3.85, -0.3);               // the outer edges of the spheres
+        if (b.y - a.y <= boxH && r.x - l.x <= boxW) break;
+        z *= 1.04;
+      }
+      camera.setViewOffset(W, Hh, 0, Math.round((a.y + b.y) / 2 - (top + bottom) / 2), W, Hh);  // centre them in that space
       camera.updateProjectionMatrix();
     }
     window.addEventListener("resize", resize);
+    if (window.ResizeObserver) {
+      var refit = new ResizeObserver(function () { resize(); });
+      [stage, document.querySelector(".stage-head"), $("stage-key"), $("lab-left"), $("lab-right")].forEach(function (el) { refit.observe(el); });
+    }
     window.addEventListener("qtopia:theme", paint);
 
     // Screen positions for the HTML labels: poles beside each sphere, names and results below.
@@ -940,8 +967,10 @@ def bb84_round(bit: int, basis: int, eve_on: int, eve_basis: int, flip: int):
     resize();
     runBB84();
     runGrover();
+    // Code and Roadmap keep the last experiment on the stage, so set one up first even when the page opens on them.
     var first = (location.hash || "").slice(1);
-    selectTab(STAGE[first] ? first : "bb84");
+    selectTab("bb84");
+    if (STAGE[first] && first !== "bb84") selectTab(first);
   </script>
 <script>
   // Page keys: the left and right arrows step through the experiments (also when no tab has focus).
