@@ -137,8 +137,8 @@
 
     @media (prefers-reduced-motion: reduce) { .bar i, .result, .tab, .chip { transition: none; } }
     @media (max-width: 1000px) {
-      #app { grid-template-columns: 1fr; grid-template-rows: 44vh 1fr; }
-      aside { border-left: 0; border-top: 1px solid var(--q-line); }
+      #app { grid-template-columns: minmax(0, 1fr); grid-template-rows: 44vh 1fr; }
+      aside { min-width: 0; border-left: 0; border-top: 1px solid var(--q-line); }
       .stage-head { top: 14px; left: 18px; right: 18px; }
       .stage-head h1 { font-size: 22px; margin: 6px 0 0; max-width: none; }
       .stage-head p, .stage-key, .sphere-label .c { display: none; }
