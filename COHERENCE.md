@@ -16,7 +16,7 @@
 - **A CHSH Bell test on four qBraid devices** sets how long each timeline's twins stay linked: H2 emulator S = 2.48, IonQ simulator 2.80, Quobly Alloy Forge emulator 2.68, qBraid QIR simulator 2.66. All four beat the classical limit of 2; the same test is how a quantum key link proves it's really entangled.
 - **Every world grows from qubits measured on qBraid:** 30 of 1,200 bits from a 12-qubit circuit on the H2 emulator. In the game's journal (J), the qBraid Lab page lists every job, and pressing R there sends a fresh circuit to qBraid.
 
-The seed, Bell and CHSH runs used free emulators and simulators; the only real-hardware runs are the team's two Rigetti Cepheus jobs (BB84 and the teleportation link). Every job ID is in [`QUANTUM.md`](https://github.com/EthanChenHyland/coherence/blob/main/QUANTUM.md) and [`qbraid/qdata.json`](https://github.com/EthanChenHyland/coherence/blob/main/qbraid/qdata.json) in the Coherence repo.
+The seed, Bell and CHSH runs used free emulators and simulators; the only real-hardware results the game uses are two of the team's six Rigetti Cepheus jobs (BB84 and the teleportation link). Every job ID is in [`QUANTUM.md`](https://github.com/EthanChenHyland/coherence/blob/main/QUANTUM.md) and [`qbraid/qdata.json`](https://github.com/EthanChenHyland/coherence/blob/main/qbraid/qdata.json) in the Coherence repo.
 
 ---
 
