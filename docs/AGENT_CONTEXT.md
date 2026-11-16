@@ -2,7 +2,7 @@
 
 A shared briefing for any AI agent working in this repo. It is optional: point an agent at it ("read docs/AGENT_CONTEXT.md first"). It is not loaded automatically.
 
-Last updated: Saturday 14 November 2026, after commit `1b5ad2f`. **If something here conflicts with the code or with the user, the user wins, then the code. Then update this file.**
+Last updated: Saturday 14 November 2026, after commit `744ecb5`. **If something here conflicts with the code or with the user, the user wins, then the code. Then update this file.**
 
 ---
 
@@ -27,7 +27,7 @@ The team's entry for the **Tennessee Quantum Hackathon, "Secure the Grid" track*
 5. **One session edits at a time.** Several Claude sessions have worked in this same folder at once, and commits have collided. Before editing, run `git status` and `git log -3`. If files you didn't touch are changing, stop and tell the user.
 6. **Teammates' files.** These were written by teammates; change them only with the user's go-ahead:
    - Asheb wrote the dual-ring router (since removed; its search logic lives on in `chattanooga_router.py`), and the alarm-system draft now in `docs/archive/`.
-   - **Web uploads have overwritten `WRITEUP.md` twice** (1ee92a3, 1efbdde). After any "Add files via upload" commit, diff `WRITEUP.md` against the last audited version before building on it.
+   - **Web uploads have overwritten `WRITEUP.md` twice** (0e0a49c, f17ba27). After any "Add files via upload" commit, diff `WRITEUP.md` against the last audited version before building on it.
    - Notebooks 1 and 3 were written by teammates.
 7. **Generated files**
    - `site/` is built by `tools/build_site.sh` and ignored by git. Never edit it by hand.
@@ -38,7 +38,7 @@ The team's entry for the **Tennessee Quantum Hackathon, "Secure the Grid" track*
 ## 3. Current decisions (and one open conflict)
 
 - **The main model is Chattanooga's real grid** (OpenStreetMap). That was the first thing built and it is the hero.
-- **The dual ring is removed** (team decision, 14 Nov; recording in `remove the ring/`; done in commit `919d24a`). Only `vercel.json` redirects from its old URLs remain.
+- **The dual ring is removed** (team decision, 14 Nov; recording in `remove the ring/`; done in commit `2e653cc`). Only `vercel.json` redirects from its old URLs remain.
 - **Next feature: route search on Chattanooga** (from the recording). Inputs are a start site, an end site and an adjustable QBER cutoff (default 11%). Links above the cutoff are blocked, and the search finds the best other path. If none exists: ML-KEM, then islanding.
   - Plus a Grover demonstration that reuses notebook 2b's oracle and diffuser to pick a clean route among 8–16 candidates.
   - Frame it honestly: Dijkstra already solves this exactly, so this is a demo, not a speed-up. Details in the plan.
@@ -59,7 +59,7 @@ The team's entry for the **Tennessee Quantum Hackathon, "Secure the Grid" track*
 | `grid-twin/` | The live 3D grid (Three.js). `src/` holds the physics, routing (`response.js`), UI and scene; `data/networks/` the Chattanooga, Tennessee 500 kV, IEEE and dual-ring networks; `sim/` the Python bridge that runs fibers on Qiskit, CUDA-Q, Guppy and qBraid; `tests/` the Node tests |
 | Site pages | `index.html` (home), `chattanooga_quantum_map.html` (real map), `bb84_visualizer.html` (photon line), `threejs_quantum_grid.html` (quantum lab), `grid_twin.html` (the live grid as one file, built by `grid-twin/tools/build_standalone.mjs`). The 2D monitor prototype was deleted on 14 Nov; `dual_ring_quantum_routing.html` stays in the repo but `vercel.json` redirects it to the real map. All share `shared/qtopia.css` and `shared/qbar.js` (top bar and journey order) |
 | `docs/` | Audits, mentor notes, tech options, work log, and this file. `REMOVE_RING_PLAN.md` is the ring plan |
-| Recordings | `Additional Mentor Recordings IMPORTANT/`; `Idea/`, `New Chat Grid/` and `remove the ring/` were removed in `b7d4733` and are still in git history (`git checkout f21177c -- "Idea"`): team and mentor recordings, transcripts and photos. `Video Resources/` is ignored by git (too large) |
+| Recordings | `Additional Mentor Recordings IMPORTANT/`; `Idea/`, `New Chat Grid/` and `remove the ring/` were removed in `cc559c3` and are still in git history (`git checkout 40e71e7 -- "Idea"`): team and mentor recordings, transcripts and photos. `Video Resources/` is ignored by git (too large) |
 
 ## 5. How to run and check things
 
